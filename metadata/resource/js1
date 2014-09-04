@@ -1,0 +1,13 @@
+{
+    "type": "jsresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "js1",
+        "url": "resources/sch.plugins.excelexport.js"
+    },
+    "designerId": "c75e29ab-79a5-471d-b3e9-90e751b0905d"
+}

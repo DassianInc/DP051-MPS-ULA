@@ -1,0 +1,14 @@
+{
+    "type": "cssresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "css1",
+        "id": "customCss.css",
+        "url": "http://win1004.dnvr.ulalaunch.com/framework/extra/customCss.css"
+    },
+    "designerId": "cf28aca8-96f8-4d0c-bb94-ee2e40c8863c"
+}

@@ -1,0 +1,35 @@
+{
+    "type": "arraystore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "data": [
+            "[\r",
+            "    {\"name\":\"Show Summary with Dates and Percent Complete\"},\r",
+            "    {\"name\":\"Show Summary with Dates (No Percent Complete)\"},\r",
+            "    {\"name\":\"Show Summary with no Dates\"},\r",
+            "    {\"name\":\"Exclude Summary\"}\r",
+            "]"
+        ],
+        "designer|userClassName": "SummaryOptionsStore",
+        "storeId": "SummaryOptionsStore"
+    },
+    "designerId": "5f617242-6a8d-417e-926d-4b6a813eeebf",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "name"
+            },
+            "designerId": "4921e4e8-ee08-4118-8a84-213e0a2ad36c"
+        }
+    ]
+}

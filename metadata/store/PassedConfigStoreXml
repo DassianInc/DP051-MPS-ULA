@@ -1,0 +1,39 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "PassedConfigStoreXml",
+        "storeId": "PassedConfigStoreXml"
+    },
+    "designerId": "8aeddbea-8450-4221-8068-194bc5922bc8",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "type"
+            },
+            "designerId": "1c31c21a-8565-4afc-b294-3fd52cf402bf"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "value"
+            },
+            "designerId": "769908a0-e8bf-43be-b8cb-5f898ba50d02"
+        }
+    ]
+}

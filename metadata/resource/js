@@ -1,0 +1,14 @@
+{
+    "type": "jsresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "js",
+        "id": null,
+        "url": "resources/gnt-all-debug.js"
+    },
+    "designerId": "285b3460-62b0-4374-9e88-a6be2ff56342"
+}

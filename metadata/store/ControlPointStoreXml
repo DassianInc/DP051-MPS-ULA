@@ -1,0 +1,43 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "ControlPointStoreXml",
+        "model": "ControlPointModel",
+        "storeId": "ControlPointStoreXml"
+    },
+    "designerId": "0edc22bf-7155-4b74-8c93-774ccc3a695f",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/ControlPointStoreXml"
+            },
+            "designerId": "3ab5f20d-84d5-47c6-993a-7cf196b0962a",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "e253b6db-19c5-4134-b6b3-bd64597a24a3"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,51 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "PlantStoreXml",
+        "model": "NetworkModel",
+        "storeId": "PlantStoreXml"
+    },
+    "designerId": "cad2b519-f275-47db-9cfa-9e0e463bc0b2",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "api": [
+                    "{\r",
+                    "create: '/dsnwebui/dsnwebui_rest/PlantStoreXml/create',\r",
+                    "read: '/dsnwebui/dsnwebui_rest/PlantStoreXml/read',\r",
+                    "update: '/dsnwebui/dsnwebui_rest/PlantStoreXml/update',\r",
+                    "destroy: '/dsnwebui/dsnwebui_rest/PlantStoreXml/delete'\r",
+                    "}"
+                ],
+                "url": "/dsnwebui/dsnwebui_rest/PlantStoreXml"
+            },
+            "designerId": "4010bbd1-1433-4065-8190-9c7151630f4e",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "be53d4ea-4c6f-4c6f-ab00-fd7caf5ec0bf"
+                }
+            ]
+        }
+    ]
+}

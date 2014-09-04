@@ -1,0 +1,62 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "SearchStoreXml",
+        "model": "SearchModel",
+        "storeId": "SearchStoreXml"
+    },
+    "designerId": "72707719-f589-45fc-8796-e1a7aea46971",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "api": [
+                    "{\r",
+                    "create: '/dsnwebui/dsnwebui_rest/SearchStoreXml/create',\r",
+                    "read: '/dsnwebui/dsnwebui_rest/SearchStoreXml/read',\r",
+                    "update: '/dsnwebui/dsnwebui_rest/SearchStoreXml/update',\r",
+                    "destroy: '/dsnwebui/dsnwebui_rest/SearchStoreXml/delete'\r",
+                    "}"
+                ],
+                "url": "/dsnwebui/dsnwebui_rest/SearchStoreXml"
+            },
+            "designerId": "43297dfd-b9a9-4468-8b3f-2bcc8bb2ce7f",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "root": "root"
+                    },
+                    "designerId": "84ecbce0-be5d-4f49-978d-03e881ef9d60"
+                },
+                {
+                    "type": "Ext.data.writer.Xml",
+                    "reference": {
+                        "name": "writer",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "documentRoot": "root"
+                    },
+                    "designerId": "a26bdd4d-e28f-450e-bd7b-1f21aef96e4a"
+                }
+            ]
+        }
+    ]
+}

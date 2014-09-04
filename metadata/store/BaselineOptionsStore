@@ -1,0 +1,44 @@
+{
+    "type": "arraystore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "data": [
+            "[\r",
+            "    {\"name\":\"No Baseline Dates\"},\r",
+            "    {\"name\":\"Baseline Dates\"},\r",
+            "    {\"name\":\"Last Week Dates\"},\r",
+            "    {\"name\":\"Baseline 1\"},\r",
+            "    {\"name\":\"Baseline 2\"},\r",
+            "    {\"name\":\"Baseline 3\"},\r",
+            "    {\"name\":\"Baseline 4\"},\r",
+            "    {\"name\":\"Baseline 5\"},\r",
+            "    {\"name\":\"Baseline 6\"},\r",
+            "    {\"name\":\"Baseline 7\"},\r",
+            "    {\"name\":\"Baseline 8\"},\r",
+            "    {\"name\":\"Baseline 9\"},\r",
+            "    {\"name\":\"Baseline 10\"}\r",
+            "]"
+        ],
+        "designer|userClassName": "BaselineOptionsStore",
+        "storeId": "BaselineOptionsStore"
+    },
+    "designerId": "1c6026f1-847a-4792-b4ce-f334e501f0d4",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "name"
+            },
+            "designerId": "d709c3c3-648a-4fff-9abf-ad65d50d3f31"
+        }
+    ]
+}

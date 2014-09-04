@@ -1,0 +1,7 @@
+{
+    "webBuild": {
+        "environment": "production",
+        "clean": "on",
+        "publishPath": "C:/Users/Josh/Documents/Sencha/Build"
+    }
+}

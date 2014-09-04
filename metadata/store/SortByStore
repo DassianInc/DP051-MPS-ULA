@@ -1,0 +1,33 @@
+{
+    "type": "arraystore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "data": [
+            "[\r",
+            "    {\"name\":\"Mission Build Sequence\"},\r",
+            "    {\"name\":\"Mission Launch Sequence\"}\r",
+            "]"
+        ],
+        "designer|userClassName": "SortByStore",
+        "storeId": "SortByStore"
+    },
+    "designerId": "3e48db5a-75ba-4e09-9315-b6c44db1719a",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "name"
+            },
+            "designerId": "8f42c1b8-c7b6-4083-9680-77777dfafb71"
+        }
+    ]
+}

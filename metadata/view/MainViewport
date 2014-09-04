@@ -1,0 +1,16 @@
+{
+    "type": "Ext.container.Viewport",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|initialView": true,
+        "designer|userAlias": "mainview",
+        "designer|userClassName": "MainViewport",
+        "id": "mainView",
+        "layout": "border"
+    },
+    "designerId": "d2d16c5d-f323-43d1-9413-fed5afc85086"
+}

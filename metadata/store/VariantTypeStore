@@ -1,0 +1,33 @@
+{
+    "type": "arraystore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "data": [
+            "[\r",
+            "    {\"name\":\"User\"},\r",
+            "    {\"name\":\"Global\"}\r",
+            "]"
+        ],
+        "designer|userClassName": "VariantTypeStore",
+        "storeId": "VariantTypeStore"
+    },
+    "designerId": "89803d6a-8c88-4a24-ad13-2f9877b3aa2e",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "name"
+            },
+            "designerId": "c534f292-9d53-4bed-a509-a511afaa661b"
+        }
+    ]
+}

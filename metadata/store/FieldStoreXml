@@ -1,0 +1,43 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "FieldStoreXml",
+        "model": "FieldsModel",
+        "storeId": "FieldStoreXml"
+    },
+    "designerId": "10f4e74c-c57b-4507-aecd-7b4e4f78d080",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/TaskStoreXml"
+            },
+            "designerId": "bfe5dd1d-87bb-4dbe-9dc5-23d67f1691dc",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": ">Fields",
+                        "root": "Field"
+                    },
+                    "designerId": "0339607f-7c1f-4737-b09f-43030d6ba5a6"
+                }
+            ]
+        }
+    ]
+}

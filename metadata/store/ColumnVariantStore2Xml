@@ -1,0 +1,14 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "ColumnVariantStore2Xml",
+        "model": "ColumnVariantModel",
+        "storeId": "ColumnVariantStore2Xml"
+    },
+    "designerId": "6f0d6d99-7b04-4acf-944a-fad8685c0a1f"
+}

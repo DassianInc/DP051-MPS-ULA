@@ -1,0 +1,14 @@
+{
+    "type": "jsresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "js2",
+        "id": "SearchWindow.js",
+        "url": "resources/SearchWindow.js"
+    },
+    "designerId": "179eb18b-3865-43f1-bceb-a075aac7bd13"
+}

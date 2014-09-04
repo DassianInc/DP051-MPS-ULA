@@ -1,0 +1,44 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "GanttConfigStoreXml",
+        "model": "GanttConfigModel",
+        "storeId": "GanttConfigStoreXml"
+    },
+    "designerId": "3895dce6-88d3-4d95-9e56-7835fe034fbf",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "timeout": 60000,
+                "url": "/dsnwebui/dsnwebui_rest/GanttConfigStoreXml"
+            },
+            "designerId": "aa6aa205-ee4f-4783-ab69-2849e7bade7d",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "60bf8e35-38ff-4225-9462-a31316845070"
+                }
+            ]
+        }
+    ]
+}

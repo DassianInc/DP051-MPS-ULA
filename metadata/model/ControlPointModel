@@ -1,0 +1,50 @@
+{
+    "type": "Ext.data.Model",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "ControlPointModel"
+    },
+    "designerId": "99e7c2e3-f1ed-45e3-a29f-e2725bfe8555",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "number"
+            },
+            "designerId": "cd7d22be-de13-4cab-9299-012b5d3b7731"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "description"
+            },
+            "designerId": "13e571c3-b6cb-49ab-b3a9-529b815e721d"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "plant"
+            },
+            "designerId": "8dd945d4-393b-4aa8-9ebb-51238f3547ee"
+        }
+    ]
+}

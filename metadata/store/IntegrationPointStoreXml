@@ -1,0 +1,43 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "IntegrationPointStoreXml",
+        "model": "IntegrationPointModel",
+        "storeId": "IntegrationPointStoreXml"
+    },
+    "designerId": "64799931-5629-4de1-9992-fa371dacb175",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/IntegrationPointStoreXml"
+            },
+            "designerId": "5354fb6a-8c2b-42b8-a937-375ca503b598",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "5af72b58-0cea-432a-b133-4d9610ad5355"
+                }
+            ]
+        }
+    ]
+}

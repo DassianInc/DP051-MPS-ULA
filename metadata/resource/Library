@@ -1,0 +1,14 @@
+{
+    "type": "libraryresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "basePath": "http://win1004.dnvr.ulalaunch.com/framework/",
+        "designer|userClassName": "Library",
+        "theme": "gray"
+    },
+    "designerId": "f0124f6f-9117-4763-895a-3efd1e8cf95a"
+}

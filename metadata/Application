@@ -1,0 +1,73 @@
+{
+    "type": "Ext.app.Application",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "controllers": [
+            "Main"
+        ],
+        "models": [
+            "PartNumberModel",
+            "NetworkModel",
+            "ControlPointModel",
+            "IntegrationPointModel",
+            "ModelUnitModel",
+            "UserModel",
+            "SelectionVariantModel",
+            "ColumnVariantModel",
+            "SelectedObjectModel",
+            "VersionModel",
+            "SearchModel",
+            "ResultsModel",
+            "FieldsModel",
+            "GanttConfigModel",
+            "PassedObjectsModel"
+        ],
+        "name": "MyApp",
+        "stores": [
+            "UserStoreXml",
+            "PartNumberStoreXml",
+            "NetworkStoreXml",
+            "ControlPointStoreXml",
+            "IntegrationPointStoreXml",
+            "ModelUnitStoreXml",
+            "SelectionVariantStoreXml",
+            "ColumnVariantStoreXml",
+            "SelectedObjectStoreXml",
+            "VersionStoreXml",
+            "PlantStoreXml",
+            "ProgramStoreXml",
+            "PrimaryMissionStoreXml",
+            "BuildItemStoreXml",
+            "TailNumberStoreXml",
+            "EffectivityStoreXml",
+            "NameStoreXml",
+            "NotesStoreXml",
+            "SearchStoreXml",
+            "ResultsStoreXml",
+            "FieldStoreXml",
+            "GanttConfigStoreXml",
+            "SortByStore",
+            "PassedObjectsStoreXml",
+            "PassedObjectStoreXml2",
+            "ColumnVariantStore2Xml",
+            "VariantTypeStore",
+            "ColumnStoreXml",
+            "GanttViewStore",
+            "PassedConfigStoreXml",
+            "SummaryOptionsStore2",
+            "ParamStoreXml",
+            "YesNoStore",
+            "BaselineOptionsStore"
+        ],
+        "views": [
+            "MainViewport",
+            "EventTrigger",
+            "MyPanel12"
+        ]
+    },
+    "designerId": "application"
+}

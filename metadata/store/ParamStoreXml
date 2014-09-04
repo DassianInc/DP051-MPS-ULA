@@ -1,0 +1,43 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "ParamStoreXml",
+        "model": "GanttConfigModel",
+        "storeId": "ParamStoreXml"
+    },
+    "designerId": "0368a18e-4e81-4932-950c-48575ee227f5",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/SelectedObjectStoreXml"
+            },
+            "designerId": "e4f87b28-c596-4b8b-a81f-d541f4c028b1",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "bfdb1800-9393-46a3-b15a-4c546884783b"
+                }
+            ]
+        }
+    ]
+}

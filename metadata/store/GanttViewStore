@@ -1,0 +1,48 @@
+{
+    "type": "arraystore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "data": [
+            "[\r",
+            "    {\"id\":\"1\",\"name\":\"Month & Year\"},\r",
+            "    {\"id\":\"2\",\"name\":\"Year & Quarter\"},\r",
+            "    {\"id\":\"3\",\"name\":\"Week & Month\"},\r",
+            "    {\"id\":\"4\",\"name\":\"Week & Day\"},\r",
+            "    {\"id\":\"5\",\"name\":\"Day & Week\"}\r",
+            "]"
+        ],
+        "designer|userClassName": "GanttViewStore",
+        "storeId": "GanttViewStore"
+    },
+    "designerId": "fdd3e00f-beb9-435b-88d3-953776942311",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "id"
+            },
+            "designerId": "cbc96061-3b20-41c7-a61b-f9ddb0a56fef"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "name"
+            },
+            "designerId": "dd2a54d1-f3e3-45e0-952b-1b0812a9be55"
+        }
+    ]
+}

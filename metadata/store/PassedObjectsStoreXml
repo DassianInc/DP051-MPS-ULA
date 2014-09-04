@@ -1,0 +1,43 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "PassedObjectsStoreXml",
+        "model": "PassedObjectsModel",
+        "storeId": "PassedObjectsStoreXml"
+    },
+    "designerId": "521b8fb7-e8e7-4484-940e-7fe1fd327e11",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/SelectedObjectStoreXml"
+            },
+            "designerId": "5302b0a8-70fb-4e50-b95e-84a890430377",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "2a409fd1-878e-4ff7-9675-3c43407d393e"
+                }
+            ]
+        }
+    ]
+}

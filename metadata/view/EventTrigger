@@ -1,0 +1,33 @@
+{
+    "type": "Ext.container.Container",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userAlias": "eventtrigger",
+        "designer|userClassName": "EventTrigger",
+        "itemId": "eventTrigger",
+        "width": 150
+    },
+    "designerId": "776f38d7-0ec5-401a-a18c-50d6c7f70e53",
+    "cn": [
+        {
+            "type": "customevent",
+            "reference": {
+                "name": "customEvents",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "ganttConfig",
+                "params": [
+                    "component",
+                    "config"
+                ]
+            },
+            "designerId": "5ad437b0-a9f3-44f8-a2b0-94541febda7d"
+        }
+    ]
+}

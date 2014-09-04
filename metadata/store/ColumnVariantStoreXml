@@ -1,0 +1,44 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "buffered": true,
+        "designer|userClassName": "ColumnVariantStoreXml",
+        "model": "ColumnVariantModel",
+        "storeId": "ColumnVariantStoreXml"
+    },
+    "designerId": "93a99040-00ed-4cb6-b58f-2cc74825c450",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/ColumnVariantStoreXml"
+            },
+            "designerId": "f3af5019-27a1-463e-a2f8-b1ff42d4d98e",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "5e6c160d-7ea3-44b3-9845-34ff6e2d87ae"
+                }
+            ]
+        }
+    ]
+}

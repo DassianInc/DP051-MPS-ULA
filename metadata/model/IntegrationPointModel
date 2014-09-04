@@ -1,0 +1,50 @@
+{
+    "type": "Ext.data.Model",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "IntegrationPointModel"
+    },
+    "designerId": "e0bb49cf-b33b-4add-aa97-fd2cf80c97ec",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "number"
+            },
+            "designerId": "39ac2cf5-3605-40c2-9019-0ac654f22ab4"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "description"
+            },
+            "designerId": "71df87f6-6905-439a-9efe-09b51786813c"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "plant"
+            },
+            "designerId": "8dcde991-6561-44ef-84b1-1c088c175d01"
+        }
+    ]
+}

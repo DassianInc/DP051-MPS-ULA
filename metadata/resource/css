@@ -1,0 +1,14 @@
+{
+    "type": "cssresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "css",
+        "id": "sch-gantt-all.css",
+        "url": "http://win1004.dnvr.ulalaunch.com/framework/extra/sch-gantt-all-debug.css"
+    },
+    "designerId": "82b58b4a-6dcb-4391-a61a-81750f9ffda2"
+}

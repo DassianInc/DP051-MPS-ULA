@@ -1,0 +1,43 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "VersionStoreXml",
+        "model": "VersionModel",
+        "storeId": "VersionStoreXml"
+    },
+    "designerId": "dd5e7956-7bd3-4949-8560-eb3cfc91bb29",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/VersionStoreXml"
+            },
+            "designerId": "6f422df5-b1bd-416d-b8ee-eb2ccbb6f0e0",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "c3409f93-6d25-491d-9c8c-681c29e960ca"
+                }
+            ]
+        }
+    ]
+}

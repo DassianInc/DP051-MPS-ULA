@@ -1,0 +1,43 @@
+{
+    "type": "directstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "PassedObjectStoreXml2",
+        "model": "PassedObjectsModel",
+        "storeId": "PassedObjectStoreXml2"
+    },
+    "designerId": "0f3e1671-6263-4b63-b3db-998779eee26d",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Rest",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/dsnwebui/dsnwebui_rest/SelectedObjectStoreXml"
+            },
+            "designerId": "a6580d36-62de-4402-a0bc-88470ad2162d",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "4190fa0c-edf4-482f-af80-9d246bc4353d"
+                }
+            ]
+        }
+    ]
+}

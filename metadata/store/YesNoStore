@@ -1,0 +1,34 @@
+{
+    "type": "arraystore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "data": [
+            "[\r",
+            "    {name:'Yes'},\r",
+            "    {name:'No'},\r",
+            "    {name:'Only Summary'}\r",
+            "]"
+        ],
+        "designer|userClassName": "YesNoStore",
+        "storeId": "YesNoStore"
+    },
+    "designerId": "45836913-882d-4f07-ab80-68fe6bb8b5a2",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "name"
+            },
+            "designerId": "ac2f9fd8-962c-4a0e-9a5f-4388edc7ce1e"
+        }
+    ]
+}

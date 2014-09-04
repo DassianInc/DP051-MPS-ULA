@@ -1,0 +1,121 @@
+{
+    "name": "MasterProductionSchedule",
+    "settings": {
+        "cmd": {
+            "license": "",
+            "cmdVersion": "",
+            "frameworkVersion": ""
+        },
+        "spacesToIndent": 4,
+        "lineEnding": "CRLF",
+        "genTimestamps": false,
+        "cacheBust": false,
+        "urlPrefix": "http://localhost/ulaGantt2",
+        "exportPath": "C:/Publish",
+        "buildShouldOverwriteIndex": true,
+        "canvasControls": {
+            "viewportSize": {
+                "name": "Auto Expand",
+                "builtIn": true,
+                "height": null,
+                "width": null
+            }
+        },
+        "sdkPath": "",
+        "generateArchitectVersion": true,
+        "displayfield-ExtBox1-1279-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1330-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1380-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1630-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1278-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1329-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1274-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1325-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1379-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1429-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1441-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1491-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1541-inputEl": "Not Installed",
+        "displayfield-ExtBox1-1286-inputEl": "Not Installed"
+    },
+    "xdsVersion": "3.0.4",
+    "xdsBuild": 1386,
+    "schemaVersion": 1,
+    "upgradeVersion": 300000000004,
+    "framework": "ext42",
+    "viewOrderMap": {
+        "view": [
+            "776f38d7-0ec5-401a-a18c-50d6c7f70e53",
+            "d2d16c5d-f323-43d1-9413-fed5afc85086",
+            "f7cfadc7-f5aa-4dcf-830b-1670616abaed"
+        ],
+        "store": [
+            "9e852c35-53be-4da0-b055-c3f39a9eaedb",
+            "d488277c-82e6-4e4e-8e86-6b25ebf56e76",
+            "77b07bfc-bfa9-4151-8468-2a2fbb045386",
+            "4f74cdc3-311c-4c10-bb8a-aec2fd14b452",
+            "cad2b519-f275-47db-9cfa-9e0e463bc0b2",
+            "a0f63ff9-d0bc-4cf7-a08c-d68db5f97953",
+            "f12279e8-8f67-4f79-a5e5-aba2dec45ca7",
+            "67e3cc75-2d61-4443-8aac-dd2dfec8e024",
+            "d60bd009-80d2-4463-b6e4-3d8a0004494a",
+            "ced9bec0-cbd0-40e7-9252-0faf3bf565b2",
+            "4a616aaa-babe-4677-8a7b-6880f5e45395",
+            "0edc22bf-7155-4b74-8c93-774ccc3a695f",
+            "f3412cbe-bc05-43b2-9644-6563c05a1531",
+            "93a99040-00ed-4cb6-b58f-2cc74825c450",
+            "dd5e7956-7bd3-4949-8560-eb3cfc91bb29",
+            "2550cb98-2c34-493e-b799-4b215e6c4883",
+            "72707719-f589-45fc-8796-e1a7aea46971",
+            "5af75a30-dae0-4a84-9fe1-b6c94dbf25b6",
+            "10f4e74c-c57b-4507-aecd-7b4e4f78d080",
+            "3895dce6-88d3-4d95-9e56-7835fe034fbf",
+            "64799931-5629-4de1-9992-fa371dacb175",
+            "ab4bb707-499e-4523-b5c5-3caf30d7a582",
+            "3e48db5a-75ba-4e09-9315-b6c44db1719a",
+            "5f617242-6a8d-417e-926d-4b6a813eeebf",
+            "521b8fb7-e8e7-4484-940e-7fe1fd327e11",
+            "0f3e1671-6263-4b63-b3db-998779eee26d",
+            "89803d6a-8c88-4a24-ad13-2f9877b3aa2e",
+            "bde8a776-cf97-4561-87e4-16afc484755d",
+            "fdd3e00f-beb9-435b-88d3-953776942311",
+            "8aeddbea-8450-4221-8068-194bc5922bc8",
+            "6f0d6d99-7b04-4acf-944a-fad8685c0a1f",
+            "0cd74722-8537-462a-92c3-98d709f69b97",
+            "1c6026f1-847a-4792-b4ce-f334e501f0d4",
+            "0368a18e-4e81-4932-950c-48575ee227f5",
+            "45836913-882d-4f07-ab80-68fe6bb8b5a2"
+        ],
+        "controller": [
+            "b0031603-6392-4726-b5dc-e5ff02ae1abc"
+        ],
+        "model": [
+            "4d027beb-7ab5-488d-ae3d-82e2fa845f8d",
+            "aa63c07b-6bf4-4f0f-8707-8aee7ad0127d",
+            "81e24f52-b317-4f6f-858c-ed272fb2ce50",
+            "99e7c2e3-f1ed-45e3-a29f-e2725bfe8555",
+            "e0bb49cf-b33b-4add-aa97-fd2cf80c97ec",
+            "aeff1932-4fe7-435d-8801-5ebe1de5394a",
+            "d2c4d778-159a-43ab-bc16-551bd1b170b0",
+            "3822e860-a021-454d-9681-e6a5afe5d4f3",
+            "deb39ed3-a94c-456e-a420-7da33cf003d7",
+            "b2972643-b741-4f83-ba9d-3abcff78e738",
+            "c70457c2-1aa7-480a-b46e-2fd509afa8f6",
+            "83eae173-c9ae-4bc7-be2b-a2dcb9dcf25d",
+            "44d09076-4449-46e9-9730-0b92cc138d74",
+            "50cb731a-32ad-4de3-b55b-3c8872f00704",
+            "2f71434c-0660-4e68-b675-e2faabbf53a2"
+        ],
+        "resource": [
+            "f0124f6f-9117-4763-895a-3efd1e8cf95a",
+            "285b3460-62b0-4374-9e88-a6be2ff56342",
+            "82b58b4a-6dcb-4391-a61a-81750f9ffda2",
+            "179eb18b-3865-43f1-bceb-a075aac7bd13",
+            "cf28aca8-96f8-4d0c-bb94-ee2e40c8863c",
+            "c75e29ab-79a5-471d-b3e9-90e751b0905d"
+        ],
+        "app": [
+            "application"
+        ]
+    }
+}

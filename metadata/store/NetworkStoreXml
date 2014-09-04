@@ -1,0 +1,52 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userAlias": "networkstore",
+        "designer|userClassName": "NetworkStoreXml",
+        "model": "NetworkModel",
+        "storeId": "NetworkStoreXml"
+    },
+    "designerId": "9e852c35-53be-4da0-b055-c3f39a9eaedb",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "api": [
+                    "{\r",
+                    "create: '/dsnwebui/dsnwebui_rest/NetworkStoreXml/create',\r",
+                    "read: '/dsnwebui/dsnwebui_rest/NetworkStoreXml/read',\r",
+                    "update: '/dsnwebui/dsnwebui_rest/NetworkStoreXml/update',\r",
+                    "destroy: '/dsnwebui/dsnwebui_rest/NetworkStoreXml/delete'\r",
+                    "}"
+                ],
+                "url": "/dsnwebui/dsnwebui_rest/NetworkStoreXml"
+            },
+            "designerId": "1c972d1e-2a2b-4a25-a9db-8da485f167d7",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "af55f646-8501-4654-bba5-aa42607d3d05"
+                }
+            ]
+        }
+    ]
+}

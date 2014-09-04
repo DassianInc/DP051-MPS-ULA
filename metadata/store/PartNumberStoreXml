@@ -1,0 +1,51 @@
+{
+    "type": "xmlstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "PartNumberStoreXml",
+        "model": "PartNumberModel",
+        "storeId": "PartNumberStoreXml"
+    },
+    "designerId": "d488277c-82e6-4e4e-8e86-6b25ebf56e76",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "api": [
+                    "{\r",
+                    "create: '/dsnwebui/dsnwebui_rest/PartNumberStoreXml/create',\r",
+                    "read: '/dsnwebui/dsnwebui_rest/PartNumberStoreXml/read',\r",
+                    "update: '/dsnwebui/dsnwebui_rest/PartNumberStoreXml/update',\r",
+                    "destroy: '/dsnwebui/dsnwebui_rest/PartNumberStoreXml/delete'\r",
+                    "}"
+                ],
+                "url": "/dsnwebui/dsnwebui_rest/PartNumbersStoreXml"
+            },
+            "designerId": "5e75d840-52cc-479b-8093-545701750299",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Xml",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "record": "record",
+                        "root": "root"
+                    },
+                    "designerId": "87fd414a-f000-4a05-ba0b-eaeacdd677ba"
+                }
+            ]
+        }
+    ]
+}

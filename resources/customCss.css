@@ -1,0 +1,9 @@
+.bgred .x-change-cell {
+    background-color: #FF704D; 
+}
+.bggray .x-change-cell {
+    background-color: #CDCDB4;
+}
+.x-tree-node-icon {
+display: none;
+}
