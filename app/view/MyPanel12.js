@@ -114,12 +114,18 @@ Ext.define('MyApp.view.MyPanel12', {
                             handler: function(button, e) {
                                 var me = this;
                                 var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                                ganttPanel.setLoading();
-                                Ext.suspendLayouts();
-                                ganttPanel.expandAll();
-                                Ext.resumeLayouts();
-                                ganttPanel.setLoading(false);
-
+                                var root = ganttPanel.getRootNode();
+                                var view = ganttPanel.getView();
+                                var store = view.getStore();
+                                var nodes = [];
+                                root.cascadeBy(function(node){
+                                    if (!node.isRoot() || ganttPanel.rootVisible) {
+                                        node.data.expanded = true;
+                                        nodes.push(node);
+                                    }
+                                });
+                                view.refresh();
+                                return nodes;
                             },
                             height: 35,
                             id: '',
