@@ -33,7 +33,7 @@ Ext.define('MyApp.store.FieldStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/TaskStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'Field',
+                    rootProperty: 'Field',
                     record: '>Fields'
                 }
             }

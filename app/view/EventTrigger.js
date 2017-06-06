@@ -12,7 +12,21 @@
  *
  * Do NOT hand edit this file.
  */
+Ext.define('MyApp.view.EventTrigger', {
+    extend: 'Ext.container.Container',
+    alias: 'widget.eventtrigger',
 
+    requires: [
+        'MyApp.view.EventTriggerViewModel'
+    ],
+
+    viewModel: {
+        type: 'eventtrigger'
+    },
+    itemId: 'eventTrigger'
+
+});
+/*
 Ext.define('MyApp.view.EventTrigger', {
     extend: 'Ext.container.Container',
     alias: 'widget.eventtrigger',
@@ -30,4 +44,4 @@ Ext.define('MyApp.view.EventTrigger', {
         me.callParent(arguments);
     }
 
-});
+});*/

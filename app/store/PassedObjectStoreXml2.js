@@ -33,7 +33,7 @@ Ext.define('MyApp.store.PassedObjectStoreXml2', {
                 url: '/dsnwebui/dsnwebui_rest/SelectedObjectStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

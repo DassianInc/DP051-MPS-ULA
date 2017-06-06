@@ -12,1184 +12,469 @@
  *
  * Do NOT hand edit this file.
  */
+// @define Gnt.model.Task
 
-Ext.define('MyApp.controller.Main', {
-    extend: 'Ext.app.Controller',
+    Ext.define('MyApp.controller.Main', {
+        extend: 'Ext.app.Controller',
 
-    id: 'Main',
+        id: 'Main',
+        /*requires:[
+            'DSch.plugin.exporter.AbstractExporter',
+            'DSch.plugin.exporter.MultiPageHorizontal',
+            'DSch.plugin.exporter.SinglePage',
+            'DSch.plugin.Export',
+            'Sch.plugin.ExcelExport',
+            'DGnt.plugin.exporter.MultiPageHorizontal',
+            'DGnt.plugin.exporter.SinglePage',
+            'Gnt.model.Task',
+            'Gnt.plugin.ProjectLines'
+        ],*/
+        refs: [
+            {
+                ref: 'myPanel',
+                selector: '#myPanel'
+            },
+            {
+                ref: 'mainViewport',
+                selector: '#myviewport'
+            },
+            {
+                ref: 'mainViewport2',
+                selector: '#myviewport'
+            },
+            {
+                ref: 'MainView',
+                selector: '#MainView'
+            },
+            {
+                ref: 'mytreepanel',
+                selector: '#mytreepanel'
+            },
+            {
+                ref: 'version',
+                selector: '#version'
+            }
+        ],
 
-    refs: [
-        {
-            ref: 'myPanel',
-            selector: '#myPanel'
+        onAufnrKeypress: function(textfield, e, eOpts) {
+            var me = this;
+            if (e.getCharCode() === e.ENTER) {
+                // enter pressed
+                me.loadTaskStore(textfield.value);
+            }
         },
-        {
-            ref: 'mainViewport',
-            selector: '#myviewport'
+
+        onAufnrChange: function(field, newValue, oldValue, eOpts) {
+            var me = this;
+            if (field.searchGo) {
+                field.searchGo = false;
+                me.loadTaskStore(newValue);
+            }
         },
-        {
-            ref: 'mainViewport2',
-            selector: '#myviewport'
-        },
-        {
-            ref: 'MainView',
-            selector: '#MainView'
-        },
-        {
-            ref: 'mytreepanel',
-            selector: '#mytreepanel'
-        },
-        {
-            ref: 'version',
-            selector: '#version'
-        }
-    ],
 
-    onAufnrKeypress: function(textfield, e, eOpts) {
-        var me = this;
-        if (e.getCharCode() === e.ENTER) {
-            // enter pressed
-            me.loadTaskStore(textfield.value);
-        }
-    },
-
-    onAufnrChange: function(field, newValue, oldValue, eOpts) {
-        var me = this;
-        if (field.searchGo) {
-            field.searchGo = false;
-            me.loadTaskStore(newValue);
-        }
-    },
-
-    onButtonClick1: function(button, e, eOpts) {
-        var me = this;
-        var myPanel = Ext.widget('mypanel');
-        var mainView = Ext.widget('mainview');
-        var taskStore = Ext.store('taskstore');
-        mainView.setLoading(true);
-        taskStore.sync({
-            callback: function() {
-                mainView.removeAll();
-                mainView.insert(0,myPanel);
-                mainView.setLoading(false);
-            }
-        });
-
-    },
-
-    onEventTriggerGanttConfig: function(component, config, eventOptions) {
-        var me = this;
-        var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
-        var yesNoStore  = Ext.getStore('YesNoStore');
-        var selectedRecord;
-        var ganttExists = yesNoStore.findExact('name','ganttExists');
-        var mainView = Ext.widget('mainview');
-        var panelWidth = mainView.getWidth();
-        var panelHeight = mainView.getHeight();
-        var panelThird = panelWidth/3;
-        //finishDate
-        var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-        var finishValue = finishRecord.get('value');
-        finishValue = new Date(finishValue);
-        finishValue = finishValue.setMonth(finishValue.getMonth()+6);
-        //startDate
-        startRecordIndex = ganttConfigStore.findExact('name','start');
-        var startRecord = ganttConfigStore.getAt(startRecordIndex);
-        var startValue = startRecord.get('value');
-        startValue = new Date(startValue);
-        startValue = startValue.setMonth(startValue.getMonth()-6);
-        //columnVariant
-        columnVariantSelectedRecord = ganttConfigStore.findExact('name','columnVariant');
-        var columnVariantRecord = ganttConfigStore.getAt(columnVariantSelectedRecord);
-        var columnVariantValue = columnVariantRecord.get('value');
-        //selectionVariant
-        selectionVariantSelectedRecord = ganttConfigStore.findExact('name','selectionVariant');
-        var selectionVariantRecord = ganttConfigStore.getAt(selectionVariantSelectedRecord);
-        var selectionVariantValue = selectionVariantRecord.get('value');
-        //version
-        versionSelectedRecord = ganttConfigStore.findExact('name','version');
-        var versionRecord = ganttConfigStore.getAt(versionSelectedRecord);
-        var versionValue = versionRecord.get('value');
-        try {
-            //text01
-            text01SelectedRecord = ganttConfigStore.findExact('name','text01');
-            var text01Record = ganttConfigStore.getAt(text01SelectedRecord);
-            var text01Value = text01Record.get('value');
-            switch (text01Value) {
-                case 'Not Used':
-                    var text01Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text01columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text01columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text01columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text01Hide = false;
-                    var text01columnType = 'gridcolumn';
-                    break;
-            }
-            //text02
-            text02SelectedRecord = ganttConfigStore.findExact('name','text02');
-            var text02Record = ganttConfigStore.getAt(text02SelectedRecord);
-            var text02Value = text02Record.get('value');
-            switch (text02Value) {
-                case 'Not Used':
-                    var text02Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text02columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text02columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text02columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text02Hide = false;
-                    var text02columnType = 'gridcolumn';
-                    break;
-            }
-            //text03
-            text03SelectedRecord = ganttConfigStore.findExact('name','text03');
-            var text03Record = ganttConfigStore.getAt(text03SelectedRecord);
-            var text03Value = text03Record.get('value');
-            switch (text03Value) {
-                case 'Not Used':
-                    var text03Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text03columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text03columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text03columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text03Hide = false;
-                    var text03columnType = 'gridcolumn';
-                    break;
-            }
-            //text04
-            text04SelectedRecord = ganttConfigStore.findExact('name','text04');
-            var text04Record = ganttConfigStore.getAt(text04SelectedRecord);
-            var text04Value = text04Record.get('value');
-            switch (text04Value) {
-                case 'Not Used':
-                    var text04Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text04columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text04olumnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text04columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text04Hide = false;
-                    var text04columnType = 'gridcolumn';
-                    break;
-            }
-            //text05
-            text05SelectedRecord = ganttConfigStore.findExact('name','text05');
-            var text05Record = ganttConfigStore.getAt(text05SelectedRecord);
-            var text05Value = text05Record.get('value');
-            switch (text05Value) {
-                case 'Not Used':
-                    var text05Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text05columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text05columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text05columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text05Hide = false;
-                    var text05columnType = 'gridcolumn';
-                    break;
-            }
-            //text06
-            text06SelectedRecord = ganttConfigStore.findExact('name','text06');
-            var text06Record = ganttConfigStore.getAt(text06SelectedRecord);
-            var text06Value = text06Record.get('value');
-            switch (text06Value) {
-                case 'Not Used':
-                    var text06Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text06columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text06columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text06columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text06Hide = false;
-                    var text06columnType = 'gridcolumn';
-                    break;
-            }
-            //text07
-            text07SelectedRecord = ganttConfigStore.findExact('name','text07');
-            var text07Record = ganttConfigStore.getAt(text07SelectedRecord);
-            var text07Value = text07Record.get('value');
-            switch (text07Value) {
-                case 'Not Used':
-                    var text07Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text07columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text07columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text07columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text07Hide = false;
-                    var text07columnType = 'gridcolumn';
-                    break;
-            }
-            //text08
-            text08SelectedRecord = ganttConfigStore.findExact('name','text08');
-            var text08Record = ganttConfigStore.getAt(text08SelectedRecord);
-            var text08Value = text08Record.get('value');
-            switch (text08Value) {
-                case 'Not Used':
-                    var text08Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text08columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text08columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text08columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text08Hide = false;
-                    var text08columnType = 'gridcolumn';
-                    break;
-            }
-            //text09
-            text09SelectedRecord = ganttConfigStore.findExact('name','text09');
-            var text09Record = ganttConfigStore.getAt(text09SelectedRecord);
-            var text09Value = text09Record.get('value');
-            switch (text09Value) {
-                case 'Not Used':
-                    var text09Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text09columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text09columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text09columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text09Hide = false;
-                    var text09columnType = 'gridcolumn';
-                    break;
-            }
-            //text10
-            text10SelectedRecord = ganttConfigStore.findExact('name','text10');
-            var text10Record = ganttConfigStore.getAt(text10SelectedRecord);
-            var text10Value = text10Record.get('value');
-            switch (text10Value) {
-                case 'Not Used':
-                    var text10Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text10columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text10columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text10columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text010Hide = false;
-                    var text10columnType = 'gridcolumn';
-                    break;
-            }
-            //text11
-            text11SelectedRecord = ganttConfigStore.findExact('name','text11');
-            var text11Record = ganttConfigStore.getAt(text11SelectedRecord);
-            var text11Value = text11Record.get('value');
-            switch (text11Value) {
-                case 'Not Used':
-                    var text11Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text11columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text11columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text11columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text011Hide = false;
-                    var text11columnType = 'gridcolumn';
-                    break;
-            }
-            //text12
-            text12SelectedRecord = ganttConfigStore.findExact('name','text12');
-            var text12Record = ganttConfigStore.getAt(text12SelectedRecord);
-            var text12Value = text12Record.get('value');
-            switch (text12Value) {
-                case 'Not Used':
-                    var text12Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text12columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text12columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text12columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text12Hide = false;
-                    var text12columnType = 'gridcolumn';
-                    break;
-            }
-            //text13
-            text13SelectedRecord = ganttConfigStore.findExact('name','text13');
-            var text13Record = ganttConfigStore.getAt(text13SelectedRecord);
-            var text13Value = text13Record.get('value');
-            switch (text13Value) {
-                case 'Not Used':
-                    var text13Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text13columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text13columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text13columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text13Hide = false;
-                    var text13columnType = 'gridcolumn';
-                    break;
-            }
-            //text14
-            text14SelectedRecord = ganttConfigStore.findExact('name','text14');
-            var text14Record = ganttConfigStore.getAt(text14SelectedRecord);
-            var text14Value = text14Record.get('value');
-            switch (text14Value) {
-                case 'Not Used':
-                    var text14Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text14columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text14columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text14columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text14Hide = false;
-                    var columnTypemnType = 'gridcolumn';
-                    break;
-            }
-            //text15
-            text15SelectedRecord = ganttConfigStore.findExact('name','text15');
-            var text15Record = ganttConfigStore.getAt(text15SelectedRecord);
-            var text15Value = text15Record.get('value');
-            switch (text15Value) {
-                case 'Not Used':
-                    var text15Hide = true;
-                    break;
-                case 'Icon FA':
-                    var text15columnType = 'templatecolumn';
-                    break;
-                case 'Icon S/T':
-                    var text15columnType = 'templatecolumn';
-                    break;
-                case 'Icon Fab':
-                    var text15columnType = 'templatecolumn';
-                    break;
-                default :
-                    var text15Hide = false;
-                    var text15columnType = 'gridcolumn';
-                    break;
-            }
-        } catch(e) {}
-        //status date
-        var statusDateSelectedRecord = ganttConfigStore.findExact('name','statusDate');
-        var statusDateRecord = ganttConfigStore.getAt(statusDateSelectedRecord);
-        var statusDateValue = statusDateRecord.get('value');
-        Ext.define('Line', {
-            extend : 'Ext.data.Model',
-            fields : [
-                'Date',
-                'Text',
-                'Cls'
-            ]
-        });
-        var lineStore = Ext.create('Ext.data.JsonStore', {
-            model : 'Line',
-            data  : [
-                {
-                    Date : new Date(statusDateValue),
-                    Text : 'Status Date',
-                    Cls  : 'important'
-                }
-            ]
-        });
-        if (ganttExists != -1){
-            var ganttPanelCmp = Ext.getCmp('ganttPanel');
-            ganttPanelCmp.lockedGrid.reconfigure(null, [
-                {
-                    xtype : 'gridcolumn',
-                    dataIndex: 'program',
-                    header: 'Prog',
-                    width: 60
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'tailNumber',
-                    header: 'Tail Number',
-                    width: 60
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'primaryMission',
-                    header: 'Primary Mission',
-                    width: 75
-                },{
-                    xtype: 'treecolumn',
-                    header: 'Task',
-                    sortable: false,
-                    dataIndex: 'Name',
-                    width: 250,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        if (backgroundColor !== ""){
-                            switch (backgroundColor) {
-                                case 'red':
-                                    metadata.style = "background-color:#ff6666;";
-                                    return value;
-                                case 'gray':
-                                    metadata.style = "background-color:#b2b2b2";
-                                    return value;
-                                case 'orange':
-                                    metadata.style = "background-color:#FFA500";
-                                    return value;
-                                case 'blue':
-                                    metadata.style = "background-color:#7f7fff";
-                                    return value;
-                                case 'yellow':
-                                    metadata.style = "background-color:#ffff00";
-                                    return value;
-                                case 'green':
-                                    if (record.data.depth < 4) {
-                                        metadata.style = "background-color:#80B280";
-                                    }
-                                    return value;
-                                case 'lightBlue':
-                                    return value;
-                                case 'euTracker':
-                                    return value;
-                            }
-                        } else {
-                            return value;
-                        }
-                    }
-                },{
-                    xtype : 'startdatecolumn',
-                    dateFormat: 'm/d/Y',
-                    dataIndex: 'StartDate',
-                    hidden: true
-                },{
-                    xtype : 'enddatecolumn',
-                    dateFormat: 'm/d/Y',
-                    dataIndex: 'EndDate',
-                    hidden: true
-                },{
-                    xtype : 'baselinestartdatecolumn',
-                    dataIndex: 'BaselineStartDate',
-                    dateFormat: 'm-d-Y',
-                    hidden: true
-                },{
-                    xtype : 'baselineenddatecolumn',
-                    dataIndex: 'BaselineEndDate',
-                    dateFormat: 'm/d/Y',
-                    hidden: true
-                },{
-                    xtype : 'durationcolumn',
-                    hidden: true
-                },{
-                    xtype : 'datecolumn',
-                    dataIndex: 'actualStartDate',
-                    header: 'Actual Start',
-                    dateFormat: 'm/d/Y',
-                    hidden: true
-                },{
-                    xtype : 'datecolumn',
-                    dataIndex: 'actualEndDate',
-                    header: 'Actual Finish',
-                    dateFormat: 'm-d-Y',
-                    hidden: true
-                },{
-                    xtype : 'percentdonecolumn',
-                    width : 50,
-                    dataIndex: 'PercentDone',
-                    hidden: true
-                },{
-                    xtype : 'predecessorcolumn',
-                    hidden: true
-                },{
-                    xtype : 'notecolumn',
-                    hidden: true
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'outline',
-                    header: 'Outline',
-                    hidden: true
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'color',
-                    header: 'Color',
-                    hidden: true
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text01',
-                    header: text01Value,
-                    hidden: text01Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text02',
-                    header: text02Value,
-                    hidden: text02Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text03',
-                    header: text03Value,
-                    hidden: text03Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text04',
-                    header: text04Value,
-                    hidden: text04Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text05',
-                    header: text05Value,
-                    hidden: text05Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text06',
-                    header: text06Value,
-                    hidden: text06Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text07',
-                    header: text07Value,
-                    hidden: text07Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text08',
-                    header: text08Value,
-                    hidden: text08Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text09',
-                    header: text09Value,
-                    hidden: text09Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text10',
-                    header: text10Value,
-                    hidden: text10Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text11',
-                    header: text11Value,
-                    hidden: text11Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text12',
-                    header: text12Value,
-                    hidden: text12Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text13',
-                    header: text13Value,
-                    hidden: text13Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text14',
-                    header: text14Value,
-                    hidden: text14Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text15',
-                    header: text15Value,
-                    hidden: text15Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                }
-            ]);
-
-            var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-            var lockedGrid = ganttPanel.lockedGrid;
-            lockedGrid.addEvents({
-                itemClick: function() {
-                    console.log('josh');
+        onButtonClick1: function(button, e, eOpts) {
+            var me = this;
+            var myPanel = Ext.widget('mypanel');
+            var mainView = Ext.widget('mainview');
+            var taskStore = Ext.store('taskstore');
+            mainView.setLoading(true);
+            taskStore.sync({
+                callback: function() {
+                    mainView.removeAll();
+                    mainView.insert(0,myPanel);
+                    mainView.setLoading(false);
                 }
             });
-            var cols = lockedGrid.columns;
-            var count = 0;
-            for (var i=0; i < cols.length; i++) {
-                var col = cols[i];
-                if (col.hidden === false || col.hidden === undefined) {
-                    count = count + 1;
-                }
-                console.log(count);
-            }
 
-        } else {
-            yesNoStore.add({
-                name: 'ganttExists'
+        },
+
+        onEventTriggerGanttConfig: function(component, config, eventOptions) {
+
+            var me = this;
+            var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
+            var yesNoStore  = Ext.getStore('YesNoStore');
+            var selectedRecord;
+            var ganttExists = yesNoStore.findExact('name','ganttExists');
+            var mainView = Ext.ComponentManager.get('mainView');//Ext.widget('mainview');
+            var panelWidth = mainView.getWidth();
+            var panelHeight = mainView.getHeight();
+            var panelThird = panelWidth/3;
+            //finishDate
+            var finishRecordIndex = ganttConfigStore.findExact('name','finish');
+            var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+            var finishValue = finishRecord.get('value');
+            finishValue = new Date(finishValue);
+            finishValue = finishValue.setMonth(finishValue.getMonth()+6);
+            //startDate
+            var startRecordIndex = ganttConfigStore.findExact('name','start');
+            var startRecord = ganttConfigStore.getAt(startRecordIndex);
+            var startValue = startRecord.get('value');
+            startValue = new Date(startValue);
+            startValue = startValue.setMonth(startValue.getMonth()-6);
+            //columnVariant
+            var columnVariantSelectedRecord = ganttConfigStore.findExact('name','columnVariant');
+            var columnVariantRecord = ganttConfigStore.getAt(columnVariantSelectedRecord);
+            var columnVariantValue = columnVariantRecord.get('value');
+            //selectionVariant
+            var selectionVariantSelectedRecord = ganttConfigStore.findExact('name','selectionVariant');
+            var selectionVariantRecord = ganttConfigStore.getAt(selectionVariantSelectedRecord);
+            var selectionVariantValue = selectionVariantRecord.get('value');
+            //version
+            var versionSelectedRecord = ganttConfigStore.findExact('name','version');
+            var versionRecord = ganttConfigStore.getAt(versionSelectedRecord);
+            var versionValue = versionRecord.get('value');
+            try {
+                //text01
+                text01SelectedRecord = ganttConfigStore.findExact('name','text01');
+                var text01Record = ganttConfigStore.getAt(text01SelectedRecord);
+                var text01Value = text01Record.get('value');
+                switch (text01Value) {
+                    case 'Not Used':
+                        var text01Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text01columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text01columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text01columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text01Hide = false;
+                        var text01columnType = 'gridcolumn';
+                        break;
+                }
+                //text02
+                text02SelectedRecord = ganttConfigStore.findExact('name','text02');
+                var text02Record = ganttConfigStore.getAt(text02SelectedRecord);
+                var text02Value = text02Record.get('value');
+                switch (text02Value) {
+                    case 'Not Used':
+                        var text02Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text02columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text02columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text02columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text02Hide = false;
+                        var text02columnType = 'gridcolumn';
+                        break;
+                }
+                //text03
+                text03SelectedRecord = ganttConfigStore.findExact('name','text03');
+                var text03Record = ganttConfigStore.getAt(text03SelectedRecord);
+                var text03Value = text03Record.get('value');
+                switch (text03Value) {
+                    case 'Not Used':
+                        var text03Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text03columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text03columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text03columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text03Hide = false;
+                        var text03columnType = 'gridcolumn';
+                        break;
+                }
+                //text04
+                text04SelectedRecord = ganttConfigStore.findExact('name','text04');
+                var text04Record = ganttConfigStore.getAt(text04SelectedRecord);
+                var text04Value = text04Record.get('value');
+                switch (text04Value) {
+                    case 'Not Used':
+                        var text04Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text04columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text04olumnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text04columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text04Hide = false;
+                        var text04columnType = 'gridcolumn';
+                        break;
+                }
+                //text05
+                text05SelectedRecord = ganttConfigStore.findExact('name','text05');
+                var text05Record = ganttConfigStore.getAt(text05SelectedRecord);
+                var text05Value = text05Record.get('value');
+                switch (text05Value) {
+                    case 'Not Used':
+                        var text05Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text05columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text05columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text05columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text05Hide = false;
+                        var text05columnType = 'gridcolumn';
+                        break;
+                }
+                //text06
+                text06SelectedRecord = ganttConfigStore.findExact('name','text06');
+                var text06Record = ganttConfigStore.getAt(text06SelectedRecord);
+                var text06Value = text06Record.get('value');
+                switch (text06Value) {
+                    case 'Not Used':
+                        var text06Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text06columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text06columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text06columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text06Hide = false;
+                        var text06columnType = 'gridcolumn';
+                        break;
+                }
+                //text07
+                text07SelectedRecord = ganttConfigStore.findExact('name','text07');
+                var text07Record = ganttConfigStore.getAt(text07SelectedRecord);
+                var text07Value = text07Record.get('value');
+                switch (text07Value) {
+                    case 'Not Used':
+                        var text07Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text07columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text07columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text07columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text07Hide = false;
+                        var text07columnType = 'gridcolumn';
+                        break;
+                }
+                //text08
+                text08SelectedRecord = ganttConfigStore.findExact('name','text08');
+                var text08Record = ganttConfigStore.getAt(text08SelectedRecord);
+                var text08Value = text08Record.get('value');
+                switch (text08Value) {
+                    case 'Not Used':
+                        var text08Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text08columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text08columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text08columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text08Hide = false;
+                        var text08columnType = 'gridcolumn';
+                        break;
+                }
+                //text09
+                text09SelectedRecord = ganttConfigStore.findExact('name','text09');
+                var text09Record = ganttConfigStore.getAt(text09SelectedRecord);
+                var text09Value = text09Record.get('value');
+                switch (text09Value) {
+                    case 'Not Used':
+                        var text09Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text09columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text09columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text09columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text09Hide = false;
+                        var text09columnType = 'gridcolumn';
+                        break;
+                }
+                //text10
+                text10SelectedRecord = ganttConfigStore.findExact('name','text10');
+                var text10Record = ganttConfigStore.getAt(text10SelectedRecord);
+                var text10Value = text10Record.get('value');
+                switch (text10Value) {
+                    case 'Not Used':
+                        var text10Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text10columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text10columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text10columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text010Hide = false;
+                        var text10columnType = 'gridcolumn';
+                        break;
+                }
+                //text11
+                text11SelectedRecord = ganttConfigStore.findExact('name','text11');
+                var text11Record = ganttConfigStore.getAt(text11SelectedRecord);
+                var text11Value = text11Record.get('value');
+                switch (text11Value) {
+                    case 'Not Used':
+                        var text11Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text11columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text11columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text11columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text011Hide = false;
+                        var text11columnType = 'gridcolumn';
+                        break;
+                }
+                //text12
+                text12SelectedRecord = ganttConfigStore.findExact('name','text12');
+                var text12Record = ganttConfigStore.getAt(text12SelectedRecord);
+                var text12Value = text12Record.get('value');
+                switch (text12Value) {
+                    case 'Not Used':
+                        var text12Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text12columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text12columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text12columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text12Hide = false;
+                        var text12columnType = 'gridcolumn';
+                        break;
+                }
+                //text13
+                text13SelectedRecord = ganttConfigStore.findExact('name','text13');
+                var text13Record = ganttConfigStore.getAt(text13SelectedRecord);
+                var text13Value = text13Record.get('value');
+                switch (text13Value) {
+                    case 'Not Used':
+                        var text13Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text13columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text13columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text13columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text13Hide = false;
+                        var text13columnType = 'gridcolumn';
+                        break;
+                }
+                //text14
+                text14SelectedRecord = ganttConfigStore.findExact('name','text14');
+                var text14Record = ganttConfigStore.getAt(text14SelectedRecord);
+                var text14Value = text14Record.get('value');
+                switch (text14Value) {
+                    case 'Not Used':
+                        var text14Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text14columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text14columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text14columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text14Hide = false;
+                        var columnTypemnType = 'gridcolumn';
+                        break;
+                }
+                //text15
+                text15SelectedRecord = ganttConfigStore.findExact('name','text15');
+                var text15Record = ganttConfigStore.getAt(text15SelectedRecord);
+                var text15Value = text15Record.get('value');
+                switch (text15Value) {
+                    case 'Not Used':
+                        var text15Hide = true;
+                        break;
+                    case 'Icon FA':
+                        var text15columnType = 'templatecolumn';
+                        break;
+                    case 'Icon S/T':
+                        var text15columnType = 'templatecolumn';
+                        break;
+                    case 'Icon Fab':
+                        var text15columnType = 'templatecolumn';
+                        break;
+                    default :
+                        var text15Hide = false;
+                        var text15columnType = 'gridcolumn';
+                        break;
+                }
+            } catch(e) {
+                console.log(e);
+            }
+            //status date
+            var statusDateSelectedRecord = ganttConfigStore.findExact('name','statusDate');
+            var statusDateRecord = ganttConfigStore.getAt(statusDateSelectedRecord);
+            var statusDateValue = statusDateRecord.get('value');
+
+            var lineStore = Ext.create('Ext.data.JsonStore', {
+                model : 'MyApp.model.Line',
+                data  : [
+                    {
+                        Date : new Date(statusDateValue),
+                        Text : 'Status Date',
+                        Cls  : 'important'
+                    }
+                ]
             });
-            component.returnValue = Ext.applyIf(config, {
-                taskStore: me.taskStore,
-                lockedGridConfig:{
-                    width: panelThird,
-                    resizable: 'w e'
-                },
-                readOnly: true,
-                baselineVisible: false,
-                viewPreset: 'year',
-                width: panelWidth,
-                listeners: {
-                    itemclick: {
-                        fn: function () {
-                            var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                            var lockedGrid = ganttPanel.lockedGrid;
-                            lockedGrid.addEvents({
-                                itemClick: function() {
-                                    console.log('josh');
-                                }
-                            });
-                            var cols = lockedGrid.columns;
-                            var count = 0;
-                            for (var i=0; i < cols.length; i++) {
-                                var col = cols[i];
-                                if (col.hidden === false || col.hidden === undefined) {
-                                    count = count + 1;
-                                }
-                            }
-                        },
-                        scope: me
-                    }
-                },
-                plugins: [
-                    Ext.create("Sch.plugin.Lines", {
-                        showHeaderElements : true,
-                        innerTpl           : '<span class="line-text">{Text}</span>',
-                        store              : lineStore
-                    }),
-                    Ext.create("DGnt.plugin.Export", {
-                        pluginId: 'exportServer',
-                        printServer     : window.server,
-                        afterExport :  function (gantt) {
-                            Ext.Ajax.useDefaultXhrHeader = true;
-                        },
-                        beforeExport : function (gantt) {
-                            Ext.Ajax.useDefaultXhrHeader = false;
-                        },
-                        getStylesheets : function() {
-                            var translate   = true,
-                                styleSheets = Ext.getDoc().select('link[rel="stylesheet"]'),
-                                ctTmp       = Ext.get(Ext.core.DomHelper.createDom({
-                                    tag : 'div'
-                                })),
-                                stylesString;
-                            styleSheets.each(function(s) {
-                                var node    = s.dom.cloneNode(true);
-                                // put absolute URL to node `href` attribute
-                                node.setAttribute('href', s.dom.href);
-                                ctTmp.appendChild(node);
-                            });
-                            stylesString = ctTmp.dom.innerHTML + '';
-                            return stylesString;
-                        }
-                    }),
-                    //new Sch.plugin.ExcelExport()
-                ],
-                height: panelHeight-75,
-                startDate: new Date(startValue),
-                endDate: new Date(finishValue),
-                rightLabelField: {
-                    renderer : function (value, record){
-                        var color = record.get('color');
-                        var depth = record.getDepth();
-                        if (color == 'red' && depth < 3) {
-                            rightLabel = record.get('Note');
-                            return rightLabel;
-                        } if (color == 'lightBlue') {
-                            rightLabel = record.get('smDuration');
-                            rightLabel = Math.round(rightLabel);
-                            return rightLabel+' days';
-                        } else {
-                            var rightLabel = record.get('EndDate');
-                            var mth = rightLabel.getUTCMonth()+1;
-                            var day = rightLabel.getUTCDate();
-                            if (day-1===0) {
-                                switch (mth) {
-                                    case 1:
-                                        mth = mth -1;
-                                        day = '31';
-                                        break;
-                                    case 2:
-                                        mth = mth -1;
-                                        day = '31';
-                                        break;
-                                    case 3:
-                                        mth = mth -1;
-                                        day = '28';
-                                        break;
-                                    case 4:
-                                        mth = mth -1;
-                                        day = '31';
-                                        break;
-                                    case 5:
-                                        mth = mth -1;
-                                        day = '30';
-                                        break;
-                                    case 6:
-                                        mth = mth -1;
-                                        day = '31';
-                                        break;
-                                    case 7:
-                                        mth = mth -1;
-                                        day = '30';
-                                        break;
-                                    case 8:
-                                        mth = mth -1;
-                                        day = '31';
-                                        break;
-                                    case 9:
-                                        mth = mth -1;
-                                        day = '31';
-                                        break;
-                                    case 10:
-                                        mth = mth -1;
-                                        day = '30';
-                                        break;
-                                    case 11:
-                                        mth = mth -1;
-                                        day = '31';
-                                        break;
-                                    case 12:
-                                        mth = mth -1;
-                                        day = '30';
-                                        break;
-                                }
-                            } else {
-                                day = day-1;
-                            }
-                            var yr = rightLabel.getUTCFullYear();
-                            rightLabel = mth+'/'+day+'/'+yr;
-                            return rightLabel;
-                        }
-                    }
-                },
-                leftLabelField: {
-                    renderer : function (value, record){
-                        var color = record.get('color');
-                        if (color !=='lightBlue'){
-                            var leftLabel = record.get('StartDate');
-                            var mth = leftLabel.getUTCMonth()+1;
-                            var day = leftLabel.getUTCDate();
-                            var yr = leftLabel.getUTCFullYear();
-                            leftLabel = mth+'/'+day+'/'+yr;
-                            return leftLabel;
-                        } else {
-                            var leftLabelAlt = 'MR';
-                            return leftLabelAlt;
-                        }
-                    }
-                },
-                eventRenderer : function (task) {
-                    var color = task.get('color');
-                    var style = Ext.String.format('background-color: #{0};border-color:#{1}');
-                    if (color !=='') {
-                        switch (color) {
-                            case 'red':
-                                style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FF0000', 'FF0000');
-                                progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ff0000', 'ff0000');
-                                return {
-                                    style: style,
-                                    progressBarStyle: progressBarStyle,
-                                    cls: cls
-                                };
-                            //orange
-                            case 'orange':
-                                style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFA500', 'FFA500');
-                                progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ffa500', 'ffa500');
-                                return {
-                                    style: style,
-                                    progressBarStyle: progressBarStyle,
-                                    cls: cls
-                                };
-                            case 'blue':
-                                style = Ext.String.format('background-color: #{0};border-color:#{1}', '9B9BD7', '9B9BD7');
-                                progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                cls = style;
-                                return {
-                                    style: style,
-                                    progressBarStyle: progressBarStyle,
-                                    cls: cls
-                                };
-                            case 'yellow':
-                                style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
-                                progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
-                                cls = style;
-                                return {
-                                    style: style,
-                                    progressBarStyle: progressBarStyle,
-                                    cls: cls
-                                };
-                            case 'gray':
-                                style = Ext.String.format('background-color: #{0};border-color:#{1}', 'BEBEB1', 'BEBEB1');
-                                progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                cls = style;
-                                return {
-                                    style: style,
-                                    progressBarStyle: progressBarStyle,
-                                    cls: cls
-                                };
-                            case 'green':
-                                style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                                progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                cls = style;
-                                return {
-                                    style: style,
-                                    progressBarStyle: progressBarStyle,
-                                    cls: cls
-                                };
-                            case 'lightBlue':
-                                style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                                progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                cls = style;
-                                return {
-                                    style: style,
-                                    progressBarStyle: progressBarStyle,
-                                    cls: cls
-                                };
-                        }
-                    } else {
-                        //green
-                        style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                        progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                        cls = style;
-                        return {
-                            style: style,
-                            progressBarStyle: progressBarStyle,
-                            cls: cls
-                        };
-                    }
-                },
-                columns: [
+            if (ganttExists != -1){
+                var ganttPanelCmp = Ext.getCmp('ganttPanel');
+                ganttPanelCmp.lockedGrid.reconfigure(null, [
                     {
                         xtype : 'gridcolumn',
                         dataIndex: 'program',
@@ -1207,11 +492,10 @@ Ext.define('MyApp.controller.Main', {
                         width: 75
                     },{
                         xtype: 'treecolumn',
-                        header: 'Task Name',
+                        header: 'Task',
                         sortable: false,
                         dataIndex: 'Name',
                         width: 250,
-                        bodyCssClass: 'x-tree-noicon',
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
                             var backgroundColor = record.get('color');
                             if (backgroundColor !== ""){
@@ -1233,7 +517,7 @@ Ext.define('MyApp.controller.Main', {
                                         return value;
                                     case 'green':
                                         if (record.data.depth < 4) {
-                                            metadata.style = "background-color:#397D02";
+                                            metadata.style = "background-color:#80B280";
                                         }
                                         return value;
                                     case 'lightBlue':
@@ -1248,19 +532,21 @@ Ext.define('MyApp.controller.Main', {
                     },{
                         xtype : 'startdatecolumn',
                         dateFormat: 'm/d/Y',
+                        dataIndex: 'StartDate',
                         hidden: true
                     },{
                         xtype : 'enddatecolumn',
                         dateFormat: 'm/d/Y',
+                        dataIndex: 'EndDate',
                         hidden: true
                     },{
-                        //hidden : true,
                         xtype : 'baselinestartdatecolumn',
-                        dateFormat: 'm/d/Y',
+                        dataIndex: 'BaselineStartDate',
+                        dateFormat: 'm-d-Y',
                         hidden: true
                     },{
-                        //hidden : true,
                         xtype : 'baselineenddatecolumn',
+                        dataIndex: 'BaselineEndDate',
                         dateFormat: 'm/d/Y',
                         hidden: true
                     },{
@@ -1276,11 +562,12 @@ Ext.define('MyApp.controller.Main', {
                         xtype : 'datecolumn',
                         dataIndex: 'actualEndDate',
                         header: 'Actual Finish',
-                        dateFormat: 'm/d/Y',
+                        dateFormat: 'm-d-Y',
                         hidden: true
                     },{
                         xtype : 'percentdonecolumn',
                         width : 50,
+                        dataIndex: 'PercentDone',
                         hidden: true
                     },{
                         xtype : 'predecessorcolumn',
@@ -1304,7 +591,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text01Value,
                         hidden: text01Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1328,7 +614,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text02Value,
                         hidden: text02Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1352,7 +637,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text03Value,
                         hidden: text03Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1376,7 +660,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text04Value,
                         hidden: text04Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1400,7 +683,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text05Value,
                         hidden: text05Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1424,7 +706,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text06Value,
                         hidden: text06Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1448,7 +729,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text07Value,
                         hidden: text07Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1472,7 +752,6 @@ Ext.define('MyApp.controller.Main', {
                         header: text08Value,
                         hidden: text08Hide,
                         renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
                             switch (value) {
                                 //active
                                 case '#ICON_1#':
@@ -1652,706 +931,1439 @@ Ext.define('MyApp.controller.Main', {
                             }
                         }
                     }
+                ]);
+
+                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                var lockedGrid = ganttPanel.lockedGrid;
+                lockedGrid.addEvents({
+                    itemClick: function() {
+                        console.log('josh');
+                    }
+                });
+                var cols = lockedGrid.columns;
+                var count = 0;
+                for (var i=0; i < cols.length; i++) {
+                    var col = cols[i];
+                    if (col.hidden === false || col.hidden === undefined) {
+                        count = count + 1;
+                    }
+                    console.log(count);
+                }
+
+            } else {
+                yesNoStore.add({
+                    name: 'ganttExists'
+                });
+
+                component.returnValue = Ext.applyIf(config, {
+                    taskStore: me.taskStore,
+                    lockedGridConfig:{
+                        width: panelThird,
+                        resizable: 'w e'
+                    },
+                    readOnly: true,
+                    baselineVisible: false,
+                    viewPreset: 'year',
+                    width: panelWidth,
+                    listeners: {
+                        itemclick: {
+                            fn: function () {
+                                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                                var lockedGrid = ganttPanel.lockedGrid;
+                                lockedGrid.addEvents({
+                                    itemClick: function() {
+                                        console.log('josh');
+                                    }
+                                });
+                                var cols = lockedGrid.columns;
+                                var count = 0;
+                                for (var i=0; i < cols.length; i++) {
+                                    var col = cols[i];
+                                    if (col.hidden === false || col.hidden === undefined) {
+                                        count = count + 1;
+                                    }
+                                }
+                            },
+                            scope: me
+                        }
+                    },
+                    plugins: [
+                        Ext.create("Sch.plugin.Lines", {
+                            showHeaderElements : true,
+                            innerTpl           : '<span class="line-text">{Text}</span>',
+                            store              : lineStore
+                        }),
+                        Ext.create("DSch.plugin.Export", {//DGnt.plugin.Export
+                            pluginId: 'exportServer',
+                            printServer     : window.server,
+                            afterExport :  function (gantt) {
+                                Ext.Ajax.useDefaultXhrHeader = true;
+                            },
+                            beforeExport : function (gantt) {
+                                Ext.Ajax.useDefaultXhrHeader = false;
+                            },
+                            getStylesheets : function() {
+                                var translate   = true,
+                                    styleSheets = Ext.getDoc().select('link[rel="stylesheet"]'),
+                                    ctTmp       = Ext.get(Ext.core.DomHelper.createDom({
+                                        tag : 'div'
+                                    })),
+                                    stylesString;
+                                styleSheets.each(function(s) {
+                                    var node    = s.dom.cloneNode(true);
+                                    // put absolute URL to node `href` attribute
+                                    node.setAttribute('href', s.dom.href);
+                                    ctTmp.appendChild(node);
+                                });
+                                stylesString = ctTmp.dom.innerHTML + '';
+                                return stylesString;
+                            }
+                        }),
+                        //new Sch.plugin.ExcelExport()
+                    ],
+                    height: panelHeight-75,
+                    startDate: new Date(startValue),
+                    endDate: new Date(finishValue),
+                    rightLabelField: {
+                        renderer : function (value, record){
+                            var color = record.get('color');
+                            var depth = record.getDepth();
+                            if (color == 'red' && depth < 3) {
+                                rightLabel = record.get('Note');
+                                return rightLabel;
+                            } if (color == 'lightBlue') {
+                                rightLabel = record.get('smDuration');
+                                rightLabel = Math.round(rightLabel);
+                                return rightLabel+' days';
+                            } else {
+                                var rightLabel = record.get('EndDate');
+                                var mth = rightLabel.getUTCMonth()+1;
+                                var day = rightLabel.getUTCDate();
+                                if (day-1===0) {
+                                    switch (mth) {
+                                        case 1:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 2:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 3:
+                                            mth = mth -1;
+                                            day = '28';
+                                            break;
+                                        case 4:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 5:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                        case 6:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 7:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                        case 8:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 9:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 10:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                        case 11:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 12:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                    }
+                                } else {
+                                    day = day-1;
+                                }
+                                var yr = rightLabel.getUTCFullYear();
+                                rightLabel = mth+'/'+day+'/'+yr;
+                                return rightLabel;
+                            }
+                        }
+                    },
+                    leftLabelField: {
+                        renderer : function (value, record){
+                            var color = record.get('color');
+                            if (color !=='lightBlue'){
+                                var leftLabel = record.get('StartDate');
+                                var mth = leftLabel.getUTCMonth()+1;
+                                var day = leftLabel.getUTCDate();
+                                var yr = leftLabel.getUTCFullYear();
+                                leftLabel = mth+'/'+day+'/'+yr;
+                                return leftLabel;
+                            } else {
+                                var leftLabelAlt = 'MR';
+                                return leftLabelAlt;
+                            }
+                        }
+                    },
+                    eventRenderer : function (task) {
+                        var color = task.get('color');
+                        var style = Ext.String.format('background-color: #{0};border-color:#{1}');
+                        if (color !=='') {
+                            switch (color) {
+                                case 'red':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FF0000', 'FF0000');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ff0000', 'ff0000');
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                //orange
+                                case 'orange':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFA500', 'FFA500');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ffa500', 'ffa500');
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'blue':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '9B9BD7', '9B9BD7');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'yellow':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'gray':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'BEBEB1', 'BEBEB1');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'green':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'lightBlue':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                            }
+                        } else {
+                            //green
+                            style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                            progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                            cls = style;
+                            return {
+                                style: style,
+                                progressBarStyle: progressBarStyle,
+                                cls: cls
+                            };
+                        }
+                    },
+                    columns: [
+                        {
+                            xtype : 'gridcolumn',
+                            dataIndex: 'program',
+                            header: 'Prog',
+                            width: 60
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'tailNumber',
+                            header: 'Tail Number',
+                            width: 60
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'primaryMission',
+                            header: 'Primary Mission',
+                            width: 75
+                        },{
+                            xtype: 'treecolumn',
+                            header: 'Task Name',
+                            sortable: false,
+                            dataIndex: 'Name',
+                            width: 250,
+                            bodyCssClass: 'x-tree-noicon',
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                if (backgroundColor !== ""){
+                                    switch (backgroundColor) {
+                                        case 'red':
+                                            metadata.style = "background-color:#ff6666;";
+                                            return value;
+                                        case 'gray':
+                                            metadata.style = "background-color:#b2b2b2";
+                                            return value;
+                                        case 'orange':
+                                            metadata.style = "background-color:#FFA500";
+                                            return value;
+                                        case 'blue':
+                                            metadata.style = "background-color:#7f7fff";
+                                            return value;
+                                        case 'yellow':
+                                            metadata.style = "background-color:#ffff00";
+                                            return value;
+                                        case 'green':
+                                            if (record.data.depth < 4) {
+                                                metadata.style = "background-color:#397D02";
+                                            }
+                                            return value;
+                                        case 'lightBlue':
+                                            return value;
+                                        case 'euTracker':
+                                            return value;
+                                    }
+                                } else {
+                                    return value;
+                                }
+                            }
+                        },{
+                            xtype : 'startdatecolumn',
+                            dateFormat: 'm/d/Y',
+                            hidden: true
+                        },{
+                            xtype : 'enddatecolumn',
+                            dateFormat: 'm/d/Y',
+                            hidden: true
+                        },{
+                            //hidden : true,
+                            xtype : 'baselinestartdatecolumn',
+                            dateFormat: 'm/d/Y',
+                            hidden: true
+                        },{
+                            //hidden : true,
+                            xtype : 'baselineenddatecolumn',
+                            dateFormat: 'm/d/Y',
+                            hidden: true
+                        },{
+                            xtype : 'durationcolumn',
+                            hidden: true
+                        },{
+                            xtype : 'datecolumn',
+                            dataIndex: 'actualStartDate',
+                            header: 'Actual Start',
+                            dateFormat: 'm/d/Y',
+                            hidden: true
+                        },{
+                            xtype : 'datecolumn',
+                            dataIndex: 'actualEndDate',
+                            header: 'Actual Finish',
+                            dateFormat: 'm/d/Y',
+                            hidden: true
+                        },{
+                            xtype : 'percentdonecolumn',
+                            width : 50,
+                            hidden: true
+                        },{
+                            xtype : 'predecessorcolumn',
+                            hidden: true
+                        },{
+                            xtype : 'notecolumn',
+                            hidden: true
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'outline',
+                            header: 'Outline',
+                            hidden: true
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'color',
+                            header: 'Color',
+                            hidden: true
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text01',
+                            header: text01Value,
+                            hidden: text01Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text02',
+                            header: text02Value,
+                            hidden: text02Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text03',
+                            header: text03Value,
+                            hidden: text03Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text04',
+                            header: text04Value,
+                            hidden: text04Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text05',
+                            header: text05Value,
+                            hidden: text05Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text06',
+                            header: text06Value,
+                            hidden: text06Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text07',
+                            header: text07Value,
+                            hidden: text07Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text08',
+                            header: text08Value,
+                            hidden: text08Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                var backgroundColor = record.get('color');
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text09',
+                            header: text09Value,
+                            hidden: text09Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text10',
+                            header: text10Value,
+                            hidden: text10Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text11',
+                            header: text11Value,
+                            hidden: text11Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text12',
+                            header: text12Value,
+                            hidden: text12Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text13',
+                            header: text13Value,
+                            hidden: text13Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text14',
+                            header: text14Value,
+                            hidden: text14Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        },{
+                            xtype : 'gridcolumn',
+                            dataIndex: 'text15',
+                            header: text15Value,
+                            hidden: text15Hide,
+                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                                switch (value) {
+                                    //active
+                                    case '#ICON_1#':
+                                        metadata.css = 'ula-icon-2';
+                                        return;
+                                    //complete
+                                    case '#ICON_2#':
+                                        metadata.css = 'ula-icon-3';
+                                        return;
+                                    //not started
+                                    case '#ICON_3#':
+                                        metadata.css = 'ula-icon-1';
+                                        return;
+                                    default:
+                                        return value;
+                                }
+                            }
+                        }
+                    ]
+                });
+            }
+
+        },
+
+        onExpandClick: function(button, e, eOpts) {
+            var me = this;
+            var treePanel = Ext.ComponentManager.get('ganttPanel');
+            treePanel.setLoading(true);
+            Ext.defer(function(){
+                me.expandAll(treePanel);
+            }, 300);
+            treePanel.setLoading(false);
+        },
+
+        onMinimizeClick: function(button, e, eOpts) {
+            var me = this;
+            var treePanel = Ext.ComponentManager.get('ganttPanel');
+            treePanel.setLoading(true);
+            Ext.defer(function(){
+                me.collapseAll(treePanel);
+            }, 300);
+            treePanel.setLoading(false);
+        },
+
+        onPrintToPdfClick: function(button, e, eOpts) {
+            var me = this;
+            var store = Ext.getStore('InternalStore');
+            var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+            var lockedGrid = ganttPanel.lockedGrid;
+            var server = ganttPanel.getPlugin('exportServer');
+            var main = MyApp.app.getController('Main');
+            var time = new Date().getTime();
+            var check = store.findExact('name','ganttViewChanged');
+            if (check == -1) {
+                main.changeGanttView('Year');
+            }
+            main.updateInternalStore('currentTime',time);
+            server.printServer = window.server+'topdf/create_htmlPage.php?now='+time;
+            server.tpl = main.getTpl();
+            server.setFileFormat('pdf');
+            ganttPanel.showExportDialog();
+        },
+
+        onLaunch: function() {
+            var me = this;
+            // get users
+            me.getStore('UserStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            // get Selection Variants
+            me.getStore('SelectionVariantStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            // get Column Variants
+            me.getStore('ColumnStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            // get Materials
+            me.getStore('PartNumberStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            //get Column Variants
+            var ColumnVariantStoreXml = me.getStore('ColumnStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            //get Versions
+            var VersionStoreXml = me.getStore('VersionStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            //get Params
+            var ParamStoreXml = me.getStore('ParamStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            //get Tasks
+            var taskStoreXml = me.getStore('taskStore').load({
+                action: 'read',
+                scope: me
+            });
+            //get Gantt Config
+            var GanttConfigStoreXml = me.getStore('GanttConfigStoreXml').load({
+                action: 'read',
+                scope: me,
+                callback: function (){
+                    var myPanel = Ext.widget('mypanel');
+                    var mainView = Ext.ComponentManager.get('mainView');
+                    mainView.insert(0,myPanel);
+                }
+            });
+            var SelectionVariantStoreXml = me.getStore('SelectionVariantStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            var SelectedObjectStoreXml = me.getStore('SelectedObjectStoreXml').load({
+                action: 'read',
+                scope: me
+            });
+            var ParamStoreXml = me.getStore('PassedObjectsStoreXml').load({
+                action: 'read',
+                scope: me,
+                callback: function () {
+                    ParamStoreXml.each(
+                        function (record) {
+                            var name = record.get('name');
+                            var value = record.get('value');
+                            var selectedStore = Ext.getStore('SelectedObjectStoreXml');
+                            switch (name) {
+                                case 'network' :
+                                    var networkParentNode = SelectedObjectStoreXml.getNodeById("networkParentNode");
+                                    var networkChildNode = networkParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'material' :
+                                    var materialParentNode = SelectedObjectStoreXml.getNodeById("materialParentNode");
+                                    var materialChildNode = materialParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'plant' :
+                                    var plantParentNode = SelectedObjectStoreXml.getNodeById("plantParentNode");
+                                    var plantChildNode = plantParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'effectivity' :
+                                    var effectivityParentNode = SelectedObjectStoreXml.getNodeById("effectivityParentNode");
+                                    var effectivityChildNode = effectivityParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'program' :
+                                    var programParentNode = SelectedObjectStoreXml.getNodeById("programParentNode");
+                                    var programkChildNode = programParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'primaryMission' :
+                                    var primaryMissionParentNode = SelectedObjectStoreXml.getNodeById("primaryMissionParentNode");
+                                    var primaryMissionChildNode = primaryMissionParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'buildItem' :
+                                    var buildItemParentNode = SelectedObjectStoreXml.getNodeById("buildItemParentNode");
+                                    var buildItemChildNode = buildItemParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'tailNumber' :
+                                    var tailNumberParentNode = SelectedObjectStoreXml.getNodeById("tailNumberParentNode");
+                                    var tailNumberChildNode = tailNumberParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'name' :
+                                    var nameParentNode = SelectedObjectStoreXml.getNodeById("nameParentNode");
+                                    var nameChildNode = nameParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                                case 'notes' :
+                                    var notesParentNode = SelectedObjectStoreXml.getNodeById("notesParentNode");
+                                    var notesChildNode = notesParentNode.appendChild({
+                                        type: name,
+                                        number: value,
+                                        leaf: true
+                                    });
+                                    break;
+                            }
+                        }
+                    );
+                }
+            });
+            //Define Selected Objects Nodes
+            var rootNode = SelectedObjectStoreXml.getRootNode();
+            var networkNode = rootNode.appendChild({
+                id: 'networkParentNode',
+                type: "Network",
+                number: 'Network',
+                leaf: false
+            });
+            var materialNode = rootNode.appendChild({
+                id: "materialParentNode",
+                type: "Material",
+                number: "Material",
+                leaf: false
+            });
+            var effectivityNode = rootNode.appendChild({
+                id: "effectivityParentNode",
+                type: "Effectivity",
+                number: "Effectivity",
+                leaf: false
+            });
+            var plantNode = rootNode.appendChild({
+                id: "plantParentNode",
+                type: "Plant",
+                number: "Plant",
+                leaf: false
+            });
+            var programNode = rootNode.appendChild({
+                id: "programParentNode",
+                type: "Program",
+                number: "Program",
+                leaf: false
+            });
+            var primaryMissionNode = rootNode.appendChild({
+                id: "primaryMissionParentNode",
+                type: "Primary Mission",
+                number: "Primary Mission",
+                leaf: false
+            });
+            var buildItemNode = rootNode.appendChild({
+                id: "buildItemParentNode",
+                type: "Build Item",
+                number: "Build Item",
+                leaf: false
+            });
+            var tailNumberNode = rootNode.appendChild({
+                id: "tailNumberParentNode",
+                type: "Tail Number",
+                number: "Tail Number",
+                leaf: false
+            });
+            var nameNode = rootNode.appendChild({
+                id: "nameParentNode",
+                type: "Name",
+                number: "Name",
+                leaf: false
+            });
+            var notesNode = rootNode.appendChild({
+                id: "notesParentNode",
+                type: "Notes",
+                number: "Notes",
+                leaf: false
+            });
+
+        },
+
+        loadTaskStore: function(aufnr) {
+            var me = this;
+
+            me.TaskStoreXml.load({
+                action: "read",
+                scope: me,
+                params: {aufnr: aufnr},
+                listeners: {
+                    'load' : function(taskStore, startDate) {
+                        this.loaded=true;
+                    }
+                }
+            });
+
+
+        },
+
+        init: function(application) {
+            var me=this;
+            Ext.require('Gnt.model.Task');
+            Ext.define('taskStoreModel', {
+                extend : 'Gnt.model.Task',
+
+                // A custom columns
+                clsField : 'Test',
+                autoCalculatePercentDoneForParentTask   : false,
+                fields : [
+                    { name : 'network', type : 'string' },
+                    { name : 'outline', type : 'string' },
+                    { name : 'color', type : 'string' },
+                    { name : 'actualStartDate' },
+                    { name : 'actualEndDate' },
+                    { name : 'text01', type : 'string' },
+                    { name : 'text02', type : 'string' },
+                    { name : 'text03', type : 'string' },
+                    { name : 'text04', type : 'string' },
+                    { name : 'text05', type : 'string' },
+                    { name : 'text06', type : 'string' },
+                    { name : 'text07', type : 'string' },
+                    { name : 'text08', type : 'string' },
+                    { name : 'text09', type : 'string' },
+                    { name : 'text10', type : 'string' },
+                    { name : 'text11', type : 'string' },
+                    { name : 'text12', type : 'string' },
+                    { name : 'text13', type : 'string' },
+                    { name : 'text14', type : 'string' },
+                    { name : 'text15', type : 'string' },
+                    { name : 'smDuration', type : 'string' },
+                    { name : 'tailNumber', type : 'string' },//'tailNumber'
+                    { name : 'primaryMission', type : 'string' },//'primaryMission'
+                    { name : 'program', type : 'string' },//'program'
+                    { name : 'taskDescription', type : 'string' },//'taskDescription'
+                    { name : 'mission', type : 'string' },//'mission'
+                    { name : 'majorBuildSequence', type : 'string' },//'majorBuildSequence'
+                    { name : 'minorBuildSequence', type : 'string' }//'minorBuildSequence'
                 ]
             });
-        }
 
-    },
+            Ext.define('MyApp.model.Task', {
+                extend                                  : 'Gnt.model.Task',
+                autoCalculatePercentDoneForParentTask   : false
+            });
 
-    onExpandClick: function(button, e, eOpts) {
-        var me = this;
-        var treePanel = Ext.ComponentManager.get('ganttPanel');
-        treePanel.setLoading(true);
-        Ext.defer(function(){
-            me.expandAll(treePanel);
-        }, 300);
-        treePanel.setLoading(false);
-    },
-
-    onMinimizeClick: function(button, e, eOpts) {
-        var me = this;
-        var treePanel = Ext.ComponentManager.get('ganttPanel');
-        treePanel.setLoading(true);
-        Ext.defer(function(){
-            me.collapseAll(treePanel);
-        }, 300);
-        treePanel.setLoading(false);
-    },
-
-    onPrintToPdfClick: function(button, e, eOpts) {
-        var me = this;
-        var store = Ext.getStore('InternalStore');
-        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-        var lockedGrid = ganttPanel.lockedGrid;
-        var server = ganttPanel.getPlugin('exportServer');
-        var main = MyApp.app.getController('Main');
-        var time = new Date().getTime();
-        var check = store.findExact('name','ganttViewChanged');
-        if (check == -1) {
-            main.changeGanttView('Year');
-        }
-        main.updateInternalStore('currentTime',time);
-        server.printServer = window.server+'topdf/create_htmlPage.php?now='+time;
-        server.tpl = main.getTpl();
-        server.setFileFormat('pdf');
-        ganttPanel.showExportDialog();
-    },
-
-    onLaunch: function() {
-        var me = this;
-        // get users
-        me.getStore('UserStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        // get Selection Variants
-        me.getStore('SelectionVariantStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        // get Column Variants
-        me.getStore('ColumnStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        // get Materials
-        me.getStore('PartNumberStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        //get Column Variants
-        var ColumnVariantStoreXml = me.getStore('ColumnStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        //get Versions
-        var VersionStoreXml = me.getStore('VersionStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        //get Params
-        var ParamStoreXml = me.getStore('ParamStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        //get Tasks
-        var taskStoreXml = me.getStore('taskStore').load({
-            action: 'read',
-            scope: me
-        });
-        //get Gantt Config
-        var GanttConfigStoreXml = me.getStore('GanttConfigStoreXml').load({
-            action: 'read',
-            scope: me,
-            callback: function (){
-                var myPanel = Ext.widget('mypanel');
-                var mainView = Ext.widget('mainview');
-                mainView.insert(0,myPanel);
-            }
-        });
-        var SelectionVariantStoreXml = me.getStore('SelectionVariantStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        var SelectedObjectStoreXml = me.getStore('SelectedObjectStoreXml').load({
-            action: 'read',
-            scope: me
-        });
-        var ParamStoreXml = me.getStore('PassedObjectsStoreXml').load({
-            action: 'read',
-            scope: me,
-            callback: function () {
-                ParamStoreXml.each(
-                    function (record) {
-                        var name = record.get('name');
-                        var value = record.get('value');
-                        var selectedStore = Ext.getStore('SelectedObjectStoreXml');
-                        switch (name) {
-                            case 'network' :
-                                var networkParentNode = SelectedObjectStoreXml.getNodeById("networkParentNode");
-                                var networkChildNode = networkParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'material' :
-                                var materialParentNode = SelectedObjectStoreXml.getNodeById("materialParentNode");
-                                var materialChildNode = materialParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'plant' :
-                                var plantParentNode = SelectedObjectStoreXml.getNodeById("plantParentNode");
-                                var plantChildNode = plantParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'effectivity' :
-                                var effectivityParentNode = SelectedObjectStoreXml.getNodeById("effectivityParentNode");
-                                var effectivityChildNode = effectivityParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'program' :
-                                var programParentNode = SelectedObjectStoreXml.getNodeById("programParentNode");
-                                var programkChildNode = programParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'primaryMission' :
-                                var primaryMissionParentNode = SelectedObjectStoreXml.getNodeById("primaryMissionParentNode");
-                                var primaryMissionChildNode = primaryMissionParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'buildItem' :
-                                var buildItemParentNode = SelectedObjectStoreXml.getNodeById("buildItemParentNode");
-                                var buildItemChildNode = buildItemParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'tailNumber' :
-                                var tailNumberParentNode = SelectedObjectStoreXml.getNodeById("tailNumberParentNode");
-                                var tailNumberChildNode = tailNumberParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'name' :
-                                var nameParentNode = SelectedObjectStoreXml.getNodeById("nameParentNode");
-                                var nameChildNode = nameParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                            case 'notes' :
-                                var notesParentNode = SelectedObjectStoreXml.getNodeById("notesParentNode");
-                                var notesChildNode = notesParentNode.appendChild({
-                                    type: name,
-                                    number: value,
-                                    leaf: true
-                                });
-                                break;
-                        }
+            me.taskStore = Ext.create('Gnt.data.TaskStore', {
+                autoLoad    : false,
+                alias		: 'store.taskstore',
+                storeId		: 'taskStore',
+                model		: 'taskStoreModel',
+                proxy       : {
+                    type    : 'ajax',
+                    url: '/dsnwebui/dsnwebui_rest/TaskStoreXml',
+                    timeout: 3600000,
+                    reader  : {
+                        type: 'xml',
+                        rootProperty: 'Tasks',
+                        record: '>Task'
                     }
-                );
-            }
-        });
-        //Define Selected Objects Nodes
-        var rootNode = SelectedObjectStoreXml.getRootNode();
-        var networkNode = rootNode.appendChild({
-            id: 'networkParentNode',
-            type: "Network",
-            number: 'Network',
-            leaf: false
-        });
-        var materialNode = rootNode.appendChild({
-            id: "materialParentNode",
-            type: "Material",
-            number: "Material",
-            leaf: false
-        });
-        var effectivityNode = rootNode.appendChild({
-            id: "effectivityParentNode",
-            type: "Effectivity",
-            number: "Effectivity",
-            leaf: false
-        });
-        var plantNode = rootNode.appendChild({
-            id: "plantParentNode",
-            type: "Plant",
-            number: "Plant",
-            leaf: false
-        });
-        var programNode = rootNode.appendChild({
-            id: "programParentNode",
-            type: "Program",
-            number: "Program",
-            leaf: false
-        });
-        var primaryMissionNode = rootNode.appendChild({
-            id: "primaryMissionParentNode",
-            type: "Primary Mission",
-            number: "Primary Mission",
-            leaf: false
-        });
-        var buildItemNode = rootNode.appendChild({
-            id: "buildItemParentNode",
-            type: "Build Item",
-            number: "Build Item",
-            leaf: false
-        });
-        var tailNumberNode = rootNode.appendChild({
-            id: "tailNumberParentNode",
-            type: "Tail Number",
-            number: "Tail Number",
-            leaf: false
-        });
-        var nameNode = rootNode.appendChild({
-            id: "nameParentNode",
-            type: "Name",
-            number: "Name",
-            leaf: false
-        });
-        var notesNode = rootNode.appendChild({
-            id: "notesParentNode",
-            type: "Notes",
-            number: "Notes",
-            leaf: false
-        });
-
-    },
-
-    loadTaskStore: function(aufnr) {
-        var me = this;
-        debugger;
-        me.TaskStoreXml.load({
-            action: "read",
-            scope: me,
-            params: {aufnr: aufnr},
-            listeners: {
-                'load' : function(taskStore, startDate) {
-                    this.loaded=true;
-                }
-            }
-        });
-
-
-    },
-
-    init: function(application) {
-        var me=this;
-        Ext.define('taskStoreModel', {
-            extend : 'Gnt.model.Task',
-
-            // A custom columns
-            clsField : 'Test',
-            autoCalculatePercentDoneForParentTask   : false,
-            fields : [
-                { name : 'network', type : 'string' },
-                { name : 'outline', type : 'string' },
-                { name : 'color', type : 'string' },
-                { name : 'actualStartDate' },
-                { name : 'actualEndDate' },
-                { name : 'text01', type : 'string' },
-                { name : 'text02', type : 'string' },
-                { name : 'text03', type : 'string' },
-                { name : 'text04', type : 'string' },
-                { name : 'text05', type : 'string' },
-                { name : 'text06', type : 'string' },
-                { name : 'text07', type : 'string' },
-                { name : 'text08', type : 'string' },
-                { name : 'text09', type : 'string' },
-                { name : 'text10', type : 'string' },
-                { name : 'text11', type : 'string' },
-                { name : 'text12', type : 'string' },
-                { name : 'text13', type : 'string' },
-                { name : 'text14', type : 'string' },
-                { name : 'text15', type : 'string' },
-                { name : 'smDuration', type : 'string' },
-                { name : 'tailNumber', type : 'tailNumber' },
-                { name : 'primaryMission', type : 'primaryMission' },
-                { name : 'program', type : 'program' },
-                { name : 'taskDescription', type : 'taskDescription' },
-                { name : 'mission', type : 'mission' },
-                { name : 'majorBuildSequence', type : 'majorBuildSequence' },
-                { name : 'minorBuildSequence', type : 'minorBuildSequence' }
-            ]
-        });
-
-        Ext.define('MyApp.model.Task', {
-            extend                                  : 'Gnt.model.Task',
-            autoCalculatePercentDoneForParentTask   : false
-        });
-
-        me.taskStore = Ext.create('Gnt.data.TaskStore', {
-            autoLoad    : false,
-            alias		: 'store.taskstore',
-            storeId		: 'taskStore',
-            model		: 'taskStoreModel',
-            proxy       : {
-                type    : 'ajax',
-                url: '/dsnwebui/dsnwebui_rest/TaskStoreXml',
-                timeout: 3600000,
-                reader  : {
-                    type: 'xml',
-                    root: 'Tasks',
-                    record: '>Task'
-                }
-            }
-        });
-
-
-        this.control({
-            "textfield#aufnr": {
-                keypress: this.onAufnrKeypress,
-                change: this.onAufnrChange
-            },
-            "container#eventTrigger": {
-                click: this.onButtonClick1,
-                ganttConfig: this.onEventTriggerGanttConfig
-            },
-            "#expand": {
-                click: this.onExpandClick
-            },
-            "#minimize": {
-                click: this.onMinimizeClick
-            },
-            "#printToPdf": {
-                click: this.onPrintToPdfClick
-            }
-        });
-    },
-
-    onTextFieldUpdate: function(field, newValue, oldValue, eOpts) {
-        var me = this;
-        var searchStore = Ext.getStore('SearchStoreXml');
-        var parameters = {};
-        searchStore.load ({
-            parameters: {
-                name: field
-            }
-        });
-    },
-
-    expandAll: function(tree) {
-        this.updateTreeView(tree, function(root) {
-            var nodes = [];
-            root.cascadeBy(function(node) {
-                if (!node.isRoot() || tree.rootVisible) {
-                    node.data.expanded = true;
-                    nodes.push(node);
                 }
             });
-            return nodes;
-        });
 
-    },
 
-    updateTreeView: function(tree, fn) {
-        var view = tree.getView();
-        view.getStore().nodeStore.loadRecords(fn(tree.getRootNode()));
-        view.refresh();
-
-    },
-
-    collapseAll: function(tree) {
-        this.updateTreeView(tree, function(root) {
-            root.cascadeBy(function(node) {
-                if (!node.isRoot() || tree.rootVisible) {
-                    node.data.expanded = false;
+            this.control({
+                "textfield#aufnr": {
+                    keypress: this.onAufnrKeypress,
+                    change: this.onAufnrChange
+                },
+                "container#eventTrigger": {
+                    click: this.onButtonClick1,
+                    ganttConfig: this.onEventTriggerGanttConfig
+                },
+                "#expand": {
+                    click: this.onExpandClick
+                },
+                "#minimize": {
+                    click: this.onMinimizeClick
+                },
+                "#printToPdf": {
+                    click: this.onPrintToPdfClick
                 }
             });
-            return tree.rootVisible ? [root] : root.childNodes;
-        });
+        },
 
-    },
+        onTextFieldUpdate: function(field, newValue, oldValue, eOpts) {
+            var me = this;
+            var searchStore = Ext.getStore('SearchStoreXml');
+            var parameters = {};
+            searchStore.load ({
+                parameters: {
+                    name: field
+                }
+            });
+        },
 
-    updateInternalStore: function(name, value) {
-        var internals = Ext.getStore('InternalStore');
-        if (name!= -1 && value!= -1) {
-            var check = internals.findExact('name',name);
-            if (check == -1) {
-                internals.add({name: name,value: value});
+        expandAll: function(tree) {
+            this.updateTreeView(tree, function(root) {
+                var nodes = [];
+                root.cascadeBy(function(node) {
+                    if (!node.isRoot() || tree.rootVisible) {
+                        node.data.expanded = true;
+                        nodes.push(node);
+                    }
+                });
+                return nodes;
+            });
+
+        },
+
+        updateTreeView: function(tree, fn) {
+            var view = tree.getView();
+            view.getStore().nodeStore.loadRecords(fn(tree.getRootNode()));
+            view.refresh();
+
+        },
+
+        collapseAll: function(tree) {
+            this.updateTreeView(tree, function(root) {
+                root.cascadeBy(function(node) {
+                    if (!node.isRoot() || tree.rootVisible) {
+                        node.data.expanded = false;
+                    }
+                });
+                return tree.rootVisible ? [root] : root.childNodes;
+            });
+
+        },
+
+        updateInternalStore: function(name, value) {
+            var internals = Ext.getStore('InternalStore');
+            if (name!= -1 && value!= -1) {
+                var check = internals.findExact('name',name);
+                if (check == -1) {
+                    internals.add({name: name,value: value});
+                } else {
+                    internals.removeAt(check);
+                    internals.add({name: name,value: value});
+                }
+            }
+        },
+
+        getTime: function() {
+            var internals = Ext.getStore('InternalStore');
+            var now = internals.findExact('name','currentTime');
+            if (now != -1) {
+                now = internals.getAt(now).get('value');
+                return now;
             } else {
-                internals.removeAt(check);
-                internals.add({name: name,value: value});
+                return '';
             }
-        }
-    },
+        },
 
-    getTime: function() {
-        var internals = Ext.getStore('InternalStore');
-        var now = internals.findExact('name','currentTime');
-        if (now != -1) {
-            now = internals.getAt(now).get('value');
-            return now;
-        } else {
-            return '';
-        }
-    },
-
-    getDeleteStore: function(globalIndex) {
-        var store = Ext.getStore('SelectionVariantStoreXml'),
-            ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
-        if (globalIndex != -1) {
-            var globalValue = ganttConfigStore.getAt(globalIndex).get('value');
-            if (globalValue == 'X') {
-                return store;
+        getDeleteStore: function(globalIndex) {
+            var store = Ext.getStore('SelectionVariantStoreXml'),
+                ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
+            if (globalIndex != -1) {
+                var globalValue = ganttConfigStore.getAt(globalIndex).get('value');
+                if (globalValue == 'X') {
+                    return store;
+                } else {
+                    store = minVariantStore(store);
+                    return store;
+                }
             } else {
                 store = minVariantStore(store);
                 return store;
             }
-        } else {
-            store = minVariantStore(store);
-            return store;
-        }
-        function minVariantStore (variantStore) {
-            for (var i=0; i < variantStore.data.length; i++) {
-                var type = variantStore.getAt(i).get('type');
-                if (type == 'G') {
-                    variantStore.removeAt(i);
-                }
-            }
-            return variantStore;
-        }
-    },
-
-    changeGanttView: function(type) {
-        var me = this;
-        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-        var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
-        switch (type){
-            case 'Year':
-                //finishDate
-                var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                if (finishRecordIndex != -1) {
-                    var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                    var finishDate = new Date(finishRecord.get('value'));
-                    //pad by a month to have extra space in view
-                    var finishDatePad = new Date(finishDate);
-                    finishDatePad.setMonth(finishDatePad.getMonth()+20);
-                    var finishValue = new Date(finishDatePad);
-                }
-                //startDate
-                startRecordIndex = ganttConfigStore.findExact('name','start');
-                if (startRecordIndex != -1) {
-                    var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                    var startDate = new Date(startRecord.get('value'));
-                    //pad by 30 days to have extra space in view
-                    var startDatePad = new Date(startDate);
-                    startDatePad.setMonth(startDatePad.getMonth()-20);
-                    var startValue = new Date(startDatePad);
-                }
-                ganttPanel.switchViewPreset('manyYears',new Date(startValue), new Date(finishValue));
-                break;
-            case 'Year & Quarter':
-                //finishDate
-                var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                if (finishRecordIndex != -1) {
-                    var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                    var finishDate = new Date(finishRecord.get('value'));
-                    //pad by a month to have extra space in view
-                    var finishDatePad = new Date(finishDate);
-                    finishDatePad.setMonth(finishDatePad.getMonth()+20);
-                    var finishValue = new Date(finishDatePad);
-                }
-                //startDate
-                startRecordIndex = ganttConfigStore.findExact('name','start');
-                if (startRecordIndex != -1) {
-                    var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                    var startDate = new Date(startRecord.get('value'));
-                    //pad by 30 days to have extra space in view
-                    var startDatePad = new Date(startDate);
-                    startDatePad.setMonth(startDatePad.getMonth()-20);
-                    var startValue = new Date(startDatePad);
-                }
-                ganttPanel.switchViewPreset('year',new Date(startValue), new Date(finishValue));
-                break;
-            case 'Month & Year':
-                //finishDate
-                var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                if (finishRecordIndex != -1) {
-                    var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                    var finishDate = new Date(finishRecord.get('value'));
-                    //pad by a month to have extra space in view
-                    var finishDatePad = new Date(finishDate);
-                    finishDatePad.setMonth(finishDatePad.getMonth()+12);
-                    var finishValue = new Date(finishDatePad);
-                }
-                //startDate
-                startRecordIndex = ganttConfigStore.findExact('name','start');
-                if (startRecordIndex != -1) {
-                    var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                    var startDate = new Date(startRecord.get('value'));
-                    //pad by 30 days to have extra space in view
-                    var startDatePad = new Date(startDate);
-                    startDatePad.setMonth(startDatePad.getMonth()-12);
-                    var startValue = new Date(startDatePad);
-                }
-                ganttPanel.switchViewPreset('monthAndYear',new Date(startValue), new Date(finishValue));
-                break;
-            case 'Week & Month':
-                //finishDate
-                var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                if (finishRecordIndex != -1) {
-                    var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                    var finishDate = new Date(finishRecord.get('value'));
-                    //pad by a month to have extra space in view
-                    var finishDatePad = new Date(finishDate);
-                    finishDatePad.setMonth(finishDatePad.getMonth()+6);
-                    var finishValue = new Date(finishDatePad);
-                }
-                //startDate
-                startRecordIndex = ganttConfigStore.findExact('name','start');
-                if (startRecordIndex != -1) {
-                    var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                    var startDate = new Date(startRecord.get('value'));
-                    //pad by 30 days to have extra space in view
-                    var startDatePad = new Date(startDate);
-                    startDatePad.setMonth(startDatePad.getMonth()-6);
-                    var startValue = new Date(startDatePad);
-                }
-                ganttPanel.switchViewPreset('weekAndMonth',new Date(startValue), new Date(finishValue));
-                break;
-            case 'Week & Day':
-                //finishDate
-                var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                if (finishRecordIndex != -1) {
-                    var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                    var finishDate = new Date(finishRecord.get('value'));
-                    //pad by a month to have extra space in view
-                    var finishDatePad = new Date(finishDate);
-                    finishDatePad.setMonth(finishDatePad.getMonth()+4);
-                    var finishValue = new Date(finishDatePad);
-                }
-                //startDate
-                startRecordIndex = ganttConfigStore.findExact('name','start');
-                if (startRecordIndex != -1) {
-                    var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                    var startDate = new Date(startRecord.get('value'));
-                    //pad by 30 days to have extra space in view
-                    var startDatePad = new Date(startDate);
-                    startDatePad.setMonth(startDatePad.getMonth()-4);
-                    var startValue = new Date(startDatePad);
-                }
-                ganttPanel.switchViewPreset('weekAndDay',new Date(startValue), new Date(finishValue));
-                break;
-        }
-    },
-
-    updateStatusDate: function() {
-        var me = this,
-            lineStore = Ext.getStore('lineStore'),
-            ganttConfigStore = Ext.getStore('GanttConfigStoreXml'),
-            date = ganttConfigStore.getAt(ganttConfigStore.findExact('name','statusDate')).get('value');
-        lineStore.removeAll();
-        lineStore.add({
-            Date: new Date(date),
-            Text: 'Status Date',
-            Cls: 'important'
-        });
-    },
-
-    getStatusDate: function() {
-        var ganttConfigStore = Ext.getStore('GanttConfigStoreXml'),
-            date = ganttConfigStore.getAt(ganttConfigStore.findExact('name','statusDate')).get('value');
-        date = String(date).split(",");
-        var myYr = date[0];
-        var myMth = date[1];
-        var myDay = date[2];
-        date = myMth+ "/"+myDay+"/"+myYr;
-        return date;
-    },
-
-    getTpl: function() {
-        var main = MyApp.app.getController('Main'),
-            statusDate = main.getStatusDate(),
-            tpl = new Ext.XTemplate('<!DOCTYPE html>' +
-                '<html class="' + Ext.baseCSSPrefix + 'border-box {htmlClasses}" style="background-color:white !important">' +
-                '<head>' +
-                '<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />' +
-                '<title>{column}/{row}</title>' +
-                '{styles}' +
-                '</head>' +
-                '<body class="' + Ext.baseCSSPrefix + 'webkit sch-export {bodyClasses}" style="background-color:white !important">' +
-                '<tpl if="showHeader">' +
-                '<div class="ula-print-header" style="width:{totalWidth}px"><h3>{column}/{row}</h3></div>' +
-                '</tpl>' +
-                '<tpl>' +
-                '<div class="ula-print-header">' +
-                '<img src="'+window.server+'framework/extra/images/ula-logo-2.jpg" align="right"></img>' +
-                '<img src="'+window.server+'framework/extra/images/ula-logo.png" align="left"></img>' +
-                '<h2>MASTER PRODUCTION SCHEDULE (MPS)</h2>' +
-                '<h3>{[this.getPrintTitle()]}</h3>' +
-                '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
-                '</div>' +
-                '<div class="ula-print-header-text">' +
-                '<h3>Status Date: {[this.getStatusDate()]}</h3>' +
-                '</div>' +
-                '</tpl>' +
-                '<tpl>' +
-                '<div class="{componentClasses}" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
-                '{HTML}' +
-                '</div>' +
-                '</tpl>' +
-                '<tpl>' +
-                '<div class="ula-print-footer">' +
-                '<h3><div style="float:left; text-align:left; margin:-5px 0 0 0 !important">{[this.getPrintFooterLeft()]}</div></h3>' +
-                '<h3><div style="float: right; text-align:right; margin:-5px 0 0 0 !important">{[this.getPrintFooterRight()]}</div></h3>' +
-                '<h3>Page {row}</h3>' +
-                '</div>' +
-                '</tpl>' +
-                '</body>' +
-                '</html>',
-                {
-                    disableFormats: true,
-                    getStatusDate: function() {
-                        var main = MyApp.app.getController('Main');
-                        var statusDate = main.getStatusDate();
-                        return statusDate;
-                    },
-                    getPrintTitle: function() {
-                        var configStore = Ext.getStore('GanttConfigStoreXml');
-                        var printTitle = configStore.findExact('name','printTitle');
-                        if (printTitle !== -1) {
-                            printTitle = configStore.getAt(printTitle).get('value');
-                        } else {
-                            printTitle = '';
-                        }
-                        return printTitle;
-                    },
-                    getPrintFooterRight: function() {
-                        var configStore = Ext.getStore('GanttConfigStoreXml');
-                        var printFooterRight = configStore.findExact('name','printFooterRight');
-                        if (printFooterRight !== -1){
-                            printFooterRight = configStore.getAt(printFooterRight).get('value');
-                            printFooterRight.replace(/(\r\n|\n|\r)/g,"<br>");
-                        } else {
-                            printFooterRight = '';
-                        }
-                        return printFooterRight;
-                    },
-                    getPrintFooterLeft: function() {
-                        var configStore = Ext.getStore('GanttConfigStoreXml');
-                        var printFooterLeft = configStore.findExact('name','printFooterLeft');
-                        if (printFooterLeft !== -1){
-                            printFooterLeft = configStore.getAt(printFooterLeft).get('value');
-                            printFooterLeft.replace(/(\r\n|\n|\r)/g,"<br>");
-                        } else {
-                            printFooterLeft ='';
-                        }
-                        return printFooterLeft;
-                    },
-                    getPrintFooterCenter: function() {
-                        var configStore = Ext.getStore('GanttConfigStoreXml');
-                        var printFooterCenter = configStore.findExact('name','printFooterCenter');
-                        if (printFooterCenter !== -1) {
-                            printFooterCenter = configStore.getAt(printFooterCenter).get('value');
-                            printFooterCenter.replace(/(\r\n|\n|\r)/g,"<br>");
-                        } else {
-                            printFooterCenter = '';
-                        }
-                        return printFooterCenter;
+            function minVariantStore (variantStore) {
+                for (var i=0; i < variantStore.data.length; i++) {
+                    var type = variantStore.getAt(i).get('type');
+                    if (type == 'G') {
+                        variantStore.removeAt(i);
                     }
                 }
-            );
-        return tpl;
-    }
+                return variantStore;
+            }
+        },
 
-});
+        changeGanttView: function(type) {
+            var me = this;
+            var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+            var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
+            switch (type){
+                case 'Year':
+                    //finishDate
+                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex != -1) {
+                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        var finishDate = new Date(finishRecord.get('value'));
+                        //pad by a month to have extra space in view
+                        var finishDatePad = new Date(finishDate);
+                        finishDatePad.setMonth(finishDatePad.getMonth()+20);
+                        var finishValue = new Date(finishDatePad);
+                    }
+                    //startDate
+                    startRecordIndex = ganttConfigStore.findExact('name','start');
+                    if (startRecordIndex != -1) {
+                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        var startDate = new Date(startRecord.get('value'));
+                        //pad by 30 days to have extra space in view
+                        var startDatePad = new Date(startDate);
+                        startDatePad.setMonth(startDatePad.getMonth()-20);
+                        var startValue = new Date(startDatePad);
+                    }
+                    ganttPanel.switchViewPreset('manyYears',new Date(startValue), new Date(finishValue));
+                    break;
+                case 'Year & Quarter':
+                    //finishDate
+                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex != -1) {
+                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        var finishDate = new Date(finishRecord.get('value'));
+                        //pad by a month to have extra space in view
+                        var finishDatePad = new Date(finishDate);
+                        finishDatePad.setMonth(finishDatePad.getMonth()+20);
+                        var finishValue = new Date(finishDatePad);
+                    }
+                    //startDate
+                    startRecordIndex = ganttConfigStore.findExact('name','start');
+                    if (startRecordIndex != -1) {
+                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        var startDate = new Date(startRecord.get('value'));
+                        //pad by 30 days to have extra space in view
+                        var startDatePad = new Date(startDate);
+                        startDatePad.setMonth(startDatePad.getMonth()-20);
+                        var startValue = new Date(startDatePad);
+                    }
+                    ganttPanel.switchViewPreset('year',new Date(startValue), new Date(finishValue));
+                    break;
+                case 'Month & Year':
+                    //finishDate
+                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex != -1) {
+                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        var finishDate = new Date(finishRecord.get('value'));
+                        //pad by a month to have extra space in view
+                        var finishDatePad = new Date(finishDate);
+                        finishDatePad.setMonth(finishDatePad.getMonth()+12);
+                        var finishValue = new Date(finishDatePad);
+                    }
+                    //startDate
+                    startRecordIndex = ganttConfigStore.findExact('name','start');
+                    if (startRecordIndex != -1) {
+                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        var startDate = new Date(startRecord.get('value'));
+                        //pad by 30 days to have extra space in view
+                        var startDatePad = new Date(startDate);
+                        startDatePad.setMonth(startDatePad.getMonth()-12);
+                        var startValue = new Date(startDatePad);
+                    }
+                    ganttPanel.switchViewPreset('monthAndYear',new Date(startValue), new Date(finishValue));
+                    break;
+                case 'Week & Month':
+                    //finishDate
+                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex != -1) {
+                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        var finishDate = new Date(finishRecord.get('value'));
+                        //pad by a month to have extra space in view
+                        var finishDatePad = new Date(finishDate);
+                        finishDatePad.setMonth(finishDatePad.getMonth()+6);
+                        var finishValue = new Date(finishDatePad);
+                    }
+                    //startDate
+                    startRecordIndex = ganttConfigStore.findExact('name','start');
+                    if (startRecordIndex != -1) {
+                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        var startDate = new Date(startRecord.get('value'));
+                        //pad by 30 days to have extra space in view
+                        var startDatePad = new Date(startDate);
+                        startDatePad.setMonth(startDatePad.getMonth()-6);
+                        var startValue = new Date(startDatePad);
+                    }
+                    ganttPanel.switchViewPreset('weekAndMonth',new Date(startValue), new Date(finishValue));
+                    break;
+                case 'Week & Day':
+                    //finishDate
+                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex != -1) {
+                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        var finishDate = new Date(finishRecord.get('value'));
+                        //pad by a month to have extra space in view
+                        var finishDatePad = new Date(finishDate);
+                        finishDatePad.setMonth(finishDatePad.getMonth()+4);
+                        var finishValue = new Date(finishDatePad);
+                    }
+                    //startDate
+                    startRecordIndex = ganttConfigStore.findExact('name','start');
+                    if (startRecordIndex != -1) {
+                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        var startDate = new Date(startRecord.get('value'));
+                        //pad by 30 days to have extra space in view
+                        var startDatePad = new Date(startDate);
+                        startDatePad.setMonth(startDatePad.getMonth()-4);
+                        var startValue = new Date(startDatePad);
+                    }
+                    ganttPanel.switchViewPreset('weekAndDay',new Date(startValue), new Date(finishValue));
+                    break;
+            }
+        },
+
+        updateStatusDate: function() {
+            var me = this,
+                lineStore = Ext.getStore('lineStore'),
+                ganttConfigStore = Ext.getStore('GanttConfigStoreXml'),
+                date = ganttConfigStore.getAt(ganttConfigStore.findExact('name','statusDate')).get('value');
+            lineStore.removeAll();
+            lineStore.add({
+                Date: new Date(date),
+                Text: 'Status Date',
+                Cls: 'important'
+            });
+        },
+
+        getStatusDate: function() {
+            var ganttConfigStore = Ext.getStore('GanttConfigStoreXml'),
+                date = ganttConfigStore.getAt(ganttConfigStore.findExact('name','statusDate')).get('value');
+            date = String(date).split(",");
+            var myYr = date[0];
+            var myMth = date[1];
+            var myDay = date[2];
+            date = myMth+ "/"+myDay+"/"+myYr;
+            return date;
+        },
+
+        getTpl: function() {
+            var main = MyApp.app.getController('Main'),
+                statusDate = main.getStatusDate(),
+                tpl = new Ext.XTemplate('<!DOCTYPE html>' +
+                    '<html class="' + Ext.baseCSSPrefix + 'border-box {htmlClasses}" style="background-color:white !important">' +
+                    '<head>' +
+                    '<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />' +
+                    '<title>{column}/{row}</title>' +
+                    '{styles}' +
+                    '</head>' +
+                    '<body class="' + Ext.baseCSSPrefix + 'webkit sch-export {bodyClasses}" style="background-color:white !important">' +
+                    '<tpl if="showHeader">' +
+                    '<div class="ula-print-header" style="width:{totalWidth}px"><h3>{column}/{row}</h3></div>' +
+                    '</tpl>' +
+                    '<tpl>' +
+                    '<div class="ula-print-header">' +
+                    '<img src="'+window.server+'framework/extra/images/ula-logo-2.jpg" align="right"></img>' +
+                    '<img src="'+window.server+'framework/extra/images/ula-logo.png" align="left"></img>' +
+                    '<h2>MASTER PRODUCTION SCHEDULE (MPS)</h2>' +
+                    '<h3>{[this.getPrintTitle()]}</h3>' +
+                    '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
+                    '</div>' +
+                    '<div class="ula-print-header-text">' +
+                    '<h3>Status Date: {[this.getStatusDate()]}</h3>' +
+                    '</div>' +
+                    '</tpl>' +
+                    '<tpl>' +
+                    '<div class="{componentClasses}" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
+                    '{HTML}' +
+                    '</div>' +
+                    '</tpl>' +
+                    '<tpl>' +
+                    '<div class="ula-print-footer">' +
+                    '<h3><div style="float:left; text-align:left; margin:-5px 0 0 0 !important">{[this.getPrintFooterLeft()]}</div></h3>' +
+                    '<h3><div style="float: right; text-align:right; margin:-5px 0 0 0 !important">{[this.getPrintFooterRight()]}</div></h3>' +
+                    '<h3>Page {row}</h3>' +
+                    '</div>' +
+                    '</tpl>' +
+                    '</body>' +
+                    '</html>',
+                    {
+                        disableFormats: true,
+                        getStatusDate: function() {
+                            var main = MyApp.app.getController('Main');
+                            var statusDate = main.getStatusDate();
+                            return statusDate;
+                        },
+                        getPrintTitle: function() {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printTitle = configStore.findExact('name','printTitle');
+                            if (printTitle !== -1) {
+                                printTitle = configStore.getAt(printTitle).get('value');
+                            } else {
+                                printTitle = '';
+                            }
+                            return printTitle;
+                        },
+                        getPrintFooterRight: function() {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printFooterRight = configStore.findExact('name','printFooterRight');
+                            if (printFooterRight !== -1){
+                                printFooterRight = configStore.getAt(printFooterRight).get('value');
+                                printFooterRight.replace(/(\r\n|\n|\r)/g,"<br>");
+                            } else {
+                                printFooterRight = '';
+                            }
+                            return printFooterRight;
+                        },
+                        getPrintFooterLeft: function() {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printFooterLeft = configStore.findExact('name','printFooterLeft');
+                            if (printFooterLeft !== -1){
+                                printFooterLeft = configStore.getAt(printFooterLeft).get('value');
+                                printFooterLeft.replace(/(\r\n|\n|\r)/g,"<br>");
+                            } else {
+                                printFooterLeft ='';
+                            }
+                            return printFooterLeft;
+                        },
+                        getPrintFooterCenter: function() {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printFooterCenter = configStore.findExact('name','printFooterCenter');
+                            if (printFooterCenter !== -1) {
+                                printFooterCenter = configStore.getAt(printFooterCenter).get('value');
+                                printFooterCenter.replace(/(\r\n|\n|\r)/g,"<br>");
+                            } else {
+                                printFooterCenter = '';
+                            }
+                            return printFooterCenter;
+                        }
+                    }
+                );
+            return tpl;
+        }
+
+    });
+
+
+

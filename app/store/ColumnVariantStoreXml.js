@@ -14,7 +14,7 @@
  */
 
 Ext.define('MyApp.store.ColumnVariantStoreXml', {
-    extend: 'Ext.data.Store',
+    extend: 'Ext.data.BufferedStore',
 
     requires: [
         'MyApp.model.ColumnVariantModel',
@@ -29,13 +29,13 @@ Ext.define('MyApp.store.ColumnVariantStoreXml', {
             model: 'MyApp.model.ColumnVariantModel',
             timeout: 3000000,
             storeId: 'ColumnVariantStoreXml',
-            buffered: true,
+            //buffered: true,
             proxy: {
                 type: 'ajax',
                 url: '/dsnwebui/dsnwebui_rest/ColumnVariantStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

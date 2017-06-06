@@ -34,7 +34,7 @@ Ext.define('MyApp.store.UserStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/UserStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

@@ -1,0 +1,16 @@
+.x-dd-drag-proxy.sch-gantt-dragcreator-proxy,
+.sch-gantt-dragcreator-proxy
+{
+	position:absolute;
+    left:0;
+    top:0;
+    width:0;
+    border:1px solid #3399bb;
+    cursor:auto !important;
+	opacity: .5;
+    filter:alpha(opacity=50);
+    zoom:1;
+    background-color:#c3daf9;
+    z-index:10000;
+}
+

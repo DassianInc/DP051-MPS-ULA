@@ -40,7 +40,7 @@ Ext.define('MyApp.store.SearchStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/SearchStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root'
+                    rootProperty: 'root'
                 },
                 writer: {
                     type: 'xml',

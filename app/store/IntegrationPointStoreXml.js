@@ -33,7 +33,7 @@ Ext.define('MyApp.store.IntegrationPointStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/IntegrationPointStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

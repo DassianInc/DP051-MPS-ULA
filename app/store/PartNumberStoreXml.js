@@ -40,7 +40,7 @@ Ext.define('MyApp.store.PartNumberStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/PartNumbersStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

@@ -34,274 +34,272 @@ Ext.define('MyApp.view.MyPanel12', {
 
     initComponent: function() {
         var me = this;
-
-        Ext.applyIf(me, {
-            dockedItems: [
-                {
-                    xtype: 'toolbar',
-                    dock: 'top',
-                    defaultAlign: 'tl-bl',
-                    layout: {
-                        type: 'hbox',
-                        padding: 5
-                    },
-                    items: [
-                        {
-                            xtype: 'button',
-                            height: 35,
-                            width: 35,
-                            icon: 'images/power.png',
-                            iconAlign: 'bottom',
-                            scale: 'large',
-                            text: '',
-                            tooltip: 'Run',
-                            listeners: {
-                                click: {
-                                    fn: me.onButtonClick1,
-                                    scope: me
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'button',
-                            icon: 'images/settings.png',
-                            scale: 'large',
-                            text: '',
-                            tooltip: 'Selection Settings',
-                            listeners: {
-                                click: {
-                                    fn: me.onButtonClick,
-                                    scope: me
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'button',
-                            handler: function(button, e) {
-                                var ganttPanelExcel = Ext.getCmp('ganttPanel');
-                                var ganttPanelGrid = ganttPanelExcel.lockedGrid;
-                                //ganttPanelGrid.initPlugin(
-                                //    new Sch.plugin.ExcelExport()
-                                //);
-                                ganttPanelExcel.exportToExcel();
-                            },
-                            hidden: true,
-                            id: 'exportToExcel',
-                            icon: 'images/excel.png',
-                            scale: 'large',
-                            text: ''
-                        },
-                        {
-                            xtype: 'button',
-                            id: 'printToPdf',
-                            icon: 'images/pdf.png',
-                            scale: 'large',
-                            text: '',
-                            tooltip: 'Print to PDF'
-                        },
-                        {
-                            xtype: 'button',
-                            height: 35,
-                            id: '',
-                            itemId: 'expand',
-                            width: 35,
-                            icon: 'images/expand.png',
-                            scale: 'large',
-                            text: '',
-                            tooltip: 'Expand All'
-                        },
-                        {
-                            xtype: 'button',
-                            height: 35,
-                            itemId: 'minimize',
-                            width: 35,
-                            icon: 'images/minimize.png',
-                            scale: 'large',
-                            text: '',
-                            tooltip: 'Minimize All'
-                        },
-                        {
-                            xtype: 'button',
-                            handler: function(button, e) {
-                                var me = this;
-                                var ganttStore = Ext.getStore('GanttConfigStoreXml');
-                                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                                var x = ganttStore.findExact('name','baselineShow');
-                                //check to see if it is the first baseline request
-                                if (x==-1){
-                                    ganttStore.add({
-                                        name: 'baselineShow',
-                                        value: 'x'
-                                    });
-                                    ganttPanel.showBaseline();
-                                } else {
-                                    ganttPanel.el.toggleCls('sch-ganttpanel-showbaseline');
-                                }
-
-                            },
-                            height: 35,
-                            itemId: 'showBaseline',
-                            width: 35,
-                            enableToggle: true,
-                            icon: 'images/baseline.png',
-                            scale: 'large',
-                            tooltip: 'Toggle Baseline',
-                            listeners: {
-                                afterrender: {
-                                    fn: me.onShowBaselineAfterRender,
-                                    scope: me
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'button',
-                            handler: function(button, e) {
-                                var me = this;
-                                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                                ganttPanel.el.toggleCls('hide-labels');
-
-                            },
-                            height: 35,
-                            itemId: 'showLabels',
-                            width: 35,
-                            enableToggle: true,
-                            icon: 'images/labels.png',
-                            scale: 'large',
-                            tooltip: 'Toggle Labels'
-                        },
-                        {
-                            xtype: 'tbspacer',
-                            width: 15
-                        },
-                        {
-                            xtype: 'combobox',
-                            fieldLabel: 'Version',
-                            labelAlign: 'top',
-                            labelWidth: 50,
-                            inputId: 'versionValue',
-                            displayField: 'description',
-                            store: 'VersionStoreXml',
-                            listeners: {
-                                select: {
-                                    fn: me.onComboboxSelect1,
-                                    scope: me
-                                },
-                                afterrender: {
-                                    fn: me.onComboboxAfterRender,
-                                    scope: me
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'combobox',
-                            itemId: 'column_variant',
-                            padding: 10,
-                            width: 200,
-                            fieldLabel: 'Column Variant',
-                            labelAlign: 'top',
-                            name: 'column_variant',
-                            inputId: 'columnVariantValue',
-                            displayField: 'description',
-                            forceSelection: true,
-                            queryMode: 'local',
-                            store: 'ColumnStoreXml',
-                            listeners: {
-                                select: {
-                                    fn: me.onColumn_variantSelect,
-                                    scope: me
-                                },
-                                afterrender: {
-                                    fn: me.onColumn_variantAfterRender,
-                                    scope: me
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'combobox',
-                            itemId: 'selection_variant',
-                            padding: 10,
-                            width: 200,
-                            fieldLabel: 'Selection Variant',
-                            labelAlign: 'top',
-                            labelPad: 0,
-                            name: 'selection_variant',
-                            inputId: 'selectionVariantValue',
-                            displayField: 'description',
-                            forceSelection: true,
-                            queryMode: 'local',
-                            store: 'SelectionVariantStoreXml',
-                            listeners: {
-                                select: {
-                                    fn: me.onSelection_variantSelect,
-                                    scope: me
-                                },
-                                afterrender: {
-                                    fn: me.onSelection_variantAfterRender,
-                                    scope: me
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'combobox',
-                            fieldLabel: 'Change Gantt View',
-                            labelAlign: 'top',
-                            inputId: 'ganttViewInput',
-                            displayField: 'name',
-                            store: 'GanttViewStore',
-                            listeners: {
-                                select: {
-                                    fn: me.onComboboxSelect,
-                                    scope: me
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'tbspacer',
-                            width: 10
-                        },
-                        {
-                            xtype: 'tbtext',
-                            id: 'recordCount',
-                            text: 'Record Count: None Loaded'
-                        }
-                    ]
-                }
-            ],
+        var ganttConfig = me.processGanttPanel({
+            xtype: 'ganttpanel',
+            enableBaseline: true,
+            showTodayLine: false,
+            autoFitOnLoad: true,
+            autoRender: true,
+            autoShow: true,
+            cls: 'x-tree-noicon',
+            id: 'ganttPanel',
+            itemId: 'ganttPanel',
+            resizable: true,
+            header: false,
+            icon: 'images/ula-logo.png',
+            iconCls: 'ula-header-icon',
+            title: 'MASTER PRODUCTION SCHEDULE (MPS)',
+            titleAlign: 'center',
             items: [
-                me.processGanttPanel({
-                    xtype: 'ganttpanel',
-                    enableBaseline: true,
-                    showTodayLine: false,
-                    autoFitOnLoad: true,
-                    autoRender: true,
-                    autoShow: true,
-                    cls: 'x-tree-noicon',
-                    id: 'ganttPanel',
-                    itemId: 'ganttPanel',
-                    resizable: true,
-                    header: false,
-                    icon: 'images/ula-logo.png',
-                    iconCls: 'ula-header-icon',
-                    title: 'MASTER PRODUCTION SCHEDULE (MPS)',
-                    titleAlign: 'center',
-                    items: [
-                        {
-                            xtype: 'treepanel',
-                            hidden: true,
-                            width: 150,
-                            collapseDirection: 'left',
-                            collapsed: false,
-                            collapsible: true,
-                            title: 'Selected Objects',
-                            store: 'SelectedObjectStoreXml',
-                            displayField: 'number',
-                            rootVisible: false,
-                            useArrows: true
-                        }
-                    ]
-                })
+                {
+                    xtype: 'treepanel',
+                    hidden: true,
+                    width: 150,
+                    collapseDirection: 'left',
+                    collapsed: false,
+                    collapsible: true,
+                    title: 'Selected Objects',
+                    store: 'SelectedObjectStoreXml',
+                    displayField: 'number',
+                    rootVisible: false,
+                    useArrows: true
+                }
             ]
         });
+
+        Ext.applyIf(me, {
+            items: [ganttConfig]
+        });
+        me.dockedItems = [{
+            defaultAlign: 'tl-bl',
+            xtype: 'toolbar',
+            dock: 'top',
+            region: 'myPanel-north-handle',
+            layout: {
+                type: 'hbox',
+                padding: 0
+            },
+            items: [
+                {
+                    xtype: 'button',
+                    height: 35,
+                    width: 35,
+                    icon: 'images/power.png',
+                    iconAlign: 'bottom',
+                    scale: 'large',
+                    text: '',
+                    tooltip: 'Run',
+                    listeners: {
+                        click: {
+                            fn: me.openSettings1,
+                            scope: me
+                        }
+                    }
+                },
+                {
+                    xtype: 'button',
+                    icon: 'images/settings.png',
+                    scale: 'large',
+                    text: '',
+                    tooltip: 'Selection Settings',
+                    listeners: {
+                        click: {
+                            fn: me.openSettings,
+                            scope: me
+                        }
+                    }
+                },
+                {
+                    xtype: 'button',
+                    handler: function (button, e) {
+                        var ganttPanelExcel = Ext.getCmp('ganttPanel');
+                        var ganttPanelGrid = ganttPanelExcel.lockedGrid;
+                        //ganttPanelGrid.initPlugin(
+                        //    new Sch.plugin.ExcelExport()
+                        //);
+                        ganttPanelExcel.exportToExcel();
+                    },
+                    hidden: true,
+                    id: 'exportToExcel',
+                    icon: 'images/excel.png',
+                    scale: 'large',
+                    text: ''
+                },
+                {
+                    xtype: 'button',
+                    id: 'printToPdf',
+                    icon: 'images/pdf.png',
+                    scale: 'large',
+                    text: '',
+                    tooltip: 'Print to PDF'
+                },
+                {
+                    xtype: 'button',
+                    height: 35,
+                    //id: '',
+                    itemId: 'expand',
+                    width: 35,
+                    icon: 'images/expand.png',
+                    scale: 'large',
+                    text: '',
+                    tooltip: 'Expand All'
+                },
+                {
+                    xtype: 'button',
+                    height: 35,
+                    itemId: 'minimize',
+                    width: 35,
+                    icon: 'images/minimize.png',
+                    scale: 'large',
+                    text: '',
+                    tooltip: 'Minimize All'
+                },
+                {
+                    xtype: 'button',
+                    handler: function (button, e) {
+                        var me = this;
+                        var ganttStore = Ext.getStore('GanttConfigStoreXml');
+                        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                        var x = ganttStore.findExact('name', 'baselineShow');
+                        //check to see if it is the first baseline request
+                        if (x == -1) {
+                            ganttStore.add({
+                                name: 'baselineShow',
+                                value: 'x'
+                            });
+                            ganttPanel.showBaseline();
+                        } else {
+                            ganttPanel.el.toggleCls('sch-ganttpanel-showbaseline');
+                        }
+
+                    },
+                    height: 35,
+                    itemId: 'showBaseline',
+                    width: 35,
+                    enableToggle: true,
+                    icon: 'images/baseline.png',
+                    scale: 'large',
+                    tooltip: 'Toggle Baseline',
+                    listeners: {
+                        afterrender: {
+                            fn: me.onShowBaselineAfterRender,
+                            scope: me
+                        }
+                    }
+                },
+                {
+                    xtype: 'button',
+                    handler: function (button, e) {
+                        var me = this;
+                        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                        ganttPanel.el.toggleCls('hide-labels');
+
+                    },
+                    height: 35,
+                    itemId: 'showLabels',
+                    width: 35,
+                    enableToggle: true,
+                    icon: 'images/labels.png',
+                    scale: 'large',
+                    tooltip: 'Toggle Labels'
+                },
+                {
+                    xtype: 'tbspacer',
+                    width: 15
+                },
+                {
+                    xtype: 'combobox',
+                    fieldLabel: 'Version',
+                    labelAlign: 'top',
+                    labelWidth: 50,
+                    inputId: 'versionValue',
+                    displayField: 'description',
+                    store: 'VersionStoreXml',
+                    listeners: {
+                        select: {
+                            fn: me.onComboboxSelect1,
+                            scope: me
+                        },
+                        afterrender: {
+                            fn: me.onComboboxAfterRender,
+                            scope: me
+                        }
+                    }
+                },
+                {
+                    xtype: 'combobox',
+                    itemId: 'column_variant',
+                    padding: 10,
+                    width: 200,
+                    fieldLabel: 'Column Variant',
+                    labelAlign: 'top',
+                    name: 'column_variant',
+                    inputId: 'columnVariantValue',
+                    displayField: 'description',
+                    forceSelection: true,
+                    queryMode: 'local',
+                    store: 'ColumnStoreXml',
+                    listeners: {
+                        select: {
+                            fn: me.onColumn_variantSelect,
+                            scope: me
+                        },
+                        afterrender: {
+                            fn: me.onColumn_variantAfterRender,
+                            scope: me
+                        }
+                    }
+                },
+                {
+                    xtype: 'combobox',
+                    itemId: 'selection_variant',
+                    padding: 10,
+                    width: 200,
+                    fieldLabel: 'Selection Variant',
+                    labelAlign: 'top',
+                    labelPad: 0,
+                    name: 'selection_variant',
+                    inputId: 'selectionVariantValue',
+                    displayField: 'description',
+                    forceSelection: true,
+                    queryMode: 'local',
+                    store: 'SelectionVariantStoreXml',
+                    listeners: {
+                        select: {
+                            fn: me.onSelection_variantSelect,
+                            scope: me
+                        },
+                        afterrender: {
+                            fn: me.onSelection_variantAfterRender,
+                            scope: me
+                        }
+                    }
+                },
+                {
+                    xtype: 'combobox',
+                    fieldLabel: 'Change Gantt View',
+                    labelAlign: 'top',
+                    inputId: 'ganttViewInput',
+                    displayField: 'name',
+                    store: 'GanttViewStore',
+                    listeners: {
+                        select: {
+                            fn: me.onComboboxSelect,
+                            scope: me
+                        }
+                    }
+                },
+                {
+                    xtype: 'tbspacer',
+                    width: 10
+                },
+                {
+                    xtype: 'tbtext',
+                    id: 'recordCount',
+                    text: 'Record Count: None Loaded'
+                }
+            ]
+        }];
 
         me.callParent(arguments);
     },
@@ -321,7 +319,7 @@ Ext.define('MyApp.view.MyPanel12', {
         return me.returnValue;
     },
 
-    onButtonClick1: function(button, e, eOpts) {
+    openSettings1: function(button, e, eOpts) {
         var me = this;
         var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
         var promptShow = ganttConfigStore.findExact('name','noPrompt');
@@ -587,16 +585,9 @@ Ext.define('MyApp.view.MyPanel12', {
             });
         }
 
-
-
-
-
-
-
-
     },
 
-    onButtonClick: function(button, e, eOpts) {
+    openSettings: function(button, e, eOpts) {
         Ext.require([
             'Ext.grid.*',
             'Ext.data.*',
@@ -651,6 +642,7 @@ Ext.define('MyApp.view.MyPanel12', {
 
         //define selection window
         var selectionWindow = Ext.ComponentQuery.query('selectionwindow[fieldname='+me.itemId+']')[0];
+
         var clickMenu = Ext.menu.Menu({
             id:'nodeClickMenu',
             focusOnToFront: true,
@@ -2373,7 +2365,7 @@ Ext.define('MyApp.view.MyPanel12', {
                         value :''
                     });
                 }
-                me.eventTrigger.fireEvent('ganttConfig', me);
+                me.eventTrigger.fireEvent('ganttConfig');//doFireEvent
                 ganttPanel.setLoading(false);
             }
         });
@@ -2657,7 +2649,8 @@ Ext.define('MyApp.view.MyPanel12', {
                 name: 'ganttViewChanged'
             });
         }
-        main.changeGanttView(records[0].get('name'));
+        record = 'length' in records ? records[0] : records;
+        main.changeGanttView(record.get('name'));
 
     }
 

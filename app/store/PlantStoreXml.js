@@ -39,7 +39,7 @@ Ext.define('MyApp.store.PlantStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/PlantStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

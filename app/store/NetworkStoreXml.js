@@ -40,7 +40,7 @@ Ext.define('MyApp.store.NetworkStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/NetworkStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

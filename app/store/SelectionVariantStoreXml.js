@@ -34,7 +34,7 @@ Ext.define('MyApp.store.SelectionVariantStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/SelectionVariantStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

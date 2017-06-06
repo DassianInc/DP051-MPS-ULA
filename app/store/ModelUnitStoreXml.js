@@ -33,7 +33,7 @@ Ext.define('MyApp.store.ModelUnitStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/UnitModelStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

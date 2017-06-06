@@ -33,7 +33,7 @@ Ext.define('MyApp.store.ControlPointStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/ControlPointStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

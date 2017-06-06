@@ -14,10 +14,14 @@
  */
 
 // @require @packageOverrides
+/*
+Ext.Loader.setPath({
+    'Gnt.model.Task' : 'resources/gantt/gntPlugin.js'
+});*/
+
 Ext.Loader.setConfig({
     enabled: true
 });
-
 
 Ext.application({
     models: [
@@ -27,6 +31,7 @@ Ext.application({
         'IntegrationPointModel',
         'ModelUnitModel',
         'UserModel',
+        //'LineModel',
         'SelectionVariantModel',
         'ColumnVariantModel',
         'SelectedObjectModel',
@@ -83,9 +88,9 @@ Ext.application({
         'Main'
     ],
     name: 'MyApp',
-
     launch: function() {
         Ext.create('MyApp.view.MainViewport');
     }
 
 });
+

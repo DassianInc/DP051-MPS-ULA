@@ -1,6 +1,6 @@
 requirejs.config({
     paths: {
-        jquery: 'vendor/jquery.min'
+        jquery: 'resources/jquery'
     }
 });
 require(['jquery'],function($){

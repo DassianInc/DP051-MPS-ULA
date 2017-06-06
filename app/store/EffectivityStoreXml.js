@@ -39,7 +39,7 @@ Ext.define('MyApp.store.EffectivityStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/EffectivityStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

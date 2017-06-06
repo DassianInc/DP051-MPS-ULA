@@ -33,7 +33,7 @@ Ext.define('MyApp.store.ColumnStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/ColumnVariantStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

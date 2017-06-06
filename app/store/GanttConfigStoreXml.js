@@ -34,7 +34,7 @@ Ext.define('MyApp.store.GanttConfigStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/GanttConfigStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

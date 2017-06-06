@@ -1,0 +1,53 @@
+.gnt-resourceutilizationpanel .sch-timelineview .x-grid-item
+{
+    border-top-color:transparent;
+    border-bottom-color:transparent;
+}
+
+.gnt-utilization-interval {
+    background   : transparent;
+    text-align   : center;
+    box-shadow   : none;
+    height       : 100% !important;
+}
+
+.gnt-utilization-interval,
+.gnt-utilization-interval.sch-event-hover {
+    border-color : transparent;
+}
+
+.gnt-resourceutilizationpanel .x-grid-cell-inner-treecolumn {
+    padding-top : 12px;
+}
+
+.gnt-utilizationrow-task .x-grid-cell-inner-treecolumn,
+.gnt-utilizationrow-task .sch-event {
+    color : #666;
+}
+
+.gnt-resourceutilizationpanel .sch-event-inner {
+    padding : 10px 0;
+}
+
+.gnt-utilizationrow-resource .sch-event {
+    background  : #e0e0e0;
+    font-weight : bold;
+}
+
+.gnt-utilizationrow-resource .gnt-utilization-optimal {
+    background : #60a354;
+    color      : #fff;
+}
+
+.gnt-utilizationrow-resource .gnt-utilization-over {
+    background : red;
+    color      : #fff;
+}
+
+.gnt-utilizationrow-resource .gnt-utilization-under {
+    background : #bbb;
+}
+
+.gnt-resourceutilizationpanel .x-tree-icon {
+    display : none;
+}

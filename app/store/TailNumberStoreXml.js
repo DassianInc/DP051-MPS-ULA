@@ -39,7 +39,7 @@ Ext.define('MyApp.store.TailNumberStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/NetworkStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }

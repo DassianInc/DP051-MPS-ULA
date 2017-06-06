@@ -34,7 +34,7 @@ Ext.define('MyApp.store.VersionStoreXml', {
                 url: '/dsnwebui/dsnwebui_rest/VersionStoreXml',
                 reader: {
                     type: 'xml',
-                    root: 'root',
+                    rootProperty: 'root',
                     record: 'record'
                 }
             }
