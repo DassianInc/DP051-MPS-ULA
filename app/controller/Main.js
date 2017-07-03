@@ -88,6 +88,7 @@
 
         },
 
+        /** Rebuilds based on Changed Config **/
         onEventTriggerGanttConfig: function(component, config, eventOptions) {
 
             var me = this;
@@ -970,11 +971,12 @@
                             fn: function () {
                                 var ganttPanel = Ext.ComponentManager.get('ganttPanel');
                                 var lockedGrid = ganttPanel.lockedGrid;
-                                lockedGrid.addEvents({
+                               /* Ext.mixin.Observable#addEvents" is deprecated.
+                               lockedGrid.addEvents({
                                     itemClick: function() {
                                         console.log('josh');
                                     }
-                                });
+                                });*/
                                 var cols = lockedGrid.columns;
                                 var count = 0;
                                 for (var i=0; i < cols.length; i++) {
@@ -995,28 +997,13 @@
                         }),
                         Ext.create("DSch.plugin.Export", {//DGnt.plugin.Export
                             pluginId: 'exportServer',
+                            name:'Export',
                             printServer     : window.server,
                             afterExport :  function (gantt) {
                                 Ext.Ajax.useDefaultXhrHeader = true;
                             },
                             beforeExport : function (gantt) {
                                 Ext.Ajax.useDefaultXhrHeader = false;
-                            },
-                            getStylesheets : function() {
-                                var translate   = true,
-                                    styleSheets = Ext.getDoc().select('link[rel="stylesheet"]'),
-                                    ctTmp       = Ext.get(Ext.core.DomHelper.createDom({
-                                        tag : 'div'
-                                    })),
-                                    stylesString;
-                                styleSheets.each(function(s) {
-                                    var node    = s.dom.cloneNode(true);
-                                    // put absolute URL to node `href` attribute
-                                    node.setAttribute('href', s.dom.href);
-                                    ctTmp.appendChild(node);
-                                });
-                                stylesString = ctTmp.dom.innerHTML + '';
-                                return stylesString;
                             }
                         }),
                         //new Sch.plugin.ExcelExport()
@@ -1704,9 +1691,12 @@
             server.setFileFormat('pdf');
             ganttPanel.showExportDialog();
         },
-
+        setServer:function(){
+            window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/';
+        },
         onLaunch: function() {
             var me = this;
+            me.setServer();
             // get users
             me.getStore('UserStoreXml').load({
                 action: 'read',
@@ -2054,7 +2044,7 @@
 
         updateTreeView: function(tree, fn) {
             var view = tree.getView();
-            view.getStore().nodeStore.loadRecords(fn(tree.getRootNode()));
+            view.getStore().loadRecords(fn(tree.getRootNode()));// undefined view.getStore().nodeStore
             view.refresh();
 
         },
@@ -2271,42 +2261,44 @@
         getTpl: function() {
             var main = MyApp.app.getController('Main'),
                 statusDate = main.getStatusDate(),
+                //framework/extra/
+                //framework/extra/
                 tpl = new Ext.XTemplate('<!DOCTYPE html>' +
                     '<html class="' + Ext.baseCSSPrefix + 'border-box {htmlClasses}" style="background-color:white !important">' +
-                    '<head>' +
-                    '<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />' +
-                    '<title>{column}/{row}</title>' +
-                    '{styles}' +
-                    '</head>' +
-                    '<body class="' + Ext.baseCSSPrefix + 'webkit sch-export {bodyClasses}" style="background-color:white !important">' +
-                    '<tpl if="showHeader">' +
-                    '<div class="ula-print-header" style="width:{totalWidth}px"><h3>{column}/{row}</h3></div>' +
-                    '</tpl>' +
-                    '<tpl>' +
-                    '<div class="ula-print-header">' +
-                    '<img src="'+window.server+'framework/extra/images/ula-logo-2.jpg" align="right"></img>' +
-                    '<img src="'+window.server+'framework/extra/images/ula-logo.png" align="left"></img>' +
-                    '<h2>MASTER PRODUCTION SCHEDULE (MPS)</h2>' +
-                    '<h3>{[this.getPrintTitle()]}</h3>' +
-                    '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
-                    '</div>' +
-                    '<div class="ula-print-header-text">' +
-                    '<h3>Status Date: {[this.getStatusDate()]}</h3>' +
-                    '</div>' +
-                    '</tpl>' +
-                    '<tpl>' +
-                    '<div class="{componentClasses}" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
-                    '{HTML}' +
-                    '</div>' +
-                    '</tpl>' +
-                    '<tpl>' +
-                    '<div class="ula-print-footer">' +
-                    '<h3><div style="float:left; text-align:left; margin:-5px 0 0 0 !important">{[this.getPrintFooterLeft()]}</div></h3>' +
-                    '<h3><div style="float: right; text-align:right; margin:-5px 0 0 0 !important">{[this.getPrintFooterRight()]}</div></h3>' +
-                    '<h3>Page {row}</h3>' +
-                    '</div>' +
-                    '</tpl>' +
-                    '</body>' +
+                        '<head>' +
+                        '<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />' +
+                        '<title>{column}/{row}</title>' +
+                        '{styles}' +
+                        '</head>' +
+                        '<body class="' + Ext.baseCSSPrefix + 'webkit sch-export {bodyClasses}" style="background-color:white !important">' +
+                            '<tpl if="showHeader">' +
+                                '<div class="ula-print-header" style="width:{totalWidth}px"><p>{column}/{row}</p></div>' +
+                            '</tpl>' +
+                            '<tpl>' +
+                                '<div class="ula-print-header">' +
+                                        '<img src="'+window.server+'images/ula-logo-2.jpg" width="100px" align="right"></img>' +
+                                        '<img src="'+window.server+'images/ula-logo.png" width="150px" align="left"></img>' +
+                                        '<h4>MASTER PRODUCTION SCHEDULE (MPS)</h4>' +
+                                        '<h5>{[this.getPrintTitle()]}</h5>' +
+                                        '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
+                                '</div>' +
+                                '<div class="ula-print-header-text">' +
+                                    '<h5>Status Date: {[this.getStatusDate()]}</h5>' +
+                                '</div>' +
+                            '</tpl>' +
+                            '<tpl>' +
+                                '<div class="{componentClasses}" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
+                                    '{HTML}' +
+                                '</div>' +
+                            '</tpl>' +
+                            '<tpl>' +
+                                '<div class="ula-print-footer">' +
+                                    '<p><div style="float:left; text-align:left; margin:-5px 0 0 0 !important">{[this.getPrintFooterLeft()]}</div></p>' +
+                                    '<p><div style="float: right; text-align:right; margin:-5px 0 0 0 !important">{[this.getPrintFooterRight()]}</div></p>' +
+                                    '<p>Page {row}</p>' +
+                                '</div>' +
+                            '</tpl>' +
+                        '</body>' +
                     '</html>',
                     {
                         disableFormats: true,

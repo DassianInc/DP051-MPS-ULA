@@ -1,5 +1,6 @@
 /**
- * GANTT ALL VIEWS, MODELS, STORES
+ * GANTT 3.0.12
+ * ALL VIEWS, MODELS, STORES
  */
 
 /**
@@ -21038,7 +21039,7 @@ Ext.define('Sch.widget.ColumnPicker', {
     processColumns : function (columns) {
         var data = [],
             value = [];
-
+        columns = columns === null ? data : columns;
         Ext.Array.forEach(columns, function (column) {
 
             data.push({
@@ -21561,7 +21562,19 @@ Ext.define('Sch.widget.ExportDialogForm', {
                 items              : [me.resizePicker]
             });
         }
-
+        me.exportConfig = typeof me.exportConfig === 'undefined' ? {
+                DPI         :72,
+                showHeader  :true,
+                showFooter  :true,
+                format      :'Letter',
+                orientation : 'portrait',
+                range       : 'complete',
+                rowsRange   : 'all',
+                showHeader  : true,
+                showFooter  : false
+            } : me.exportConfig;
+        me.defaultExporter = typeof me.defaultExporter === 'undefined' ? '' : me.defaultExporter;
+        me.exporters = typeof me.exporters === 'undefined' ? [] : me.exporters;
         // from date
         me.dateFromField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
             xtype       : 'datefield',

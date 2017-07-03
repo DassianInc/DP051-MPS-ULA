@@ -109,7 +109,7 @@
            "includeInBundle": true
         },
         {
-            "path": "gantt/SchExportPlugin.js",
+            "path": "gantt/SchExportPlugin.js",//SchExportPluginExtend.js
             "includeInBundle": true
         },
         {

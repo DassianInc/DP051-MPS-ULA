@@ -633,13 +633,13 @@ Ext.define('MyApp.view.MyPanel12', {
                 storeId: 'DeleteStore'
             });
         }
-        Ext.define('Ext.data.SelectedObjectModel', {
+       /* Ext.define('Ext.data.SelectedObjectModel', {
             extend: 'Ext.data.Model',
             fields: [{name: 'number', type: 'string'}],
             proxy: {
                 type: 'memory'
             }});
-
+        */
         //define selection window
         var selectionWindow = Ext.ComponentQuery.query('selectionwindow[fieldname='+me.itemId+']')[0];
 

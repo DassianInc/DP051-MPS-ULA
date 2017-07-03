@@ -319,9 +319,16 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         frag.el.select('.sch-remove').remove();
 
 
-        var get             = function (s) { var el = frag.select('#' + s, true).first(); return el && el.dom; },
-            elapseWidth     = function (el) { if (el) el.style.width  = '100%'; },
-            elapseHeight    = function (el) { if (el) el.style.height = '100%'; },
+        var get  = function (s) {
+                var el = frag.select('#' + s).first();//.select('#'+s,true)
+                return el && el.dom;
+            },
+            elapseWidth = function (el) {
+                if (el) el.style.width  = '100%';
+            },
+            elapseHeight  = function (el) {
+                if (el) el.style.height = '100%';
+            },
             dFrag;
 
 
@@ -334,7 +341,9 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
             //IE removed getElementById from documentFragment in later browsers
             var fn      = (dFrag.getElementById || dFrag.querySelector);
 
-            get         = function (s) { return fn(prefix + s); };
+            get         = function (s) {
+                return fn(prefix + s);
+            };
 
             dFrag.appendChild(frag.dom);
         }
@@ -342,8 +351,9 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         // we elapse some elements width and/or height
 
         var lockedElements  = [
-            get(component.id + '-targetEl'),
-            get(component.id + '-innerCt'),
+           // get(component.id + '-targetEl'),
+           // get(component.id + '-innerCt'),
+            get(component.id),
             get(lockedGrid.id),
             get(lockedGrid.body.id),
             get(lockedGrid.view.el.id)
@@ -999,16 +1009,37 @@ Ext.define('DSch.plugin.Export', {
             me.win = null;
         }
 
-        me.win  = Ext.create(me.exportDialogClassName, {
+      me.win  = Ext.create(me.exportDialogClassName, Ext.apply({   // on submit button press we launch export
+                 doExportFn         : me.doExport,
+                 doExportFnScope    : me,
+
+                 // form related configs
+                 startDate          : me.scheduler.getStart(),
+                 endDate            : me.scheduler.getEnd(),
+                 rowHeight          : view.timeAxisViewModel.getViewRowHeight(),
+                 columnWidth        : view.timeAxisViewModel.getTickWidth(),
+                 defaultExporter    : me.defaultExporter,
+                 // TODO: move "DPI" config to "exportConfig" container and get rid of this Ext.apply()
+                 exportConfig       : Ext.apply(me.exportConfig, { DPI : me.DPI }),
+                 exporters          : me.exporters,
+                 //pageFormats        : me.getPageFormats(),
+                 columnPickerConfig : {
+                     columns: me.scheduler.lockedGrid.query('gridcolumn')
+                 }
+             }, me.exportDialogConfig)
+         );
+
+        /*me.win  = Ext.create(me.exportDialogClassName, {
             plugin                  : me,
             exportDialogConfig      : Ext.apply({
                 startDate       : me.scheduler.getStart(),
                 endDate         : me.scheduler.getEnd(),
                 rowHeight       : view.timeAxisViewModel.getViewRowHeight(),
                 columnWidth     : view.timeAxisViewModel.getTickWidth(),
-                defaultConfig   : me.defaultConfig
+                defaultConfig   : me.defaultConfig,
+                columnPickerConfig : me.scheduler
             }, me.exportDialogConfig)
-        });
+        });*/
 
         me.saveRestoreData();
 
@@ -1041,6 +1072,7 @@ Ext.define('DSch.plugin.Export', {
     doExport : function (conf, callback, errback) {
         // put mask on the panel
         this.mask();
+
         var me           = this,
             component    = me.scheduler,
             view         = component.getSchedulingView(),
@@ -1108,7 +1140,8 @@ Ext.define('DSch.plugin.Export', {
             var now = main.getTime();
             var toPdf = window.server+'topdf/toPdf.php?now='+now;
             //var pdf = window.server+'topdf/output/pdf/mps_output-'+now+'.pdf';
-            var toPdfAjaxConfig = {
+            window.open(toPdf);
+          /*  var toPdfAjaxConfig = {
                 method: 'POST',
                 url: toPdf,
                 async: false,
@@ -1117,16 +1150,16 @@ Ext.define('DSch.plugin.Export', {
                 },
                 success: function () {
                     console.log('Success');
-                    window.open(toPdf);
+                    //
                 },
                 failure: function() {
                     console.log('Failure');
                 }
             };
-            Ext.Ajax.request(toPdfAjaxConfig);
+            Ext.Ajax.request(toPdfAjaxConfig);*/
             me.onSuccess();
             view.timeAxisViewModel.suppressFit = false;
-            this.forEachTimeSpanPlugin(component, function (plug) {
+            me.forEachTimeSpanPlugin(component, function (plug) {
                 plug.renderDelay = plug._renderDelay;
                 delete plug._renderDelay;
             });
@@ -1184,7 +1217,7 @@ Ext.define('DSch.plugin.Export', {
             re                  = new RegExp(Ext.baseCSSPrefix + 'ie\\d?|' + Ext.baseCSSPrefix + 'gecko', 'g'),
             bodyClasses         = Ext.getBody().dom.className.replace(re, ''),
             componentClasses    = component.el.dom.className;
-
+        bodyClasses = bodyClasses.replace('spinner','');
         //Hack for IE
         if (Ext.isIE) {
             bodyClasses += ' sch-ie-export';
@@ -1266,7 +1299,7 @@ Ext.define('DSch.plugin.Export', {
         me.unmask();
 
         if (me.openAfterExport) {
-            window.open(response.url, 'ExportedPanel');
+            //window.open(response.url, 'ExportedPanel');
         }
     },
 
@@ -1436,5 +1469,22 @@ Ext.define('DSch.plugin.Export', {
         Ext.select('.sch-gantt-labelct-left').setStyle({
             'width':'570px'
         });
+    },
+
+    getStylesheets : function() {
+        var translate   = true,
+            styleSheets = Ext.getDoc().select('link[rel="stylesheet"]'),
+            ctTmp       = Ext.get(Ext.core.DomHelper.createDom({
+                tag : 'div'
+            })),
+            stylesString;
+        styleSheets.each(function(s) {
+            var node    = s.dom.cloneNode(true);
+            // put absolute URL to node `href` attribute
+            node.setAttribute('href', s.dom.href);
+            ctTmp.appendChild(node);
+        });
+        stylesString = ctTmp.dom.innerHTML + '';
+        return stylesString;
     }
 });
