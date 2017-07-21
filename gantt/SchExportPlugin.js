@@ -353,7 +353,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         var lockedElements  = [
            // get(component.id + '-targetEl'),
            // get(component.id + '-innerCt'),
-            get(component.id),
+            //get(component.id),
             get(lockedGrid.id),
             get(lockedGrid.body.id),
             get(lockedGrid.view.el.id)
@@ -534,6 +534,7 @@ Ext.define('DSch.plugin.exporter.MultiPageHorizontal', {
         var task =new Ext.util.DelayedTask(createExportPage, this, [0]);
         task.delay(10);
     },
+
     sizeToFit : function (range) {
 
         var me = this,
@@ -552,7 +553,7 @@ Ext.define('DSch.plugin.exporter.MultiPageHorizontal', {
         var currentLockedWidth = me.getVisibleColumnWidth();
         var currentTimeLineWidth = ticks.length * timeColumnWidth;
 
-        var visibleColumns = this.restoreSettings.visibleColumns;
+        var visibleColumns = me.settings.columns;//this.restoreSettings.visibleColumns;
         var cols = visibleColumns.length;
         if (cols > 4) {
             var lockedWidth = Math.floor(me.paperWidth*0.65);
@@ -579,138 +580,134 @@ Ext.define('DSch.plugin.exporter.MultiPageHorizontal', {
         var rowHeight = ( tickWidth / timeColumnWidth) * me.getRowHeight();
 
         rowHeight = rowHeight < 20 ? 20 : rowHeight;
-
         me.view.setRowHeight(rowHeight);
 
-        switch (true) {
-            case (cols > 5 && cols < 9):
-                Ext.select('.sch-gantt-label-right').setStyle({
-                    'font-size':'0.50rem',
-                    'margin-left':'1px',
-                    'padding':'1px',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.sch-gantt-label-left').setStyle({
-                    'font-size':'0.50rem',
-                    'margin-right':'4px',
-                    'padding':'1px',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.sch-simple-timeheader').setStyle({
-                    'font-size':'0.50rem',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.x-grid-cell-inner').setStyle({
-                    'font-size':'0.50rem',
-                    'font-weight':'600',
-                    'font-family':'Verdana',
-                    'padding':'1px'
-                });
-                Ext.select('.x-column-header-text').setStyle({
-                    'font-size':'0.50rem',
-                    'white-space':'normal',
-                    'font-family':'Verdana',
-                    'font-weight':'bold'
-                });
-                Ext.select('.x-tree-elbow-img').setStyle({
-                    'width':'3px',
-                    'height':'20px',
-                    'margin-right':'0'
-                });
-                Ext.select('.sch-gantt-labelct').setStyle({
-                    'padding':'2px'
-                });
-                Ext.select('.sch-gantt-labelct-right').setStyle({
-                    'margin-left':'1px'
-                });
-                Ext.select('.sch-gantt-labelct-left').setStyle({
-                    'width':'599px'
-                });
-                break;
-            case (cols > 8 && cols < 15):
-                Ext.select('.x-grid-cell-inner').setStyle({
-                    'font-size':'0.47rem',
-                    'font-family':'Verdana',
-                    'font-weight':'600'
-                });
-                Ext.select('.x-column-header-text').setStyle({
-                    'font-size':'0.50rem',
-                    'font-family':'Verdana',
-                    'white-space':'normal',
-                });
-                Ext.select('.sch-gantt-label-left').setStyle({
-                    'font-size':'0.50rem',
-                    'font-family':'Verdana',
-                    'margin-right':'3px',
-                    'padding':'1px'
-                });
-                Ext.select('.sch-gantt-label-right').setStyle({
-                    'font-size':'0.50rem',
-                    'margin-left':'3px',
-                    'font-family':'Verdana',
-                    'padding':'1px'
-                });
-                Ext.select('.sch-simple-timeheader').setStyle({
-                    'font-size':'0.50rem',
-                    'font-weight':'bold',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.x-tree-elbow-img').setStyle({
-                    'width':'4px',
-                    'height':'20px',
-                    'margin-right':'0'
-                });
-                Ext.select('.sch-gantt-labelct').setStyle({
-                    'padding':'2px'
-                });
-                Ext.select('.sch-gantt-labelct-right').setStyle({
-                    'margin-left':'1px'
-                });
-                Ext.select('.sch-gantt-labelct-left').setStyle({
-                    'width':'599px'
-                });
-                break;
-            case (cols > 14 && cols < 20):
-                Ext.select('.x-grid-cell-inner').setStyle({
-                    'font-size':'0.425rem',
-                    'font-weight':'600',
-                    'padding':'1px'
-                });
-                Ext.select('.x-column-header-text').setStyle({
-                    'font-size':'0.40rem',
-                    'font-family':'Verdana',
-                    'font-weight':'bold',
-                    'white-space':'normal'
-                });
-                Ext.select('.sch-gantt-label-left').setStyle({
-                    'font-size':'0.40rem',
-                    'margin-right':'3px',
-                    'font-weight':'bold'
-                });
-                Ext.select('.sch-gantt-label-right').setStyle({
-                    'font-size':'0.40rem',
-                    'margin-left':'3px',
-                    'font-weight':'bold'
-                });
-                Ext.select('.sch-simple-timeheader').setStyle({
-                    'font-size':'0.40em',
-                    'font-weight':'bold'
-                });
-                Ext.select('.x-tree-elbow-img').setStyle({
-                    'width':'3px',
-                    'height':'20px',
-                    'margin-right':'0'
-                });
-                Ext.select('.sch-gantt-labelct-right').setStyle({
-                    'margin-left':'1px'
-                });
-                Ext.select('.sch-gantt-labelct-left').setStyle({
-                    'width':'599px'
-                });
-                break;
-            default:
-                Ext.Msg.alert('Print Error','20 columns maximum available for printing to PDF.');
+        if(cols > 5 && cols < 9){
+            Ext.select('.sch-gantt-label-right').setStyle({
+                'font-size':'0.50rem',
+                'margin-left':'1px',
+                'padding':'1px',
+                'font-family':'Verdana'
+            });
+            Ext.select('.sch-gantt-label-left').setStyle({
+                'font-size':'0.50rem',
+                'margin-right':'4px',
+                'padding':'1px',
+                'font-family':'Verdana'
+            });
+            Ext.select('.sch-simple-timeheader').setStyle({
+                'font-size':'0.50rem',
+                'font-family':'Verdana'
+            });
+            Ext.select('.x-grid-cell-inner').setStyle({
+                'font-size':'0.50rem',
+                'font-weight':'600',
+                'font-family':'Verdana',
+                'padding':'1px'
+            });
+            Ext.select('.x-column-header-text').setStyle({
+                'font-size':'0.50rem',
+                'white-space':'normal',
+                'font-family':'Verdana',
+                'font-weight':'bold'
+            });
+            Ext.select('.x-tree-elbow-img').setStyle({
+                'width':'3px',
+                'height':'20px',
+                'margin-right':'0'
+            });
+            Ext.select('.sch-gantt-labelct').setStyle({
+                'padding':'2px'
+            });
+            Ext.select('.sch-gantt-labelct-right').setStyle({
+                'margin-left':'1px'
+            });
+            Ext.select('.sch-gantt-labelct-left').setStyle({
+                'width':'599px'
+            });
+        }else if(cols > 8 && cols < 15){
+            Ext.select('.x-grid-cell-inner').setStyle({
+                'font-size':'0.47rem',
+                'font-family':'Verdana',
+                'font-weight':'600'
+            });
+            Ext.select('.x-column-header-text').setStyle({
+                'font-size':'0.50rem',
+                'font-family':'Verdana',
+                'white-space':'normal',
+            });
+            Ext.select('.sch-gantt-label-left').setStyle({
+                'font-size':'0.50rem',
+                'font-family':'Verdana',
+                'margin-right':'3px',
+                'padding':'1px'
+            });
+            Ext.select('.sch-gantt-label-right').setStyle({
+                'font-size':'0.50rem',
+                'margin-left':'3px',
+                'font-family':'Verdana',
+                'padding':'1px'
+            });
+            Ext.select('.sch-simple-timeheader').setStyle({
+                'font-size':'0.50rem',
+                'font-weight':'bold',
+                'font-family':'Verdana'
+            });
+            Ext.select('.x-tree-elbow-img').setStyle({
+                'width':'4px',
+                'height':'20px',
+                'margin-right':'0'
+            });
+            Ext.select('.sch-gantt-labelct').setStyle({
+                'padding':'2px'
+            });
+            Ext.select('.sch-gantt-labelct-right').setStyle({
+                'margin-left':'1px'
+            });
+            Ext.select('.sch-gantt-labelct-left').setStyle({
+                'width':'599px'
+            });
+        }else if(cols > 14 && cols < 20){
+            Ext.select('.x-grid-cell-inner').setStyle({
+                'font-size':'0.425rem',
+                'font-weight':'600',
+                'padding':'1px'
+            });
+            Ext.select('.x-column-header-text').setStyle({
+                'font-size':'0.40rem',
+                'font-family':'Verdana',
+                'font-weight':'bold',
+                'white-space':'normal'
+            });
+            Ext.select('.sch-gantt-label-left').setStyle({
+                'font-size':'0.40rem',
+                'margin-right':'3px',
+                'font-weight':'bold'
+            });
+            Ext.select('.sch-gantt-label-right').setStyle({
+                'font-size':'0.40rem',
+                'margin-left':'3px',
+                'font-weight':'bold'
+            });
+            Ext.select('.sch-simple-timeheader').setStyle({
+                'font-size':'0.40em',
+                'font-weight':'bold'
+            });
+            Ext.select('.x-tree-elbow-img').setStyle({
+                'width':'3px',
+                'height':'20px',
+                'margin-right':'0'
+            });
+            Ext.select('.sch-gantt-labelct-right').setStyle({
+                'margin-left':'1px'
+            });
+            Ext.select('.sch-gantt-labelct-left').setStyle({
+                'width':'599px'
+            });
+        }else if(cols > 20){
+            Ext.Msg.alert('Print Error','20 columns maximum available for printing to PDF.');
         }
+
     },
 
     getVisibleColumnWidth : function () {
@@ -830,6 +827,10 @@ Ext.define('DSch.plugin.exporter.SinglePage', {
 
 });
 
+/**
+ * Generic export interface for Single and Multiple page exports.
+ * Triggers Sch.widget.ExportDialog popup and passes config to Exporter
+ */
 Ext.define('DSch.plugin.Export', {
     extend                  : 'Ext.util.Observable',
 
@@ -839,7 +840,7 @@ Ext.define('DSch.plugin.Export', {
 
     mixins                  : ['Ext.AbstractPlugin'],
 
-    requires        : [
+    requires                : [
         'Ext.XTemplate',
         'DSch.plugin.exporter.SinglePage',
         'DSch.plugin.exporter.MultiPageHorizontal'
@@ -873,12 +874,20 @@ Ext.define('DSch.plugin.Export', {
      * Default export configuration.
      */
     defaultConfig           : {
-        format              : "Letter",
-        orientation         : "landscape",
-        range               : "complete",
-        showHeader          : false,
-        singlePageExport    : false,
-        multiPageHorizontal : false
+            format              : "Letter",
+            orientation         : "Landscape",
+            range               : "complete",
+            DPI                 :  72,
+            rowsRange           : 'all',
+            showHeader          : false,
+            showFooter          : true,
+            showShowHeaderField : false,
+            showShowFooterField : false,
+            showDPIField        : false,
+            showColumnPicker    : true,
+            singlePageExport    : false,
+            multiPageHorizontal : false,
+            showResizePicker    : true
     },
 
     /**
@@ -1020,13 +1029,13 @@ Ext.define('DSch.plugin.Export', {
                  columnWidth        : view.timeAxisViewModel.getTickWidth(),
                  defaultExporter    : me.defaultExporter,
                  // TODO: move "DPI" config to "exportConfig" container and get rid of this Ext.apply()
-                 exportConfig       : Ext.apply(me.exportConfig, { DPI : me.DPI }),
+                 exportConfig       : Ext.apply(me.exportConfig, me.defaultConfig),
                  exporters          : me.exporters,
                  //pageFormats        : me.getPageFormats(),
                  columnPickerConfig : {
                      columns: me.scheduler.lockedGrid.query('gridcolumn')
                  }
-             }, me.exportDialogConfig)
+             }, me.defaultConfig)
          );
 
         /*me.win  = Ext.create(me.exportDialogClassName, {
@@ -1090,56 +1099,12 @@ Ext.define('DSch.plugin.Export', {
         me.getExportJsonHtml(config, function (htmlArray) {
             //further update progress bar
             // me.fireEvent('updateprogressbar', 0.4);
-            /*
-             if (me.printServer) {
-             // if it's not debugging or test environment
-             if (!me.debug && !me.test) {
-             var ajaxConfig = {
-             type : 'POST',
-             url : me.printServer,
-             timeout : 60000000,
-             params : Ext.apply({
-             html : {
-             array : htmlArray
-             },
-             startDate : component.getStartDate(),
-             endDate : component.getEndDate(),
-             format : me.exporter.getFormat(),
-             orientation : config.orientation,
-             range : config.range,
-             fileFormat : me.fileFormat
-             }, this.getParameters()),
-             success : function (response) {
-             var main = MyApp.app.getController('Main');
-             var url = "http://apps.dassian.com/topdf/toPdf.php?now="+main.getTime();
-             window.open(url,'_blank');
-             me.onSuccess(response, callback, errback);
-             },
-             failure : function (response) {
-             me.onFailure(response, errback);
-             },
-             scope : me
-             };
-             Ext.apply(ajaxConfig, this.getAjaxConfig(ajaxConfig));
-             Ext.Ajax.request(ajaxConfig);
-             // for debugging mode we just show output instead of sending it to server
-             } else if (me.debug) {
-             var w, a = Ext.JSON.decode(htmlArray);
-             for (var i = 0, l = a.length; i < l; i++) {
-             w = window.open();
-             w.document.write(a[i].html);
-             w.document.close();
-             }
 
-             }
-             } else {
-             throw 'Print server URL is not defined, please specify printServer config';
-             }
-             */
             var main = MyApp.app.getController('Main');
             var now = main.getTime();
             var toPdf = window.server+'topdf/toPdf.php?now='+now;
             //var pdf = window.server+'topdf/output/pdf/mps_output-'+now+'.pdf';
+            /**Opens url to download zip file **/
             window.open(toPdf);
           /*  var toPdfAjaxConfig = {
                 method: 'POST',

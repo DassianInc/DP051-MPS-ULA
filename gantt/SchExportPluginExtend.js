@@ -1,7 +1,3 @@
-/**
- * Created by craig on 7/3/2017.
- */
-
 
 /**
  @class Sch.plugin.exporter.AbstractExporter
@@ -23,14 +19,8 @@
  */
 Ext.define('DSch.plugin.exporter.AbstractExporter', {
 
-    extend                  : 'Ext.util.Observable',
+    extend                  : 'Sch.plugin.exporter.AbstractExporter',
 
-    requires                : [
-        'Ext.dom.Element',
-        'Ext.core.DomHelper'
-    ],
-
-    mixins                  : ['Sch.mixin.Localizable'],
 
     /**
      * @cfg {Number} pageHeaderHeight
@@ -213,7 +203,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         }
 
         // get the exporter name from locale (if not provided explicitly)
-        //if (!config.name) me.setName(me.L('name'));
+        if (!config.name) me.setName(me.L('name'));
     },
 
     setHeaderTpl : function (tpl) {
@@ -252,7 +242,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
     getBodyClasses : function () {
         var re      = new RegExp(Ext.baseCSSPrefix + 'ie\\d?|' + Ext.baseCSSPrefix + 'gecko', 'g'),
             result  = Ext.getBody().dom.className.replace(re, '');
-
+        result = result.replace('spinner','');
         if (Ext.isIE) {
             result  += ' sch-ie-export';
         }
@@ -286,18 +276,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         me.normalBodySelector   = '#' + me.normalView.getId();
         me.lockedHeader         = me.lockedGrid.headerCt;
         me.normalHeader         = me.normalGrid.headerCt;
-        if(!Ext.isDefined(me.normalHeader.el)){
-            window.intervalNormalHeaderHeight = window.setInterval(function(){
-                if(Ext.isDefined(me.normalHeader.el)){
-                    window.clearInterval(window.intervalNormalHeaderHeight);
-                    me.headerHeight = me.normalHeader.getHeight();
-                }
-            },500);
-            me.headerHeight = 0;
-        }else{
-            me.headerHeight = me.normalHeader.getHeight();
-        }
-
+        me.headerHeight         = me.normalHeader.getHeight();
 
         // page height w/o component headers
         me.printHeight = Math.floor(me.paperHeight) - me.headerHeight - (me.exportConfig.showHeader ? me.pageHeaderHeight : 0) - (me.exportConfig.showFooter ? me.pageFooterHeight : 0);
@@ -432,7 +411,9 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         styleSheets.each(function(s) {
             var node    = s.dom.cloneNode(true);
             // put absolute URL to node `href` attribute
-            translate && node.setAttribute('href', s.dom.href);
+            var alternateResources = s.dom.href.replace(window.server,window.printServer);
+
+            translate && node.setAttribute('href',alternateResources);
             ctTmp.appendChild(node);
         });
 
@@ -2134,7 +2115,7 @@ Ext.define('DSch.plugin.exporter.MultiPage', {
 Ext.define('DSch.plugin.exporter.MultiPageVertical', {
 
     extend                : 'DSch.plugin.exporter.AbstractExporter',
-
+    alternateClassName      : 'DSch.plugin.exporter.MultiPageHorizontal',
     /**
      * @cfg {Object} l10n
      * A object, purposed for the class localization. Contains the following keys/values:
@@ -2329,384 +2310,206 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
 
 });
 
-Ext.define('DSch.plugin.exporter.MultiPageHorizontal', {
+/**
+ @class Sch.plugin.Export
+ @extends Ext.util.Observable
 
-    extend  : 'DSch.plugin.exporter.AbstractExporter',
+ A plugin (ptype = 'scheduler_export') generating PDF/PNG out of a scheduler panel. NOTE: This plugin will make an AJAX request to the server, POSTing
+ the HTML to be exported. The {@link #printServer} URL must therefore be on the same domain as your application.
 
-    constructor : function (config) {
+ ##Configuring/usage
 
-        this.callParent(arguments);
-        this.setPaperSize();
-    },
+ To use this plugin, add it to your scheduler as any other plugin. It is also required to have [PhantomJS][1] and [Imagemagick][2]
+ installed on the server. The complete process of setting up a backend for the plugin can be found in the readme file inside export examples
+ as well as on our [blog][3]. Note that the export feature is currently not supported if your store is buffered.
 
-    /**
-     * @private
-     * Function calculating amount of pages in vertical/horizontal direction in the exported document/image.
-     *
-     * @param {Array} ticks Ticks from the TickStore.
-     * @param {Number} timeColumnWidth Width of a single time column.
-     * @return {Object} valuesObject Object containing calculated amount of pages, rows and columns.
-     */
-    calculatePages : function (range) {
-        var me                  = this,
-            component           = me.component,
-            lockedGrid          = component.lockedGrid,
-            rowHeight           = this.getRowHeight(),
-            lockedHeader        = lockedGrid.headerCt,
-            lockedGridWidth     = lockedHeader.getEl().first().getWidth(),
-            lockedColumnPages   = null;
+ var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+            ...
 
-        var customRowHeights    = me.getRowHeights();
+            resourceStore : resourceStore,
+            eventStore    : eventStore,
 
-        return {
-            rowHeights          : customRowHeights,
-            rowPagesBounds      : me.getRowPagesBounds(me.printHeight, customRowHeights),
-            // amount of pages vertically
-            rowPages            : Math.ceil((me.getRealSize().height - component.normalGrid.headerCt.getHeight()) / me.printHeight),
-            timeColumnWidth     : range.timeColumnWidth,
-            lockedGridWidth     : lockedGridWidth,
-            rowHeight           : rowHeight,
-            panelHTML           : {}
-        };
-    },
+            plugins       : [
+                Ext.create('Sch.plugin.Export', {
+                    printServer : 'server.php'
+                })
+            ]
+        });
 
-    getFormat : function () {
-        return this.settings.format;
-    },
+ The Scheduler instance will be extended with two new methods:
 
-    getExportJsonHtml : function (range, callback) {
+ - {@link #showExportDialog}, which shows export settings dialog
 
-        var me = this,
-            component    = me.component,
-            view         = me.view,
-            styles       = me.styles,
-            normalGrid   = component.normalGrid,
-            lockedGrid   = component.lockedGrid,
-            htmlArray   = [];
+ scheduler.showExportDialog();
 
-        var ticks = range.ticks,
-            timeColumnWidth = range.timeColumnWidth;
+ - {@link #doExport} which actually performs the export operation using {@link #exportConfig} or provided config object :
 
-        me.sizeToFit(range);
+ scheduler.doExport({
+            format      : "A5",
+            orientation : "landscape",
+            range       : "complete",
+            showHeader  : true,
+            exporterId  : "singlepage"
+        });
 
-        //calculate amount of pages in the document
-        this.calculatedPages = me.calculatePages(range);
-        Ext.apply(this.calculatedPages.panelHTML, me.getPanelHTML(range, this.calculatedPages));
 
-        var calculatedPages     = this.calculatedPages,
-            bodyClasses         = this.bodyClasses,
-            componentClasses    = this.componentClasses,
-            rowPagesBounds      = calculatedPages.rowPagesBounds,
-            rowPages            = calculatedPages.rowPages,
-            panelHTML           = calculatedPages.panelHTML,
-            printHeight         = me.printHeight,
-            headerHeight        = me.headerHeight,
-            html;
+ ##Export options
 
-        var task = undefined;
+ In the current state, the plugin gives few options to modify the look and feel of the generated PDF document through a dialog window :
 
-        var createExportPage =  function (page) {
-            //hide rows that are not supposed to be visible on the current page
+ {@img scheduler/images/export_dialog.png}
 
-            if (page < rowPagesBounds.length) {
+ If no changes are made to the form, the {@link #exportConfig} will be used.
 
-                me.hideRows(rowPagesBounds[page][0], rowPagesBounds[page][1]);
+ ###Schedule range
 
-                panelHTML.dom = component.body.dom.innerHTML;
-                panelHTML.k = page;
-                panelHTML.i = 0;
-                panelHTML.rowPagesBounds = rowPagesBounds;
-                panelHTML.rowHeights = calculatedPages.rowHeights;
-                panelHTML.rowHeight = calculatedPages.rowHeight;
+ This setting controls the timespan visible on the exported document. The following options are available here :
 
-                var readyHTML = me.resizePanelHTML(panelHTML);
+ {@img scheduler/images/export_dialog_ranges.png}
 
-                html = me.tpl.apply(Ext.apply({
-                    bodyClasses : bodyClasses,
-                    bodyHeight : printHeight + headerHeight,
-                    componentClasses : componentClasses,
-                    styles : styles,
-                    showHeader : me.settings.showHeader,
-                    HTML : readyHTML.dom.innerHTML,
-                    totalWidth : me.paperWidth,
-                    headerHeight : headerHeight,
-                    column : 1,
-                    row : page + 1
-                }));
+ ####Complete schedule
 
-                var htmlLength = html.length;
-                //var htmlEnd = htmlLength-3;
-                //var html2 = html.substring(0, htmlLength-3);
-                var htmlObject = html;
-                var ajaxConfig = {};
-                var main = MyApp.app.getController('Main');
-                var url = window.server+'topdf/create_htmlPage.php';
-                var now = main.getTime();
-                var toPdf = window.server+'topdf/toPdf.php?now='+now;
-                ajaxConfig = {
-                    method: 'POST',
-                    url: url,
-                    async: false,
-                    params: {
-                        html : htmlObject,
-                        page : page,
-                        now: now
-                    },
-                    callback: function () {
-                        console.log('Page: '+page);
-                    },
-                    success: function (res) {
-                    },
-                    failure: function (res) {
-                    }
-                };
-                Ext.Ajax.request(ajaxConfig);
-                if (page >= rowPagesBounds.length-1) {
-                    console.log('Last Page: '+page);
-                }
-                //htmlArray.push(htmlObject);
-                //unhide all rows
-                me.showRows();
-                me.exporter.fireEvent('updateprogressbar', ((page+1) / rowPagesBounds.length) * 1.0);
-                task.delay(10, undefined, undefined, [page+1]);
-            }
-            else {
-                callback.call(me.exporter, htmlObject);
-            }
-        };
-        var task =new Ext.util.DelayedTask(createExportPage, this, [0]);
-        task.delay(10);
-    },
-    sizeToFit : function (range) {
+ Whole current timespan of the panel will be visible in the exported document.
 
-        var me = this,
-            component    = me.component,
-            view         = me.view,
-            normalGrid   = component.normalGrid,
-            lockedGrid   = component.lockedGrid;
+ ####Complete schedule (for all events)
 
-        var realSize  = me.getRealSize();
+ The timespan will be adjusted to include all the events registered in the event store.
 
-        var ticks = range.ticks,
-            timeColumnWidth = range.timeColumnWidth;
+ ####Date range
 
-        component.setTimeSpan(ticks[0].start, ticks[ticks.length-1].end);
+ User can select the start and end dates visible on the exported document.
 
-        var currentLockedWidth = me.getVisibleColumnWidth();
-        var currentTimeLineWidth = ticks.length * timeColumnWidth;
+ {@img scheduler/images/export_dialog_ranges_date.png}
 
-        var visibleColumns = this.restoreSettings.visibleColumns;
-        var cols = visibleColumns.length;
-        if (cols > 4) {
-            var lockedWidth = Math.floor(me.paperWidth*0.65);
-            var normalWidth = Math.floor(me.paperWidth*0.65);
-            var tickWidth = Math.floor((normalWidth / ticks.length)*1.55);
-            component.setWidth(me.paperWidth);
-            normalGrid.setWidth(me.paperWidth*0.65);
-            lockedGrid.setWidth(me.paperWidth*0.65);
-            component.setTimeColumnWidth(me.paperWidth*0.35);
-            view.timeAxisViewModel.setTickWidth(tickWidth*0.35);
-            me.fitLockedColumnWidth(me.paperWidth*0.65);
-        } else {
-            var lockedWidth = Math.floor(me.paperWidth*0.5);
-            var normalWidth = Math.floor(me.paperWidth*0.5);
-            var tickWidth = Math.floor((normalWidth / ticks.length)*2);
-            component.setWidth(me.paperWidth);
-            normalGrid.setWidth(me.paperWidth/2);
-            lockedGrid.setWidth(me.paperWidth/2);
-            me.fitLockedColumnWidth(me.paperWidth/2);
-            component.setTimeColumnWidth(me.paperWidth/2);
-            view.timeAxisViewModel.setTickWidth(tickWidth/2);
-        }
+ ####Visible schedule
 
-        var rowHeight = ( tickWidth / timeColumnWidth) * me.getRowHeight();
+ Timespan of the exported document/image will be set to the currently visible part of the time axis.
 
-        rowHeight = rowHeight < 20 ? 20 : rowHeight;
+ ###Select columns
 
-        me.view.setRowHeight(rowHeight);
+ This field allows to pick the locked grid columns to be exported:
 
-        switch (true) {
-            case (cols > 5 && cols < 9):
-                Ext.select('.sch-gantt-label-right').setStyle({
-                    'font-size':'0.50rem',
-                    'margin-left':'1px',
-                    'padding':'1px',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.sch-gantt-label-left').setStyle({
-                    'font-size':'0.50rem',
-                    'margin-right':'4px',
-                    'padding':'1px',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.sch-simple-timeheader').setStyle({
-                    'font-size':'0.50rem',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.x-grid-cell-inner').setStyle({
-                    'font-size':'0.50rem',
-                    'font-weight':'600',
-                    'font-family':'Verdana',
-                    'padding':'1px'
-                });
-                Ext.select('.x-column-header-text').setStyle({
-                    'font-size':'0.50rem',
-                    'white-space':'normal',
-                    'font-family':'Verdana',
-                    'font-weight':'bold'
-                });
-                Ext.select('.x-tree-elbow-img').setStyle({
-                    'width':'3px',
-                    'height':'20px',
-                    'margin-right':'0'
-                });
-                Ext.select('.sch-gantt-labelct').setStyle({
-                    'padding':'2px'
-                });
-                Ext.select('.sch-gantt-labelct-right').setStyle({
-                    'margin-left':'1px'
-                });
-                Ext.select('.sch-gantt-labelct-left').setStyle({
-                    'width':'599px'
-                });
-                break;
-            case (cols > 8 && cols < 15):
-                Ext.select('.x-grid-cell-inner').setStyle({
-                    'font-size':'0.47rem',
-                    'font-family':'Verdana',
-                    'font-weight':'600'
-                });
-                Ext.select('.x-column-header-text').setStyle({
-                    'font-size':'0.50rem',
-                    'font-family':'Verdana',
-                    'white-space':'normal',
-                });
-                Ext.select('.sch-gantt-label-left').setStyle({
-                    'font-size':'0.50rem',
-                    'font-family':'Verdana',
-                    'margin-right':'3px',
-                    'padding':'1px'
-                });
-                Ext.select('.sch-gantt-label-right').setStyle({
-                    'font-size':'0.50rem',
-                    'margin-left':'3px',
-                    'font-family':'Verdana',
-                    'padding':'1px'
-                });
-                Ext.select('.sch-simple-timeheader').setStyle({
-                    'font-size':'0.50rem',
-                    'font-weight':'bold',
-                    'font-family':'Verdana'
-                });
-                Ext.select('.x-tree-elbow-img').setStyle({
-                    'width':'4px',
-                    'height':'20px',
-                    'margin-right':'0'
-                });
-                Ext.select('.sch-gantt-labelct').setStyle({
-                    'padding':'2px'
-                });
-                Ext.select('.sch-gantt-labelct-right').setStyle({
-                    'margin-left':'1px'
-                });
-                Ext.select('.sch-gantt-labelct-left').setStyle({
-                    'width':'599px'
-                });
-                break;
-            case (cols > 14 && cols < 20):
-                Ext.select('.x-grid-cell-inner').setStyle({
-                    'font-size':'0.425rem',
-                    'font-weight':'600',
-                    'padding':'1px'
-                });
-                Ext.select('.x-column-header-text').setStyle({
-                    'font-size':'0.40rem',
-                    'font-family':'Verdana',
-                    'font-weight':'bold',
-                    'white-space':'normal'
-                });
-                Ext.select('.sch-gantt-label-left').setStyle({
-                    'font-size':'0.40rem',
-                    'margin-right':'3px',
-                    'font-weight':'bold'
-                });
-                Ext.select('.sch-gantt-label-right').setStyle({
-                    'font-size':'0.40rem',
-                    'margin-left':'3px',
-                    'font-weight':'bold'
-                });
-                Ext.select('.sch-simple-timeheader').setStyle({
-                    'font-size':'0.40em',
-                    'font-weight':'bold'
-                });
-                Ext.select('.x-tree-elbow-img').setStyle({
-                    'width':'3px',
-                    'height':'20px',
-                    'margin-right':'0'
-                });
-                Ext.select('.sch-gantt-labelct-right').setStyle({
-                    'margin-left':'1px'
-                });
-                Ext.select('.sch-gantt-labelct-left').setStyle({
-                    'width':'599px'
-                });
-                break;
-            default:
-                Ext.Msg.alert('Print Error','20 columns maximum available for printing to PDF.');
-        }
-    },
+ {@img scheduler/images/export_dialog_columns.png}
 
-    getVisibleColumnWidth : function () {
-        var me = this,
-            lockedGrid    = me.component.lockedGrid,
-            width = 0;
+ ###Rows range
 
-        var visibleColumns = this.restoreSettings.visibleColumns;
+ This setting controls rows to be included into the exported document. The following options are available here :
 
-        for (var i = 0; i < visibleColumns.length; i++) {
-            width += visibleColumns[i].width;
-        }
+ {@img scheduler/images/export_dialog_row_ranges.png}
 
-        return width;
-    },
+ ####All rows
 
-    fitLockedColumnWidth : function (totalWidth) {
-        var me = this;
-        var visibleColumns = this.restoreSettings.visibleColumns;
-        var currentLockedWidth = me.getVisibleColumnWidth();
-        var lockedGrid = me.component.lockedGrid;
-        var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
-        var cols = visibleColumns.length;
-        var printCls = ganttConfigStore.findExact('name','printCls');
-        me.fireEvent('updateprogressbar', 0.3);
+ All the panel rows will be included (default mode).
 
-        if(visibleColumns.length > 3) {
-            for (var i = 0; i < visibleColumns.length; i++) {
-                var width = visibleColumns[i].column.getWidth()/currentLockedWidth;
-                width = totalWidth*width;
-                visibleColumns[i].column.setWidth(width);
-            }
-            this.restoreSettings.restoreColumnWidth = true;
-        }
-    }
-});
+ ####Visible rows
 
+ Only currently visible part of rows will be included into the result document.
+
+ ##Control pagination
+
+ This field allows to pick an exporter implementing needed way of pagination. The default exporter is `Multi pages`.
+
+ {@img scheduler/images/export_modes.png}
+
+ Options:
+
+ -  `Single page`. Creates an export that fits one single page.
+
+ -  `Multi pages`. Creates an export that creates pages in both vertical and horizontal direction.
+
+ -  `Multi pages (vertically)`. Creates an export that creates pages in vertical direction.
+
+ ##Paper Format
+
+ This combo gives control of the size of the generated document/image by choosing one from a list of supported ISO paper sizes : (`A5`, `A4`, `A3`, `Letter`). Default format is `A4`.
+
+ {@img scheduler/images/export_dialog_format.png}
+
+ ###Orientation
+
+ This setting defines the orientation of the generated document/image.
+
+ {@img scheduler/images/export_dialog_orientation.png}
+
+ Default option is the `portrait` (vertical) orientation :
+
+ {@img scheduler/images/export_dialog_portrait.png}
+
+ Second option is the `landscape` (horizontal) orientation :
+
+ {@img scheduler/images/export_dialog_landscape.png}
+
+ ##DPI (dots per inch)
+
+ This field controls the DPI value to use for paper format related calculations:
+
+ {@img scheduler/images/export_dialog_dpi.png}
+
+ ##Page number
+
+ This option allows to add a header to a page displaying the page number:
+
+ {@img scheduler/images/export_page_number.png}
+
+ ##Custom export styling
+
+ A special "sch-export" CSS class is added to the body of the exported pages so that you can have special
+ styles in your exported chart.
+
+ [1]: http://www.phantomjs.org
+ [2]: http://www.imagemagick.org
+ [3]: http://bryntum.com/blog
+
+ */
 Ext.define('DSch.plugin.Export', {
-    extend                  : 'DSch.plugin.exporter.AbstractExporter',
+    extend                  : 'Sch.plugin.Export',
 
     alternateClassName      : 'DSch.plugin.PdfExport',
 
-    alias                   : 'plugin.scheduler_dassian_export',
-
-    mixins                  : ['Ext.AbstractPlugin'],
 
     requires        : [
         'Ext.XTemplate',
         'DSch.plugin.exporter.SinglePage',
-        'DSch.plugin.exporter.MultiPageVertical'
+        'DSch.plugin.exporter.MultiPage',
+        'DSch.plugin.exporter.MultiPageVertical',
+        'Sch.widget.ExportDialog'
     ],
 
     lockableScope           : 'top',
+
+    /**
+     * @cfg {Object} pageSizes
+     * Definition of all available paper sizes.
+     */
+    pageSizes               : {
+        A5      : {
+            width   : 5.8,
+            height  : 8.3
+        },
+        A4      : {
+            width   : 8.3,
+            height  : 11.7
+        },
+        A3      : {
+            width   : 11.7,
+            height  : 16.5
+        },
+        Letter  : {
+            width   : 8.5,
+            height  : 11
+        },
+        Legal   : {
+            width   : 8.5,
+            height  : 14
+        }
+    },
+
+
+    /**
+     * @cfg {Number} DPI
+     * DPI (Dots per inch) resolution.
+     */
+    DPI                     : 100,
 
     /**
      * @cfg {String}
@@ -2714,8 +2517,57 @@ Ext.define('DSch.plugin.Export', {
      */
     printServer             : undefined,
 
-    //private template for the temporary export html page
+
+    /**
+     * @cfg {Number}
+     * The timeout in milliseconds to be used for print requests to server.
+     */
+    timeout                 : 60000,
+
+
+    /**
+     * @cfg {String} headerTpl
+     * Template of extracted page header.
+     */
+    headerTpl               : null,
+
+    /**
+     * @cfg {Function} headerTplDataFn
+     * If defined provides data for the {@link #headerTpl}.
+     * To define the scope please use {@link #headerTplDataFnScope}.
+     * @return {Object} Header template data.
+     */
+    headerTplDataFn        : null,
+
+    /**
+     * @cfg {Object} headerTplDataFnScope Scope for the {@link #headerTplDataFn} function.
+     */
+    headerTplDataFnScope   : null,
+
+    /**
+     * @cfg {String} tpl
+     * Template of extracted page.
+     */
     tpl                     : null,
+
+    /**
+     * @cfg {String} footerTpl
+     * Template of extracted page footer.
+     */
+    footerTpl               : null,
+
+    /**
+     * @cfg {Function} footerTplDataFn
+     * If defined provides data for the {@link #footerTpl}.
+     * To define the scope please use {@link #footerTplDataFnScope}.
+     * @return {Object} Footer template data.
+     */
+    footerTplDataFn        : null,
+
+    /**
+     * @cfg {Object} footerTplDataFnScope Scope for the {@link #footerTplDataFn} function.
+     */
+    footerTplDataFnScope   : null,
 
     /**
      * @cfg {String}
@@ -2731,22 +2583,29 @@ Ext.define('DSch.plugin.Export', {
 
     /**
      * @cfg {Object}
+     * Config object to apply to each {@link Sch.plugin.exporter.AbstractExporter exporter} being registered.
+     */
+    exporterConfig          : null,
+
+    /**
+     * @cfg {Object}
      * Default export configuration.
      */
-    defaultConfig           : {
-        format              : "Letter",
-        orientation         : "landscape",
-        range               : "complete",
-        showHeader          : false,
-        singlePageExport    : false,
-        multiPageVertical   : false,
-        multiPageHorizontal : false
+    exportConfig           : {
+        format      : 'Letter',
+        orientation : 'landscape',
+        range       : 'complete',
+        rowsRange   : 'all',
+        showDPIField: false,
+        showShowHeaderField:false,
+        showHeader  : true,
+        showFooter  : true
     },
 
     /**
      * @cfg {Boolean} expandAllBeforeExport Only applicable for tree views, set to true to do a full expand prior to the export. Defaults to false.
      */
-    expandAllBeforeExport   : false,
+    expandAllBeforeExport   : true,
 
     /**
      * @cfg {Boolean} translateURLsToAbsolute `True` to replace all linked CSS files URLs to absolute before passing HTML to the server.
@@ -2764,6 +2623,7 @@ Ext.define('DSch.plugin.Export', {
      * before the export plugin extracts data from the scheduler.
      * @param {Sch.panel.SchedulerGrid/Sch.panel.SchedulerTree} scheduler The scheduler instance
      * @param {Object[]} ticks The ticks gathered by plugin to export.
+     * @template
      * @method beforeExport
      */
     beforeExport            : Ext.emptyFn,
@@ -2772,9 +2632,12 @@ Ext.define('DSch.plugin.Export', {
      * An empty function by default, but provided so that you can perform a custom action
      * after the export plugin has extracted the data from the scheduler.
      * @param {Sch.panel.SchedulerGrid/Sch.panel.SchedulerTree} scheduler The scheduler instance
+     * @template
      * @method afterExport
      */
     afterExport             : Ext.emptyFn,
+
+    pdfPostTotal            : null,
 
     /**
      * @cfg {String}
@@ -2783,15 +2646,23 @@ Ext.define('DSch.plugin.Export', {
      */
     fileFormat              : 'pdf',
 
-    //private Constant DPI value for generated PDF
-    DPI                     : 72,
+    /**
+     * @cfg {String}
+     * The exporterId of the default exporter to be used.
+     * The corresponding export mode will be selected in {@link Sch.widget.ExportDialog export dialog} by default.
+     */
+    defaultExporter         : 'multipagevertical',
 
-    //private variable to hold an instance of the exporter during export
-    //exporter    : undefined,
+    /**
+     * @cfg {Array[Sch.plugin.exporter.AbstractExporter/Object]}
+     * The list of available exporters.
+     * If no value is provided the list will be filled automatically (see {@link #buildExporters}).
+     */
+    exporters               : undefined,
 
-    singlePageExporterClass : 'DSch.plugin.exporter.SinglePage',
+    callbacks               : undefined,
 
-    multiPageExporterClass : 'DSch.plugin.exporter.MultiPageVertical',
+    hideExportDialogTimeout : 1000,
 
     /**
      * @event hidedialogwindow
@@ -2811,14 +2682,24 @@ Ext.define('DSch.plugin.Export', {
      * @event updateprogressbar
      * Fires when a progressbar of the {@link #exportDialogClassName dialog} should update it's value.
      * @param {Number} value Value (between 0 and 1) to set on the progressbar.
-     * @param {Object} [response] Full server response. This argument is specified only when `value` equals to `1`.
+     */
+
+    /**
+     * @event beforeexport
+     * Fires before the exporting is started. Return `false` to cancel exporting.
+     * @param {Sch.panel.SchedulerGrid/Sch.panel.SchedulerTree} component A scheduler panel to be exported.
+     * @param {Object} config Export configuration.
      */
 
     constructor : function (config) {
-        config = config || {};
+        var me              = this;
+
+        config              = config || {};
+
+        me.exportersIndex   = {};
 
         if (config.exportDialogConfig) {
-            Ext.Object.each(this.defaultConfig, function(k, v, o){
+            Ext.Object.each(this.exportConfig, function (k, v, o) {
                 var configK = config.exportDialogConfig[k];
                 if (configK) {
                     o[k] = configK;
@@ -2826,16 +2707,187 @@ Ext.define('DSch.plugin.Export', {
             });
         }
 
-        this.callParent([ config ]);
+        me.callParent([ config ]);
 
-        this.setFileFormat(this.fileFormat);
+        me.setFileFormat(me.fileFormat);
+
+        // if no exporters specified let's set the list of available by default
+        if (!me.exporters) {
+            me.exporters    = me.buildExporters();
+        }
+
+        // instantiate exporters instances in case there were provided just objects w/ xclass
+        me.initExporters();
+
+        // listen to exporters events
+        me.bindExporters();
     },
 
     init : function (scheduler) {
-        this.scheduler = this.component = scheduler;
+        var me                      = this;
 
-        scheduler.showExportDialog = Ext.Function.bind(this.showExportDialog, this);
-        scheduler.doExport         = Ext.Function.bind(this.doExport, this);
+        scheduler.showExportDialog  = Ext.Function.bind(me.showExportDialog, me);
+        scheduler.doExport          = Ext.Function.bind(me.doExport, me);
+        //scheduler.calculatePages    = Ext.Function.bind(me.calculatePages, me);
+
+        me.scheduler                = scheduler;
+    },
+
+
+    initExporters : function () {
+        var me          = this,
+            exporters   = me.exporters;
+
+        for (var i = 0; i < exporters.length; i++) {
+            // instantiate the exporter if needed
+            if (!exporters[i].isExporter) {
+                exporters[i]    = me.createExporter(exporters[i]);
+            }
+        }
+    },
+
+
+    bindExporters : function () {
+        var exporters   = this.exporters;
+
+        for (var i = 0; i < exporters.length; i++) {
+            this.bindExporter(exporters[i]);
+        }
+    },
+
+
+    bindExporter : function (exporter) {
+        var me  = this;
+
+        me.mon(exporter, {
+            commitpage  : me.onPageCommit,
+            collectrows : me.onRowCollected,
+            scope       : me
+        });
+
+    },
+
+
+    unbindExporter : function (exporter) {
+        var me  = this;
+
+        me.mun(exporter, {
+            commitpage  : me.onPageCommit,
+            collectrows : me.onRowCollected,
+            setCalcTotalPdfRequest: me.setCalcTotalPdfRequest,
+            scope       : me
+        });
+
+    },
+
+
+    /**
+     * @protected
+     * Provides the list of available exporter instances.
+     * This method is used to build the default state of the list when no {@link #exporters} provided.
+     * @returns {Array[Sch.plugin.exporter.AbstractExporter]} List of exporters.
+     */
+    buildExporters : function () {
+        return ['DSch.plugin.exporter.MultiPageVertical' ];//  'DSch.plugin.exporter.SinglePage','DSch.plugin.exporter.MultiPage',
+    },
+
+    /**
+     * @protected
+     * Returns config for an exporter being initialized.
+     * Override this to provide custom options for exporters being created.
+     */
+    getExporterConfig : function (className, config) {
+        var me      = this;
+
+        var result  = Ext.apply({
+            translateURLsToAbsolute : me.translateURLsToAbsolute,
+            expandAllBeforeExport   : me.expandAllBeforeExport,
+            DPI                     : me.DPI
+        }, me.exporterConfig);
+
+        if (me.headerTpl) result.headerTpl  = me.headerTpl;
+
+        if (me.headerTplDataFn) {
+            result.headerTplDataFn          = me.headerTplDataFn;
+            result.headerTplDataFnScope     = me.headerTplDataFnScope;
+        }
+
+        if (me.tpl) result.tpl              = me.tpl;
+        if (me.footerTpl) result.footerTpl  = me.footerTpl;
+
+        if (me.footerTplDataFn) {
+            result.footerTplDataFn          = me.footerTplDataFn;
+            result.footerTplDataFnScope     = me.footerTplDataFnScope;
+        }
+
+        return result;
+    },
+
+
+    // @protected
+    createExporter : function (className, config) {
+        var me              = this,
+            exporterConfig  = me.getExporterConfig(className, config);
+
+        if (Ext.isObject(className)) {
+            return Ext.create(Ext.apply(exporterConfig, className));
+        } else {
+            return Ext.create(className, Ext.apply(exporterConfig, config));
+        }
+    },
+
+
+    /**
+     * Adds an exporter.
+     * @param  {Sch.plugin.exporter.AbstractExporter/String} [exporter] An exporter to add.
+     * Might be provided as {@link Sch.plugin.exporter.AbstractExporter} instance or as a class name string plus a configuration object:
+     *
+     *   plugin.registerExporter('MyExporter', { foo : 'bar' });
+     *
+     * Can be ommited to use configuration object only:
+     *
+     *   plugin.registerExporter({ xclass : 'MyExporter', foo : 'bar' });
+     *
+     * @param  {Object} [config]    A configuration object
+     */
+    registerExporter : function (exporter, config) {
+        if (!(exporter instanceof Sch.plugin.exporter.AbstractExporter)) {
+            exporter    = this.createExporter.apply(this, arguments);
+        }
+
+        this.exporters.push(exporter);
+
+        this.bindExporter(exporter);
+    },
+
+
+    /**
+     * Function that returns an exporter instance based on provided exporterId.
+     *
+     * @param {String} exporterId string indicating the registered exporter.
+     *
+     * @return {Sch.plugin.exporter.AbstractExporter} an instance of the exporter.
+     */
+    getExporter : function (exporterId) {
+        if (!exporterId) return;
+
+        var result  = this.exportersIndex[exporterId];
+        if (result) return result;
+
+        result      = this.exportersIndex[exporterId] = Ext.Array.findBy(this.exporters, function (i) {
+            return i.getExporterId() == exporterId;
+        });
+
+        return result;
+    },
+
+    /**
+     * Function that returns all registered exporters.
+     *
+     * @return {Object} an Object containing registered exporters.
+     */
+    getExporters : function () {
+        return this.exporters;
     },
 
     /**
@@ -2844,162 +2896,507 @@ Ext.define('DSch.plugin.Export', {
      * @param {String} format format of the file to set. Can take either `pdf` or `png`.
      */
     setFileFormat : function (format) {
-        if (typeof format !== 'string') {
-            this.fileFormat = 'pdf';
-        } else {
-            format = format.toLowerCase();
-
-            if (format === 'png') {
-                this.fileFormat = format;
-            } else {
-                this.fileFormat = 'pdf';
-            }
-        }
+        this.fileFormat = format;
     },
 
     /**
      * Instantiates and shows a new {@link #exportDialogClassName} class using {@link #exportDialogConfig} config.
      * This popup should give user possibility to change export settings.
      */
-    showExportDialog : function() {
-        var me   = this,
-            view = me.scheduler.getSchedulingView();
+    showExportDialog : function () {
+        var me           = this,
+            view         = me.scheduler.getSchedulingView(),
+            activeDialog = me.getActiveExportDialog();
 
-        //dialog window is always removed to avoid resetting its layout after hiding
-        if (me.win) {
-            me.win.destroy();
-            me.win = null;
+        // only one active dialog is allowed
+        if (activeDialog) {
+            activeDialog.destroy();
         }
 
-        me.win  = Ext.create(me.exportDialogClassName, Ext.apply({   // on submit button press we launch export
-                doExportFn         : me.doExport,
-                doExportFnScope    : me,
-                showHeader         : false,
-                // form related configs
-                startDate          : me.scheduler.getStart(),
-                endDate            : me.scheduler.getEnd(),
-                rowHeight          : view.timeAxisViewModel.getViewRowHeight(),
-                columnWidth        : view.timeAxisViewModel.getTickWidth(),
-                defaultExporter    : me.defaultExporter,
-                // TODO: move "DPI" config to "exportConfig" container and get rid of this Ext.apply()
-                exportConfig       : Ext.apply(me.exportConfig, { DPI : me.DPI }),
-                exporters          : me.exporters,
-                //pageFormats        : me.getPageFormats(),
-                columnPickerConfig : {
-                    columns: me.scheduler.lockedGrid.query('gridcolumn')
-                }
-            }, me.exportDialogConfig)
-        );
+        // create export dialog window
+        me.setActiveExportDialog(Ext.create(me.exportDialogClassName, Ext.apply({
+            // on submit button press we launch export
+            doExportFn         : me.doExport,
+            doExportFnScope    : me,
 
-        /*me.win  = Ext.create(me.exportDialogClassName, {
-         plugin                  : me,
-         exportDialogConfig      : Ext.apply({
-         startDate       : me.scheduler.getStart(),
-         endDate         : me.scheduler.getEnd(),
-         rowHeight       : view.timeAxisViewModel.getViewRowHeight(),
-         columnWidth     : view.timeAxisViewModel.getTickWidth(),
-         defaultConfig   : me.defaultConfig,
-         columnPickerConfig : me.scheduler
-         }, me.exportDialogConfig)
-         });*/
+            // form related configs
+            startDate          : me.scheduler.getStart(),
+            endDate            : me.scheduler.getEnd(),
+            rowHeight          : view.timeAxisViewModel.getViewRowHeight(),
+            columnWidth        : view.timeAxisViewModel.getTickWidth(),
+            showDPIField       : false,
+            showShowHeaderField: false,
+            showHeaderField    : false,
+            defaultExporter    : me.defaultExporter,
+            // TODO: move "DPI" config to "exportConfig" container and get rid of this Ext.apply()
+            exportConfig       : Ext.apply(me.exportConfig, { DPI : me.DPI }),
+            exporters          : me.exporters,
+            pageFormats        : me.getPageFormats(),
+            columnPickerConfig : {
+                columns : me.scheduler.lockedGrid.query('gridcolumn')
+            }
+        }, me.exportDialogConfig)));
 
-       // me.saveComponentState();
+        activeDialog = me.getActiveExportDialog();
 
-        me.win.show();
+        activeDialog.on('destroy', me.onExportDialogDestroy, me);
+
+        // if the dialog has a progress bar onboard
+        if (activeDialog.progressBar) {
+            // let's track the export progress change and update it
+            activeDialog.mon(me, {
+                updateprogressbar : me.onExportProgress,
+                scope             : me
+            });
+        }
+
+        activeDialog.show();
     },
 
+
+    onExportDialogDestroy : function () {
+        this.setActiveExportDialog();
+    },
+
+
+    onExportProgress : function (value, description) {
+        var activeDialog = this.getActiveExportDialog(),
+            progressBar  = activeDialog && activeDialog.progressBar;
+
+        if (progressBar) {
+            progressBar.updateProgress(value);
+
+            if (typeof description == 'string') {
+                progressBar.updateText(description);
+            }
+        }
+    },
+
+
+    showError : function (error) {
+        Ext.Msg.alert('', error || this.L('generalError'));
+    },
+
+
+    getPageFormats : function () {
+        var pageSizes   = this.pageSizes,
+            sizes       = [];
+
+        Ext.Object.each(pageSizes, function (key, value) {
+            sizes.push({
+                width   : value.width,
+                height  : value.height,
+                name    : key
+            });
+        });
+
+        // let's sort page sizes by width and return array of names
+        return Ext.Array.map(sizes.sort(function (a, b) { return a.width - b.width; }), function (size) {
+            return size.name;
+        });
+    },
+
+
+    getExportConfig : function (config) {
+        var me      = this;
+        config.showFooter = me.exportConfig.showFooter;
+        config.showHeader = me.exportConfig.showHeader;
+        var result      = Ext.apply({
+            fileFormat      : me.fileFormat,
+            exporterId      : me.defaultExporter,
+            beforeExport    : Ext.Function.bind(me.beforeExport, me),
+            afterExport     : Ext.Function.bind(me.afterExport, me)
+        }, config, me.exportConfig);
+
+        // get effective DPI
+        result.DPI              = result.DPI || me.DPI;
+        // get page size for provided paper format
+        result.pageSize         = Ext.apply({}, me.pageSizes[result.format]);
+        // covert page size to pixels
+        result.pageSize.width   *= result.DPI;
+        result.pageSize.height  *= result.DPI;
+
+        return result;
+    },
+
+
     /**
-     * Function performing the export operation using config from arguments or default {@link #defaultConfig config}. After getting data
+     * Function performing the export operation using provided config. After getting data
      * from the scheduler an XHR request to {@link #printServer} will be made with the following JSON encoded data :
      *
-     * * `html` {Array}         - array of html strings containing data of each page
-     * * `format` {String}      - paper size of the exported file
-     * * `orientation` {String} - orientation of the exported file
-     * * `range`       {String} - range of the exported file
-     * * `fileFormat`  {String} - file format of the exported file
+     * * `html`        - array of HTML strings containing data of each page
+     * * `format`      - paper size of the exported file
+     * * `orientation` - orientation of the exported file
+     * * `range`       - range of the exported file
+     * * `fileFormat`  - file format of the exported file
      *
-     * @param {Object} [conf] Config options for exporting. If not provided, {@link #defaultConfig} is used.
-     * Possible parameters are :
-     *
-     * * `format` {String}            - format of the exported document/image, selectable from the {@link #pageSizes} list.
-     * * `orientation` {String}       - orientation of the exported document/image. Either `portrait` or `landscape`.
-     * * `range` {String}             - range of the panel to be exported. Selectable from `complete`, `current`, `date`.
-     * * `showHeader` {Boolean}       - boolean value defining if exported pages should have row/column numbers added in the headers.
-     * * `singlePageExport` {Boolean} - boolean value defining if exported file should be divided into separate pages or not.
-     * * `multiPageHorizontal` {Boolean} - boolean value defining if exported file should be divided into separate horizontal pages or not.
+     * @param {Object} [conf] Config options for exporting. If not provided, {@link #exportConfig} is used. Possible parameters are :
+     * @param {String} [conf.format]            - format of the exported document/image, selectable from the {@link #pageSizes} list.
+     * @param {String} [conf.orientation]       - orientation of the exported document/image. Either `portrait` or `landscape`.
+     * @param {String} [conf.range]             - range of the panel to be exported. Selectable from `complete`, `current`, `date`.
+     * @param {Boolean} [conf.showHeader]       - boolean value defining if exported pages should have row/column numbers added in the headers.
+     * @param {String} [conf.exporterId]        - string value defining which exporter to use.
      *
      * @param {Function} [callback] Optional function that will be called after successful response from export backend script.
      * @param {Function} [errback] Optional function that will be called if export backend script returns error.
      */
-    doExport : function (conf, callback, errback) {
-        // put mask on the panel
-        this.mask();
+    doExport : function (conf, callback, errback, scope) {
 
-        var me           = this,
-            component    = me.scheduler,
-            view         = component.getSchedulingView(),
-            config       = conf || me.defaultConfig;
+        var me          = this,
+            component   = me.scheduler,
+            config      = me.getExportConfig(conf);
 
-        // keep scheduler state to restore after export
-        //this.setComponent(component);//me.saveComponentState();
+        me.callbacks     = {
+            success     : callback || Ext.emptyFn,
+            failure     : errback || Ext.emptyFn,
+            scope       : scope || me
+        };
 
-        me.fireEvent('updateprogressbar', 0.1);
+        var exporter    = me.exporter = me.getExporter(config.exporterId);
 
-        this.forEachTimeSpanPlugin(component, function(plug) {
-            plug._renderDelay = plug.renderDelay;
-            plug.renderDelay = 0;
-        });
+        // if we have exporter
+        if (exporter && me.fireEvent('beforeexport', component, exporter, config) !== false) {
 
-        me.getExportJsonHtml(config, function (htmlArray) {
-            //further update progress bar
-            // me.fireEvent('updateprogressbar', 0.4);
-            var main = MyApp.app.getController('Main');
-            var now = main.getTime();
-            var toPdf = window.server+'topdf/toPdf.php?now='+now;
-            //var pdf = window.server+'topdf/output/pdf/mps_output-'+now+'.pdf';
-            var toPdfAjaxConfig = {
-                method: 'POST',
-                url: toPdf,
-                async: false,
-                params: {
-                    now: now
-                },
-                success: function () {
-                    console.log('Success');
-                    window.open(toPdf);
-                },
-                failure: function() {
-                    console.log('Failure');
-                }
-            };
-            Ext.Ajax.request(toPdfAjaxConfig);
-            me.onSuccess();
-            view.timeAxisViewModel.suppressFit = false;
-            me.forEachTimeSpanPlugin(component, function (plug) {
-                plug.renderDelay = plug._renderDelay;
-                delete plug._renderDelay;
-            });
-            // restore scheduler state
-            me.restoreComponentState();//me.restorePanel();
-            // run template method
-            this.afterExport(component);
+            var activeDialog = this.getActiveExportDialog(),
+                progressBar  = activeDialog && activeDialog.progressBar;
 
-            // for test environment we return export results
-            if (me.test) {
-                if(callback) {
-                    callback.call(this, {
-                        htmlArray : Ext.JSON.decode(htmlArray),
-                        calculatedPages : me.exporter.calculatedPages || {}
-                    });
-                }
+            // if export dialog is used and progress bar is there, let's make it visible
+            if (progressBar) {
+                progressBar.show();
             }
+
+            me.mask();
+
+            me.exporter.extractPages(component, config, function (pages) {
+                me.onPagesExtracted(pages, component, exporter, config);
+            }, me);
+        }
+    },
+
+
+    onPagesExtracted : function (pages, component, exporter, config) {
+        this.fireEvent('updateprogressbar', 0.8, this.L('requestingPrintServer'));
+
+        this.doRequest(pages, config);
+    },
+
+
+    onRowCollected : function (exporter, startIndex, endIndex, total) {
+        this.fireEvent('updateprogressbar', 0.2 * (endIndex + 1) / total, Ext.String.format(this.L('fetchingRows'), endIndex + 1, total));
+    },
+
+
+    onPageCommit : function (exporter, page, pageNum, total) {
+        var me = this;
+        total   = Math.max(pageNum, total);
+        !Ext.isDefined(me.pdfPostTotals) && me.setCalcTotalPdfRequest(total);
+        if(me.pdfPostTotals.groupCount === (exporter.extractedPages.length) || me.pdfPostTotals.processGroupsCount === me.pdfPostTotals.groupTotalCount){
+            if(me.pdfPostTotals.processGroupsCount === me.pdfPostTotals.groupTotalCount){
+                if(me.pdfPostTotals.remainder != (exporter.extractedPages.length)){
+                    return;
+                }
+                me.pdfPostTotals.processGroupsCount += 1;
+            }else{
+                me.pdfPostTotals.processGroupsCount += me.pdfPostTotals.groupCount;
+            }
+
+            var promise = this.postPageToPDF(exporter, page, pageNum, total);
+            promise.done(function(){
+                me.fireEvent('updateprogressbar', 0.2 + 0.6 * pageNum / total, Ext.String.format(me.L('builtPage'), pageNum, total));
+            });
+        }
+
+    },
+
+    postPageToPDF:function(exporter, page, pageNum, total){
+        //exporter.extractedPages
+        var me = this;
+        var promise = $.Deferred();
+        var htmlArray = [];
+        $.each(exporter.extractedPages,function(index,p){
+            htmlArray.push({
+                html : exporter.applyPageTpl(p),
+                pageNum : p.number
+            });
         });
+        //var html = exporter.applyPageTpl(page);
+        //exporter.extractedPages.pop();
+        exporter.extractedPages = [];// empty for memory
+
+       /*Ext.Ajax.on('beforerequest', function( conn, options, eOpt){
+           debugger;
+            //conn.setCors(true);
+        });*/
+        var ajaxConfig = {
+            type        : 'POST',
+            url         : me.printPDFServer,
+            timeout     : me.timeout,
+            useDefaultXhrHeader : false,
+            headers     : {
+                //'Access-Control-Allow-Origin':'*',
+                //'X-Requested-With':'XMLHttpRequest'
+                //'Origin':'http://192.168.2.98:8002/'
+            },
+            params      : Ext.apply({
+                //html        : html,
+                pages         : JSON.stringify(htmlArray)
+                //pageNum     : pageNum
+                //format      : me.exporter.getPaperFormat(),
+                //orientation : me.exporter.exportConfig.orientation,
+                //range       : me.exporter.exportConfig.range,
+                //fileFormat  : me.fileFormat
+            }, this.getParameters()),
+            success     : function(){
+                promise.resolve();
+                me.pdfPostTotals.groupsComplete += 1;
+                console.log(pageNum+' :page saved');
+            },
+            failure     : function(){
+                promise.reject();
+                me.pdfPostTotals.groupsComplete += 1;
+                console.log(pageNum+' :page failed');
+            },
+            scope       : me
+        };
+        Ext.apply(ajaxConfig, this.getAjaxConfig(ajaxConfig));
+
+        Ext.Ajax.request(ajaxConfig);
+
+        return promise;
     },
 
     /**
+     * @private
+     * Method that is called after the server responds successfully.
+     * The exported file is shown if {@link #openAfterExport} config is set to `true` (default).
+     */
+    onExportSuccess : function (result) {
+        var me           = this,
+            activeDialog = me.getActiveExportDialog(),
+            callbacks    = me.callbacks,
+            fn           = callbacks && callbacks.success,
+            scope        = callbacks && callbacks.scope || me;
+
+        //set progress to 100%
+        me.fireEvent('updateprogressbar', 1);
+
+        me.unmask();
+
+        fn && fn.apply(scope, arguments);
+
+        setTimeout(function() {
+            me.fireEvent('hidedialogwindow', result);
+
+            activeDialog && activeDialog.destroy();
+
+        }, me.hideExportDialogTimeout);
+
+        if (me.openAfterExport) {
+            setTimeout(function() {
+                window.open(result.url, 'ExportedPanel');
+            }, 0);
+        }
+    },
+
+    /**
+     * @private
+     * Function that is called when the exportserver returned failure. This function will fire the event showdialogerror.
+     * When provided in doExport the callback failure is called.
+     *
+     * @param {String} message Error message provided with the failure.
+     * @param {Object} Response object when the failure is a serverside failure.
+     */
+
+    onExportFailure : function (message, result) {
+        var me          = this,
+            dialog      = this.getActiveExportDialog(),
+            callbacks   = me.callbacks,
+            fn          = callbacks && callbacks.failure,
+            scope       = callbacks && callbacks.scope || me;
+
+        fn && fn.call(scope, message);
+
+        me.fireEvent('showdialogerror', dialog, message, result);
+
+        me.showError(message);
+
+        me.unmask();
+    },
+
+    /**
+     * @protected
+     * Launches a request to the {@link #printServer print server}.
+     * On return {@link #onRequestSuccess} or {@link #onRequestFailure} will be called with the returned response.
+     * @param {Array} exportedPages An array of paginated component content.
+     * @param {Object} config Export configuratin.
+     */
+    doRequest:function(exportedPages, config){
+        var me          = this,
+            component   = me.scheduler;
+
+        if (!me.test && !me.debug) {
+
+            if (me.printServer) {
+
+                var ajaxConfig = {
+                    type        : 'POST',
+                    url         : me.printServer,
+                    timeout     : me.timeout,
+                    useDefaultXhrHeader : false,
+                    params      : Ext.apply({
+                        format      : me.exporter.getPaperFormat(),
+                        orientation : config.orientation.substr(0,1).toUpperCase()+config.orientation.substr(1),
+                        range       : config.range,
+                        DPI         : me.DPI,
+                        fileFormat  : me.fileFormat
+                    }, this.getParameters()),
+                    headers     : {
+                        //'X-Requested-With':'XMLHttpRequest'
+                    },
+                    success     : me.onRequestSuccess,
+                    failure     : me.onRequestFailure,
+                    scope       : me
+                };
+
+                Ext.apply(ajaxConfig, this.getAjaxConfig(ajaxConfig));
+
+                if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal){
+                    Ext.Ajax.request(ajaxConfig);
+                    delete me.pdfPostTotals;
+                }else{
+                    window.doRequestId = window.setInterval(function(){
+                        if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal){
+                            window.clearInterval(window.doRequestId);
+                            Ext.Ajax.request(ajaxConfig);
+                            delete me.pdfPostTotals;
+                        }
+                    },500);
+                }
+
+
+            } else {
+                me.onExportFailure('Print server URL is not defined, please specify printServer config');
+            }
+
+        } else {
+
+            if (me.debug) {
+                var pages   = exportedPages || [];
+
+                for (var i = 0, l = pages.length; i < l; i++) {
+                    var w = window.open();
+
+                    w.document.write(pages[i].html);
+                    w.document.close();
+                }
+            }
+
+            me.onExportSuccess(me.testResponse || { success : true, url : 'foo', htmlArray : exportedPages });
+        }
+    },
+
+
+    __doRequestSaved : function (exportedPages, config) {
+
+        var me          = this,
+            component   = me.scheduler;
+
+        if (!me.test && !me.debug) {
+
+            if (me.printServer) {
+
+                var ajaxConfig = {
+                    type        : 'POST',
+                    url         : me.printServer,
+                    timeout     : me.timeout,
+                    params      : Ext.apply({
+                        html        : {
+                            array : toJson(exportedPages)
+                        },
+                        startDate   : component.getStartDate(),
+                        endDate     : component.getEndDate(),
+                        format      : me.exporter.getPaperFormat(),
+                        orientation : config.orientation,
+                        range       : config.range,
+                        fileFormat  : me.fileFormat
+                    }, this.getParameters()),
+                    success     : me.onRequestSuccess,
+                    failure     : me.onRequestFailure,
+                    scope       : me
+                };
+
+                Ext.apply(ajaxConfig, this.getAjaxConfig(ajaxConfig));
+
+                Ext.Ajax.request(ajaxConfig);
+
+            } else {
+                me.onExportFailure('Print server URL is not defined, please specify printServer config');
+            }
+
+        } else {
+
+            if (me.debug) {
+                var pages   = exportedPages || [];
+
+                for (var i = 0, l = pages.length; i < l; i++) {
+                    var w = window.open();
+
+                    w.document.write(pages[i].html);
+                    w.document.close();
+                }
+            }
+
+            me.onExportSuccess(me.testResponse || { success : true, url : 'foo', htmlArray : exportedPages });
+        }
+
+        function toJson(arrayValues){
+            for(var i=0;i<arrayValues.length;i++){
+                arrayValues[i] = JSON.stringify(arrayValues[i]);
+            }
+            return '['+arrayValues.join(',')+']';
+        }
+    },
+
+    /**
+     * @protected
+     * Runs on request succesful completion.
+     * @param  {Object} response Server response.
+     */
+    onRequestSuccess : function (response) {
+        var me  = this,
+            result;
+
+        try {
+            result = Ext.JSON.decode(response.responseText);
+        } catch (e) {
+            me.onExportFailure('Wrong server response received');
+            return;
+        }
+
+        if (result.success) {
+            me.onExportSuccess(result);
+
+        } else {
+            me.onExportFailure(result.msg, result);
+        }
+    },
+
+    /**
+     * @protected
+     * Runs on request failure.
+     * @param  {Object} response Server response.
+     */
+    onRequestFailure : function (response) {
+        var me  = this,
+            msg = response.status === 200 ? response.responseText : response.statusText;
+
+        me.onExportFailure(msg, response);
+    },
+
+    /**
+     * @template
      * This method can be used to apply additional parameters to the 'params' property of the export {@link Ext.Ajax XHR} request.
      * By default this method returns an empty object.
-     *
      * @return {Object}
      */
     getParameters : function () {
@@ -3008,7 +3405,7 @@ Ext.define('DSch.plugin.Export', {
 
     /**
      * This method can be used to return any extra configuration properties applied to the {@link Ext.Ajax#request} call.
-     *
+     * @template
      * @param {Object} config The proposed Ajax configuration settings. You may read any properties from this object, but modify it at your own risk.
      * @return {Object}
      */
@@ -3016,114 +3413,17 @@ Ext.define('DSch.plugin.Export', {
         return {};
     },
 
-    /*
-     * @private
-     * Method exporting panel's HTML to JSON structure. This function is taking snapshots of the visible panel (by changing timespan
-     * and hiding rows) and pushing their html to an array, which is then encoded to JSON.
-     *
-     * @param {Object} config Object with properties from the editor dialog.
-     *
-     * @return {Array} htmlArray JSON string created from an array of objects with stringified html.
+    /**
+     * Returns the active export dialog window instance.
+     * @return {Sch.widget.ExportDialog} Active export dialog window instance.
      */
-    getExportJsonHtml : function (config, callback) {
-        var me                  = this,
-            component           = me.scheduler,
-            //            htmlArray           = [],
-            //Remove any non-webkit browser-specific css classes
-            re                  = new RegExp(Ext.baseCSSPrefix + 'ie\\d?|' + Ext.baseCSSPrefix + 'gecko', 'g'),
-            bodyClasses         = Ext.getBody().dom.className.replace(re, ''),
-            componentClasses    = component.el.dom.className;
-
-        //Hack for IE
-        if (Ext.isIE) {
-            bodyClasses += ' sch-ie-export';
-        }
-        bodyClasses = bodyClasses.replace('spinner','');
-        var exportConfig = {
-            settings : config,
-            component : component,
-            view : component.getSchedulingView(),
-            exporter : me,
-            showHeader:false,
-            normalGrid : component.normalGrid,
-            lockedGrid : component.lockedGrid,
-            headerHeight : component.normalGrid.headerCt.getHeight(),
-            bodyClasses : bodyClasses,
-            componentClasses : componentClasses,
-            translateURLsToAbsolute : this.translateURLsToAbsolute,
-            tpl : this.tpl,
-            DPI : this.DPI,
-            lockableScope : this.lockableScope,
-            fileFormat : this.fileFormat,
-            restoreSettings : this.restoreSettings
-        };
-
-        //check if we're not exporting to single image as those calculations are not needed in this case
-        if (config.singlePageExport) {
-            me.exporter = Ext.create(me.singlePageExporterClass, exportConfig);
-        }
-        else{
-            me.exporter = Ext.create(me.multiPageExporterClass, exportConfig);
-        }
-
-        var range = me.exporter.setExportRange(config);
-
-        //expand grids in case they're collapsed
-        component.normalGrid.expand();
-        component.lockedGrid.expand();
-
-        // For Tree grid, optionally expand all nodes
-        if (this.expandAllBeforeExport && component.expandAll) {
-            component.expandAll();
-        }
-
-        this.beforeExport(component, range.ticks);
-
-        //we need to prevent Scheduler from auto adjusting the timespan
-        component.timeAxis.autoAdjust = false;
-        me.exporter.getExportJsonHtml(range, function (htmlArray) {
-            component.timeAxis.autoAdjust = true;
-            callback.call(me, Ext.JSON.encode(htmlArray));
-        });
+    getActiveExportDialog : function () {
+        return this.win;
     },
 
-    //Private used to prevent using old reference in the response callbacks
-    getWin : function () {
-        return this.win || null;
-    },
 
-    hideDialogWindow : function(response) {
-        var me  = this;
-        //fire event for hiding window
-        me.fireEvent('hidedialogwindow', response);
-        me.unmask();
-
-        if (me.openAfterExport) {
-            window.open(response.url, 'ExportedPanel');
-        }
-    },
-
-    //Private.
-    onSuccess : function () {
-        var me  = this,
-            win = me.getWin(),
-            result;
-        //set progress to 100%
-        me.fireEvent('updateprogressbar', 1);
-        me.unmask();
-    },
-
-    //Private.
-    onFailure : function (response, errback) {
-        var win = this.getWin(),                     // Not JSON           // Decoded JSON ok
-            msg = response.status === 200 ? response.responseText : response.statusText;
-
-        this.fireEvent('showdialogerror', win, msg);
-        this.unmask();
-
-        if (errback) {
-            errback.call(this, response);
-        }
+    setActiveExportDialog : function (dialog) {
+        this.win = dialog;
     },
 
     /*
@@ -3141,133 +3441,64 @@ Ext.define('DSch.plugin.Export', {
     },
 
     destroy : function () {
-        if (this.win) {
-            this.win.destroy();
+        this.callParent(arguments);
+
+        if (this.getActiveExportDialog()) {
+            this.getActiveExportDialog().destroy();
         }
-    }
-    /*
-     * @private
-     * Save values to restore panel after exporting
-
-    saveRestoreData : function() {
-        var component  = this.scheduler,
-            view       = component.getSchedulingView(),
-            normalGrid = component.normalGrid,
-            lockedGrid = component.lockedGrid;
-
-        var hiddenColumns = {},
-            visibleColumns = [];
-
-        var columnCount = 0;
-
-        lockedGrid.headerCt.items.each(function(column){
-            if (column.hidden) {
-                hiddenColumns[column.id] = column;
-            }
-            else {
-                visibleColumns.push(
-                    {
-                        column : column,
-                        width : column.getWidth()
-                    });
-            }
-        });
-
-        //values needed to restore original size/dates of panel
-        this.restoreSettings = {
-            width           : component.getWidth(),
-            height          : component.getHeight(),
-            rowHeight       : view.timeAxisViewModel.getViewRowHeight(),
-            columnWidth     : view.timeAxisViewModel.getTickWidth(),
-            startDate       : component.getStart(),
-            endDate         : component.getEnd(),
-            normalWidth     : normalGrid.getWidth(),
-            normalLeft      : normalGrid.getEl().getStyle('left'),
-            lockedWidth     : lockedGrid.getWidth(),
-            lockedCollapse  : lockedGrid.collapsed,
-            normalCollapse  : normalGrid.collapsed,
-            hiddenColumns   : hiddenColumns,
-            visibleColumns  : visibleColumns,
-            restoreColumnWidth : false
-        };
     },
-    */
-    /*
+
+    /**
      * @private
-     * Restore panel to pre-export state.
-
-    restorePanel : function () {
-        var s      = this.scheduler,
-            config = this.restoreSettings;
-
-        s.setWidth(config.width);
-        s.setHeight(config.height);
-        s.setTimeSpan(config.startDate, config.endDate);
-        s.setTimeColumnWidth(config.columnWidth, true);
-
-        s.getSchedulingView().setRowHeight(config.rowHeight);
-        s.lockedGrid.show();
-
-        if(config.restoreColumnWidth) {
-            var visibleColumns = config.visibleColumns;
-            for (var i = 0; i < visibleColumns.length; i++) {
-                var cWrap = visibleColumns[i];
-                cWrap.column.setWidth(cWrap.width);
-            }
-        }
-
-        s.normalGrid.setWidth(config.normalWidth);
-        s.normalGrid.getEl().setStyle('left', config.normalLeft);
-        s.lockedGrid.setWidth(config.lockedWidth);
-        s.getSchedulingView().timeAxisViewModel.setTickWidth(config.columnWidth);
-
-        if (config.lockedCollapse) {
-            s.lockedGrid.collapse();
-        }
-        if (config.normalCollapse) {
-            s.normalGrid.collapse();
-        }
-        //We need to update TimeAxisModel for layout fix #1334
-        s.getSchedulingView().timeAxisViewModel.update();
-        Ext.select('.sch-gantt-label-right').setStyle({
-            'font-size':'1.0em',
-            'font-family': 'tahoma',
-            'font-weight':'normal'
-        });
-        Ext.select('.sch-gantt-label-left').setStyle({
-            'font-size':'1.0em',
-            'font-family': 'tahoma',
-            'font-weight':'normal'
-        });
-        Ext.select('.sch-simple-timeheader').setStyle({
-            'font-size':'1.0em',
-            'font-family': 'tahoma',
-            'font-weight':'normal',
-            'white-space':'nowrap'
-        });
-        Ext.select('.x-grid-cell-inner').setStyle({
-            'font-size':'1.0em',
-            'font-weight':'normal',
-            'font-family': 'tahoma',
-            'white-space':'nowrap'
-        });
-        Ext.select('.x-column-header-text').setStyle({
-            'font-size':'1.0em',
-            'font-weight':'normal',
-            'font-family': 'tahoma',
-            'white-space':'nowrap'
-        });
-        Ext.select('.x-tree-elbow-img').setStyle({
-            'width':'16px',
-            'height':'20px',
-            'margin-right':'0'
-        });
-        Ext.select('.sch-gantt-labelct-right').setStyle({
-            'margin-left':'20px'
-        });
-        Ext.select('.sch-gantt-labelct-left').setStyle({
-            'width':'570px'
-        });
+     * This Calc will be used to reduce pdf posts to server by grouping pages together minimizing network latency
+     * calc: Math.floor(Math.sqrt(pageCount))
+     **/
+    setCalcTotalPdfRequest:function(pageCount){
+        var me = this;
+        var calGroupTotal = Math.floor(Math.sqrt(pageCount));
+        var regularGroupTotalCount = calGroupTotal * calGroupTotal;
+        var remainderTotalCount = Math.abs(regularGroupTotalCount - pageCount);
+        me.pdfPostTotals          = {
+                    total                   : pageCount,
+                    processGroupsCount      : 0, //count how many groups process to decide if remainder should be evaluated
+                    groupCount              : calGroupTotal,// wait for this many pages before processing create_htmlToPdf
+                    groupsComplete          : 0,// count how may groups have completed, will equal groupsTotal
+                    groupsTotal             : remainderTotalCount > 0 ? calGroupTotal + 1 : calGroupTotal, //when done wait for groupsComplete count before toPdf
+                    groupTotalCount         : regularGroupTotalCount,// total number of pages squared
+                    remainder               : remainderTotalCount,// remainder after squared from total pages
+                    hasRemainder            : remainderTotalCount > 0//check if has remainder
+        };
     }
-    */
 });
+
+
+
+/*
+ var htmlLength = html.length;
+ //var htmlEnd = htmlLength-3;
+ //var html2 = html.substring(0, htmlLength-3);
+ var htmlObject = html;
+ var ajaxConfig = {};
+ var main = MyApp.app.getController('Main');
+ var url = window.server+'topdf/create_htmlPage.php';
+ var now = main.getTime();
+ var toPdf = window.server+'topdf/toPdf.php?now='+now;
+ ajaxConfig = {
+ method: 'POST',
+ url: url,
+ async: false,
+ params: {
+ html : htmlObject,
+ page : page,
+ now: now
+ },
+ callback: function () {
+ console.log('Page: '+page);
+ },
+ success: function (res) {
+ },
+ failure: function (res) {
+ }
+ };
+ Ext.Ajax.request(ajaxConfig);
+* */

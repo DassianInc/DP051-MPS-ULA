@@ -10,3 +10,8 @@
 .no-icon{
     display : none;
 }
+
+.ula-print-footer{
+    font-size:10px;
+    border-top:thin solid #eee;
+}

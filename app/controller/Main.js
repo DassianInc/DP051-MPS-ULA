@@ -956,6 +956,9 @@
                     name: 'ganttExists'
                 });
 
+                var tpl = me.getBodyTpl();
+                var header = me.getHeaderTpl();
+                var footer = me.getFooterTpl();
                 component.returnValue = Ext.applyIf(config, {
                     taskStore: me.taskStore,
                     lockedGridConfig:{
@@ -995,10 +998,19 @@
                             innerTpl           : '<span class="line-text">{Text}</span>',
                             store              : lineStore
                         }),
-                        Ext.create("DSch.plugin.Export", {//DGnt.plugin.Export
+                        Ext.create("DSch.plugin.Export", {
                             pluginId: 'exportServer',
                             name:'Export',
+                            //tpl : me.getTpl(),
                             printServer     : window.server,
+                            printPDFServer  : window.server,
+                            tpl : tpl,
+                            headerTpl : header,
+                            //headerTplDataFn:header,
+                            //headerTplDataFnScope:me,
+                            footerTpl : footer,
+                            //footerTplDataFn:footer,
+                            //footerTplDataFnScope:me,
                             afterExport :  function (gantt) {
                                 Ext.Ajax.useDefaultXhrHeader = true;
                             },
@@ -1686,13 +1698,19 @@
                 main.changeGanttView('Year');
             }
             main.updateInternalStore('currentTime',time);
-            server.printServer = window.server+'topdf/create_htmlPage.php?now='+time;
-            server.tpl = main.getTpl();
+            server.printServer = window.printServer+'topdf/toPdf.php?now='+time;
+            server.printPDFServer = window.printServer+'topdf/createHtmlPage.php?now='+time;
+            //server.tpl = main.getBodyTpl();
+            //server.headerTpl = main.getHeaderTpl();
+            //server.footerTpl = main.getFooterTpl();
             server.setFileFormat('pdf');
             ganttPanel.showExportDialog();
         },
         setServer:function(){
-            window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/';
+            window.printServer = 'http://192.168.2.98:8002/';//window.server
+            window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
+            window.serverResources = window.printServer+'resources/'
+
         },
         onLaunch: function() {
             var me = this;
@@ -2258,6 +2276,129 @@
             return date;
         },
 
+        getHeaderTpl: function () {
+            var main = MyApp.app.getController('Main'),
+                statusDate = main.getStatusDate(),
+                tpl = new Ext.XTemplate(
+                        '<tpl if="showHeader">' +
+                            '<div class="ula-print-header" style="width:{totalWidth}px"><p>{pageNo}/{totalPages}</p></div>' +
+                        '</tpl>' +
+
+                        '<tpl>' +
+                            '<div class="ula-print-header">' +
+
+                                '<div class="ula-print-header-text" style="width:30%;float:left;text-align:left;">'+
+                                    //'<img src="'+window.server+'images/ula-logo.png" width="150px" align="left"></img>' +
+                                    '<p>Status Date: {[this.getStatusDate()]}</p>' +
+                                '</div>'+
+                                '<div style="width:36%;float:left;text-align:center;">'+
+                                        '<h6><b>MASTER PRODUCTION SCHEDULE (MPS)</b></h6>' +
+                                        '<p>{[this.getPrintTitle()]}</p>' +
+                                        '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
+                                '</div>'+
+                                '<div style="width:30%;float:left;text-align:right;">'+
+                                    '<img src="'+window.serverResources+'images/ula-logo-2.jpg" width="100px" align="right"></img>' +
+                                '</div>'+
+
+
+                            '</div>' +
+
+                        '</tpl>',
+                    {
+                        disableFormats: true,
+                        getStatusDate: function () {
+                            var main = MyApp.app.getController('Main');
+                            var statusDate = main.getStatusDate();
+                            return statusDate;
+                        },
+                        getPrintTitle: function () {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printTitle = configStore.findExact('name', 'printTitle');
+                            if (printTitle !== -1) {
+                                printTitle = configStore.getAt(printTitle).get('value');
+                            } else {
+                                printTitle = '';
+                            }
+                            return printTitle;
+                        }
+                    }
+                );
+            return tpl;
+        },
+        getFooterTpl: function () {
+            var main = MyApp.app.getController('Main'),
+                tpl = new Ext.XTemplate('<tpl>' +
+                            '<div class="ula-print-footer">' +
+                                '<div style="width:32%;float:left;text-align:left;">{[this.getPrintFooterLeft()]}</div>'+
+                                '<div style="width:32%;float:left;text-align:center;">Page {pageNo}</div>'+
+                                '<div style="width:32%;float:left;text-align:right;">{[this.getPrintFooterRight()]}</div>'+
+                            '</div>' +
+                        '</tpl>',
+                    {
+                        getPrintFooterRight: function () {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printFooterRight = configStore.findExact('name', 'printFooterRight');
+                            if (printFooterRight !== -1) {
+                                var checkVAl = configStore.getAt(printFooterRight).get('value');
+                                printFooterRight = Ext.isDefined(checkVAl) ? checkVAl : '';
+                                printFooterRight.replace(/(\r\n|\n|\r)/g, "<br>");
+                            } else {
+                                printFooterRight = '';
+                            }
+                            return printFooterRight;
+                        },
+                        getPrintFooterLeft: function () {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printFooterLeft = configStore.findExact('name', 'printFooterLeft');
+                            if (printFooterLeft !== -1) {
+                                var checkVAl = configStore.getAt(printFooterLeft).get('value');
+                                printFooterLeft = Ext.isDefined(checkVAl) ? checkVAl : '';
+                                printFooterLeft.replace(/(\r\n|\n|\r)/g, "<br>");
+                            } else {
+                                printFooterLeft = '';
+                            }
+                            return printFooterLeft;
+                        },
+                        getPrintFooterCenter: function () {
+                            var configStore = Ext.getStore('GanttConfigStoreXml');
+                            var printFooterCenter = configStore.findExact('name', 'printFooterCenter');
+                            if (printFooterCenter !== -1) {
+                                var checkVAl = configStore.getAt(printFooterCenter).get('value');
+                                printFooterCenter = Ext.isDefined(checkVAl) ? checkVAl : '';
+                                printFooterCenter.replace(/(\r\n|\n|\r)/g, "<br>");
+                            } else {
+                                printFooterCenter = '';
+                            }
+                            return printFooterCenter;
+                        }
+                    }
+                );
+            return tpl;
+        },
+        getBodyTpl:function(){
+            var main = MyApp.app.getController('Main'),
+                statusDate = main.getStatusDate(),
+                //framework/extra/
+                //framework/extra/
+                tpl = new Ext.XTemplate('<!DOCTYPE html>' +
+                    '<html class="' + Ext.baseCSSPrefix + 'border-box {htmlClasses}" style="background-color:white !important">' +
+                    '<head>' +
+                    '<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />' +
+                    '<title>{title}</title>' +
+                    '{styles}' +
+                    '</head>' +
+                        '<body class="' + Ext.baseCSSPrefix + 'webkit sch-export {bodyClasses}" style="background-color:white !important">' +
+                            '{header}' +
+                            '<div style="width:100%" align="center"><div class="{componentClasses}" align="left" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
+                                '{HTML}' +
+                            '</div></div>' +
+                            '{footer}' +
+                        '</body>' +
+                    '</html>',
+                    {}
+                );
+            return tpl;
+        },
         getTpl: function() {
             var main = MyApp.app.getController('Main'),
                 statusDate = main.getStatusDate(),
