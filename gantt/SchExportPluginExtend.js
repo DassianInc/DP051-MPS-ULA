@@ -1,3 +1,9 @@
+/**
+ * Notes:
+ *  Search "Modified by" before upgrading to review places changes were made
+ *
+ **/
+
 
 /**
  @class Sch.plugin.exporter.AbstractExporter
@@ -399,23 +405,36 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
     /**
      * @protected
      * Get links to the stylesheets of current page.
+     * Modified by: craig
      */
     getStylesheets : function() {
         var translate   = this.translateURLsToAbsolute,
-            styleSheets = Ext.getDoc().select('link[rel="stylesheet"]'),
-            ctTmp       = Ext.get(Ext.core.DomHelper.createDom({
+            //styleSheets = Ext.getDoc().select('link[rel="stylesheet"]'),
+            ctTmp  = Ext.get(Ext.core.DomHelper.createDom({
                 tag : 'div'
             })),
+            styles = [
+                window.printServer +'resources/MyApp-all.css',
+                window.printServer +'resources/css/sch-gantt-all-debug.css'
+            ],
             stylesString;
 
-        styleSheets.each(function(s) {
+        Ext.each(styles,function(value,key){
+            ctTmp.appendChild(Ext.get(Ext.core.DomHelper.createDom({
+                tag : 'link',
+                rel : 'stylesheet',
+                href: value
+            })));
+        });
+
+        /*styleSheets.each(function(s) {
             var node    = s.dom.cloneNode(true);
             // put absolute URL to node `href` attribute
             var alternateResources = s.dom.href.replace(window.server,window.printServer);
 
             translate && node.setAttribute('href',alternateResources);
             ctTmp.appendChild(node);
-        });
+        });*/
 
         stylesString = ctTmp.dom.innerHTML + '';
 
@@ -2522,7 +2541,7 @@ Ext.define('DSch.plugin.Export', {
      * @cfg {Number}
      * The timeout in milliseconds to be used for print requests to server.
      */
-    timeout                 : 60000,
+    timeout                 : 6000000,
 
 
     /**
@@ -2728,7 +2747,6 @@ Ext.define('DSch.plugin.Export', {
 
         scheduler.showExportDialog  = Ext.Function.bind(me.showExportDialog, me);
         scheduler.doExport          = Ext.Function.bind(me.doExport, me);
-        //scheduler.calculatePages    = Ext.Function.bind(me.calculatePages, me);
 
         me.scheduler                = scheduler;
     },
@@ -2788,7 +2806,7 @@ Ext.define('DSch.plugin.Export', {
      * @returns {Array[Sch.plugin.exporter.AbstractExporter]} List of exporters.
      */
     buildExporters : function () {
-        return ['DSch.plugin.exporter.MultiPageVertical' ];//  'DSch.plugin.exporter.SinglePage','DSch.plugin.exporter.MultiPage',
+        return ['DSch.plugin.exporter.MultiPageVertical','DSch.plugin.exporter.SinglePage' ];//  'DSch.plugin.exporter.SinglePage','DSch.plugin.exporter.MultiPage',
     },
 
     /**
@@ -3132,14 +3150,9 @@ Ext.define('DSch.plugin.Export', {
             url         : me.printPDFServer,
             timeout     : me.timeout,
             useDefaultXhrHeader : false,
-            headers     : {
-                //'Access-Control-Allow-Origin':'*',
-                //'X-Requested-With':'XMLHttpRequest'
-                //'Origin':'http://192.168.2.98:8002/'
-            },
             params      : Ext.apply({
                 //html        : html,
-                pages         : JSON.stringify(htmlArray)
+                pages         : {array:JSON.stringify(htmlArray)}
                 //pageNum     : pageNum
                 //format      : me.exporter.getPaperFormat(),
                 //orientation : me.exporter.exportConfig.orientation,
