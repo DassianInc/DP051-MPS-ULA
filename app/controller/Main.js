@@ -126,7 +126,7 @@
             var versionValue = versionRecord.get('value');
             try {
                 //text01
-                text01SelectedRecord = ganttConfigStore.findExact('name','text01');
+                var text01SelectedRecord = ganttConfigStore.findExact('name','text01');
                 var text01Record = ganttConfigStore.getAt(text01SelectedRecord);
                 var text01Value = text01Record.get('value');
                 switch (text01Value) {
@@ -148,7 +148,7 @@
                         break;
                 }
                 //text02
-                text02SelectedRecord = ganttConfigStore.findExact('name','text02');
+                var text02SelectedRecord = ganttConfigStore.findExact('name','text02');
                 var text02Record = ganttConfigStore.getAt(text02SelectedRecord);
                 var text02Value = text02Record.get('value');
                 switch (text02Value) {
@@ -170,7 +170,7 @@
                         break;
                 }
                 //text03
-                text03SelectedRecord = ganttConfigStore.findExact('name','text03');
+                var text03SelectedRecord = ganttConfigStore.findExact('name','text03');
                 var text03Record = ganttConfigStore.getAt(text03SelectedRecord);
                 var text03Value = text03Record.get('value');
                 switch (text03Value) {
@@ -192,7 +192,7 @@
                         break;
                 }
                 //text04
-                text04SelectedRecord = ganttConfigStore.findExact('name','text04');
+                var text04SelectedRecord = ganttConfigStore.findExact('name','text04');
                 var text04Record = ganttConfigStore.getAt(text04SelectedRecord);
                 var text04Value = text04Record.get('value');
                 switch (text04Value) {
@@ -214,7 +214,7 @@
                         break;
                 }
                 //text05
-                text05SelectedRecord = ganttConfigStore.findExact('name','text05');
+                var text05SelectedRecord = ganttConfigStore.findExact('name','text05');
                 var text05Record = ganttConfigStore.getAt(text05SelectedRecord);
                 var text05Value = text05Record.get('value');
                 switch (text05Value) {
@@ -236,7 +236,7 @@
                         break;
                 }
                 //text06
-                text06SelectedRecord = ganttConfigStore.findExact('name','text06');
+                var text06SelectedRecord = ganttConfigStore.findExact('name','text06');
                 var text06Record = ganttConfigStore.getAt(text06SelectedRecord);
                 var text06Value = text06Record.get('value');
                 switch (text06Value) {
@@ -258,7 +258,7 @@
                         break;
                 }
                 //text07
-                text07SelectedRecord = ganttConfigStore.findExact('name','text07');
+                var text07SelectedRecord = ganttConfigStore.findExact('name','text07');
                 var text07Record = ganttConfigStore.getAt(text07SelectedRecord);
                 var text07Value = text07Record.get('value');
                 switch (text07Value) {
@@ -280,7 +280,7 @@
                         break;
                 }
                 //text08
-                text08SelectedRecord = ganttConfigStore.findExact('name','text08');
+                var text08SelectedRecord = ganttConfigStore.findExact('name','text08');
                 var text08Record = ganttConfigStore.getAt(text08SelectedRecord);
                 var text08Value = text08Record.get('value');
                 switch (text08Value) {
@@ -302,7 +302,7 @@
                         break;
                 }
                 //text09
-                text09SelectedRecord = ganttConfigStore.findExact('name','text09');
+                var text09SelectedRecord = ganttConfigStore.findExact('name','text09');
                 var text09Record = ganttConfigStore.getAt(text09SelectedRecord);
                 var text09Value = text09Record.get('value');
                 switch (text09Value) {
@@ -324,7 +324,7 @@
                         break;
                 }
                 //text10
-                text10SelectedRecord = ganttConfigStore.findExact('name','text10');
+                var text10SelectedRecord = ganttConfigStore.findExact('name','text10');
                 var text10Record = ganttConfigStore.getAt(text10SelectedRecord);
                 var text10Value = text10Record.get('value');
                 switch (text10Value) {
@@ -346,7 +346,7 @@
                         break;
                 }
                 //text11
-                text11SelectedRecord = ganttConfigStore.findExact('name','text11');
+                var text11SelectedRecord = ganttConfigStore.findExact('name','text11');
                 var text11Record = ganttConfigStore.getAt(text11SelectedRecord);
                 var text11Value = text11Record.get('value');
                 switch (text11Value) {
@@ -368,7 +368,7 @@
                         break;
                 }
                 //text12
-                text12SelectedRecord = ganttConfigStore.findExact('name','text12');
+                var text12SelectedRecord = ganttConfigStore.findExact('name','text12');
                 var text12Record = ganttConfigStore.getAt(text12SelectedRecord);
                 var text12Value = text12Record.get('value');
                 switch (text12Value) {
@@ -390,7 +390,7 @@
                         break;
                 }
                 //text13
-                text13SelectedRecord = ganttConfigStore.findExact('name','text13');
+                var text13SelectedRecord = ganttConfigStore.findExact('name','text13');
                 var text13Record = ganttConfigStore.getAt(text13SelectedRecord);
                 var text13Value = text13Record.get('value');
                 switch (text13Value) {
@@ -412,7 +412,7 @@
                         break;
                 }
                 //text14
-                text14SelectedRecord = ganttConfigStore.findExact('name','text14');
+                var text14SelectedRecord = ganttConfigStore.findExact('name','text14');
                 var text14Record = ganttConfigStore.getAt(text14SelectedRecord);
                 var text14Value = text14Record.get('value');
                 switch (text14Value) {
@@ -434,7 +434,7 @@
                         break;
                 }
                 //text15
-                text15SelectedRecord = ganttConfigStore.findExact('name','text15');
+                var text15SelectedRecord = ganttConfigStore.findExact('name','text15');
                 var text15Record = ganttConfigStore.getAt(text15SelectedRecord);
                 var text15Value = text15Record.get('value');
                 switch (text15Value) {
@@ -1028,14 +1028,21 @@
                             var color = record.get('color');
                             var depth = record.getDepth();
                             if (color == 'red' && depth < 3) {
-                                rightLabel = record.get('Note');
+                                var rightLabel = record.get('Note');
                                 return rightLabel;
                             } if (color == 'lightBlue') {
-                                rightLabel = record.get('smDuration');
-                                rightLabel = Math.round(rightLabel);
-                                return rightLabel+' days';
+                                rightLabel = 0;
+                                if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
+                                    var diff = (+record.get('StartDate')) - (+record.get('EndDate'));
+                                    var days = 86400000 / Math.abs(diff);
+                                    rightLabel = days > 0 ? days -1 : days;
+                                }else{
+                                    rightLabel = record.get('smDuration');
+                                    rightLabel = Math.round(rightLabel);
+                                }
+                                return Math.floor(rightLabel)+' days';
                             } else {
-                                var rightLabel = record.get('EndDate');
+                                 rightLabel = record.get('EndDate');
                                 var mth = rightLabel.getUTCMonth()+1;
                                 var day = rightLabel.getUTCDate();
                                 if (day-1===0) {
@@ -1668,21 +1675,21 @@
         onExpandClick: function(button, e, eOpts) {
             var me = this;
             var treePanel = Ext.ComponentManager.get('ganttPanel');
-            treePanel.setLoading(true);
+            me.getMyPanel().setLoading(true);
             Ext.defer(function(){
                 me.expandAll(treePanel);
+                me.getMyPanel().setLoading(false);
             }, 300);
-            treePanel.setLoading(false);
         },
 
         onMinimizeClick: function(button, e, eOpts) {
             var me = this;
             var treePanel = Ext.ComponentManager.get('ganttPanel');
-            treePanel.setLoading(true);
+            me.getMyPanel().setLoading(true);
             Ext.defer(function(){
                 me.collapseAll(treePanel);
+                me.getMyPanel().setLoading(false);
             }, 300);
-            treePanel.setLoading(false);
         },
 
         onPrintToPdfClick: function(button, e, eOpts) {
@@ -1700,9 +1707,7 @@
             main.updateInternalStore('currentTime',time);
             server.printServer = window.printServer+'topdf/toPdf.php?now='+time;
             server.printPDFServer = window.printServer+'topdf/createHtmlPage.php?now='+time;
-            //server.tpl = main.getBodyTpl();
-            //server.headerTpl = main.getHeaderTpl();
-            //server.footerTpl = main.getFooterTpl();
+
             server.setFileFormat('pdf');
             ganttPanel.showExportDialog();
         },
