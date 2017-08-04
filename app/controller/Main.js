@@ -1711,230 +1711,247 @@
             server.setFileFormat('pdf');
             ganttPanel.showExportDialog();
         },
+
         setServer:function(){
-            window.printServer = 'http://192.168.2.98:8002/';//window.server
-            window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
-            window.serverResources = window.printServer+'resources/'
+            return $.ajax({
+                url: '/dsnwebui/dsnwebui_rest/ServerStoreXml',
+                method: 'GET',
+                success: function(res) {
+                    var server = res.getElementsByTagName("number")[0].firstChild.valueOf().textContent;
+                    window.server = server;
+                    window.printServer = server;//'http://192.168.2.98:8002/'
+                    window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
+                    window.serverResources = window.printServer+'resources/';
+                },
+                error: function(res) {
+                    alert('No entry maintained for source server in Z051ULA_MD01');
+                }
+            })
+
 
         },
+
         onLaunch: function() {
             var me = this;
-            me.setServer();
-            // get users
-            me.getStore('UserStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            // get Selection Variants
-            me.getStore('SelectionVariantStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            // get Column Variants
-            me.getStore('ColumnStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            // get Materials
-            me.getStore('PartNumberStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            //get Column Variants
-            var ColumnVariantStoreXml = me.getStore('ColumnStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            //get Versions
-            var VersionStoreXml = me.getStore('VersionStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            //get Params
-            var ParamStoreXml = me.getStore('ParamStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            //get Tasks
-            var taskStoreXml = me.getStore('taskStore').load({
-                action: 'read',
-                scope: me
-            });
-            //get Gantt Config
-            var GanttConfigStoreXml = me.getStore('GanttConfigStoreXml').load({
-                action: 'read',
-                scope: me,
-                callback: function (){
-                    var myPanel = Ext.widget('mypanel');
-                    var mainView = Ext.ComponentManager.get('mainView');
-                    mainView.insert(0,myPanel);
-                }
-            });
-            var SelectionVariantStoreXml = me.getStore('SelectionVariantStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            var SelectedObjectStoreXml = me.getStore('SelectedObjectStoreXml').load({
-                action: 'read',
-                scope: me
-            });
-            var ParamStoreXml = me.getStore('PassedObjectsStoreXml').load({
-                action: 'read',
-                scope: me,
-                callback: function () {
-                    ParamStoreXml.each(
-                        function (record) {
-                            var name = record.get('name');
-                            var value = record.get('value');
-                            var selectedStore = Ext.getStore('SelectedObjectStoreXml');
-                            switch (name) {
-                                case 'network' :
-                                    var networkParentNode = SelectedObjectStoreXml.getNodeById("networkParentNode");
-                                    var networkChildNode = networkParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'material' :
-                                    var materialParentNode = SelectedObjectStoreXml.getNodeById("materialParentNode");
-                                    var materialChildNode = materialParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'plant' :
-                                    var plantParentNode = SelectedObjectStoreXml.getNodeById("plantParentNode");
-                                    var plantChildNode = plantParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'effectivity' :
-                                    var effectivityParentNode = SelectedObjectStoreXml.getNodeById("effectivityParentNode");
-                                    var effectivityChildNode = effectivityParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'program' :
-                                    var programParentNode = SelectedObjectStoreXml.getNodeById("programParentNode");
-                                    var programkChildNode = programParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'primaryMission' :
-                                    var primaryMissionParentNode = SelectedObjectStoreXml.getNodeById("primaryMissionParentNode");
-                                    var primaryMissionChildNode = primaryMissionParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'buildItem' :
-                                    var buildItemParentNode = SelectedObjectStoreXml.getNodeById("buildItemParentNode");
-                                    var buildItemChildNode = buildItemParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'tailNumber' :
-                                    var tailNumberParentNode = SelectedObjectStoreXml.getNodeById("tailNumberParentNode");
-                                    var tailNumberChildNode = tailNumberParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'name' :
-                                    var nameParentNode = SelectedObjectStoreXml.getNodeById("nameParentNode");
-                                    var nameChildNode = nameParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
-                                case 'notes' :
-                                    var notesParentNode = SelectedObjectStoreXml.getNodeById("notesParentNode");
-                                    var notesChildNode = notesParentNode.appendChild({
-                                        type: name,
-                                        number: value,
-                                        leaf: true
-                                    });
-                                    break;
+           var promise =  me.setServer();
+            promise.done(function(){
+                // get users
+                me.getStore('UserStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                // get Selection Variants
+                me.getStore('SelectionVariantStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                // get Column Variants
+                me.getStore('ColumnStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                // get Materials
+                me.getStore('PartNumberStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                //get Column Variants
+                var ColumnVariantStoreXml = me.getStore('ColumnStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                //get Versions
+                var VersionStoreXml = me.getStore('VersionStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                //get Params
+                var ParamStoreXml = me.getStore('ParamStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                //get Tasks
+                var taskStoreXml = me.getStore('taskStore').load({
+                    action: 'read',
+                    scope: me
+                });
+                //get Gantt Config
+                var GanttConfigStoreXml = me.getStore('GanttConfigStoreXml').load({
+                    action: 'read',
+                    scope: me,
+                    callback: function (){
+                        var myPanel = Ext.widget('mypanel');
+                        var mainView = Ext.ComponentManager.get('mainView');
+                        mainView.insert(0,myPanel);
+                    }
+                });
+                var SelectionVariantStoreXml = me.getStore('SelectionVariantStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                var SelectedObjectStoreXml = me.getStore('SelectedObjectStoreXml').load({
+                    action: 'read',
+                    scope: me
+                });
+                var ParamStoreXml = me.getStore('PassedObjectsStoreXml').load({
+                    action: 'read',
+                    scope: me,
+                    callback: function () {
+                        ParamStoreXml.each(
+                            function (record) {
+                                var name = record.get('name');
+                                var value = record.get('value');
+                                var selectedStore = Ext.getStore('SelectedObjectStoreXml');
+                                switch (name) {
+                                    case 'network' :
+                                        var networkParentNode = SelectedObjectStoreXml.getNodeById("networkParentNode");
+                                        var networkChildNode = networkParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'material' :
+                                        var materialParentNode = SelectedObjectStoreXml.getNodeById("materialParentNode");
+                                        var materialChildNode = materialParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'plant' :
+                                        var plantParentNode = SelectedObjectStoreXml.getNodeById("plantParentNode");
+                                        var plantChildNode = plantParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'effectivity' :
+                                        var effectivityParentNode = SelectedObjectStoreXml.getNodeById("effectivityParentNode");
+                                        var effectivityChildNode = effectivityParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'program' :
+                                        var programParentNode = SelectedObjectStoreXml.getNodeById("programParentNode");
+                                        var programkChildNode = programParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'primaryMission' :
+                                        var primaryMissionParentNode = SelectedObjectStoreXml.getNodeById("primaryMissionParentNode");
+                                        var primaryMissionChildNode = primaryMissionParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'buildItem' :
+                                        var buildItemParentNode = SelectedObjectStoreXml.getNodeById("buildItemParentNode");
+                                        var buildItemChildNode = buildItemParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'tailNumber' :
+                                        var tailNumberParentNode = SelectedObjectStoreXml.getNodeById("tailNumberParentNode");
+                                        var tailNumberChildNode = tailNumberParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'name' :
+                                        var nameParentNode = SelectedObjectStoreXml.getNodeById("nameParentNode");
+                                        var nameChildNode = nameParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                    case 'notes' :
+                                        var notesParentNode = SelectedObjectStoreXml.getNodeById("notesParentNode");
+                                        var notesChildNode = notesParentNode.appendChild({
+                                            type: name,
+                                            number: value,
+                                            leaf: true
+                                        });
+                                        break;
+                                }
                             }
-                        }
-                    );
-                }
+                        );
+                    }
+                });
+                //Define Selected Objects Nodes
+                var rootNode = SelectedObjectStoreXml.getRootNode();
+                var networkNode = rootNode.appendChild({
+                    id: 'networkParentNode',
+                    type: "Network",
+                    number: 'Network',
+                    leaf: false
+                });
+                var materialNode = rootNode.appendChild({
+                    id: "materialParentNode",
+                    type: "Material",
+                    number: "Material",
+                    leaf: false
+                });
+                var effectivityNode = rootNode.appendChild({
+                    id: "effectivityParentNode",
+                    type: "Effectivity",
+                    number: "Effectivity",
+                    leaf: false
+                });
+                var plantNode = rootNode.appendChild({
+                    id: "plantParentNode",
+                    type: "Plant",
+                    number: "Plant",
+                    leaf: false
+                });
+                var programNode = rootNode.appendChild({
+                    id: "programParentNode",
+                    type: "Program",
+                    number: "Program",
+                    leaf: false
+                });
+                var primaryMissionNode = rootNode.appendChild({
+                    id: "primaryMissionParentNode",
+                    type: "Primary Mission",
+                    number: "Primary Mission",
+                    leaf: false
+                });
+                var buildItemNode = rootNode.appendChild({
+                    id: "buildItemParentNode",
+                    type: "Build Item",
+                    number: "Build Item",
+                    leaf: false
+                });
+                var tailNumberNode = rootNode.appendChild({
+                    id: "tailNumberParentNode",
+                    type: "Tail Number",
+                    number: "Tail Number",
+                    leaf: false
+                });
+                var nameNode = rootNode.appendChild({
+                    id: "nameParentNode",
+                    type: "Name",
+                    number: "Name",
+                    leaf: false
+                });
+                var notesNode = rootNode.appendChild({
+                    id: "notesParentNode",
+                    type: "Notes",
+                    number: "Notes",
+                    leaf: false
+                });
             });
-            //Define Selected Objects Nodes
-            var rootNode = SelectedObjectStoreXml.getRootNode();
-            var networkNode = rootNode.appendChild({
-                id: 'networkParentNode',
-                type: "Network",
-                number: 'Network',
-                leaf: false
-            });
-            var materialNode = rootNode.appendChild({
-                id: "materialParentNode",
-                type: "Material",
-                number: "Material",
-                leaf: false
-            });
-            var effectivityNode = rootNode.appendChild({
-                id: "effectivityParentNode",
-                type: "Effectivity",
-                number: "Effectivity",
-                leaf: false
-            });
-            var plantNode = rootNode.appendChild({
-                id: "plantParentNode",
-                type: "Plant",
-                number: "Plant",
-                leaf: false
-            });
-            var programNode = rootNode.appendChild({
-                id: "programParentNode",
-                type: "Program",
-                number: "Program",
-                leaf: false
-            });
-            var primaryMissionNode = rootNode.appendChild({
-                id: "primaryMissionParentNode",
-                type: "Primary Mission",
-                number: "Primary Mission",
-                leaf: false
-            });
-            var buildItemNode = rootNode.appendChild({
-                id: "buildItemParentNode",
-                type: "Build Item",
-                number: "Build Item",
-                leaf: false
-            });
-            var tailNumberNode = rootNode.appendChild({
-                id: "tailNumberParentNode",
-                type: "Tail Number",
-                number: "Tail Number",
-                leaf: false
-            });
-            var nameNode = rootNode.appendChild({
-                id: "nameParentNode",
-                type: "Name",
-                number: "Name",
-                leaf: false
-            });
-            var notesNode = rootNode.appendChild({
-                id: "notesParentNode",
-                type: "Notes",
-                number: "Notes",
-                leaf: false
-            });
+
 
         },
 
