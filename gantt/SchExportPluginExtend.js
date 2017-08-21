@@ -71,7 +71,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
 
     normalRowsHeight        : 0,
 
-    iterateTimeout          : 10,
+    iterateTimeout          : 5,
 
     /**
      * @cfg {String} tableSelector
@@ -821,7 +821,6 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         }, config);
 
         me.extractedPages.push(page);
-
         me.fireEvent('commitpage', me, page, me.numberOfPages, me.getExpectedNumberOfPages());
     },
 
@@ -895,11 +894,11 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         var next    = function () {
             var args    = arguments;
 
-            // run iteration step asynchronously w/ delay
-            var interval = setInterval(function() {
-                clearInterval(interval);
+         //run iteration step asynchronously w/ delay
+           var interval = setInterval(function() {
+               clearInterval(interval);
                 fn.apply(scope, [].concat.apply([ next ], args));
-            }, me.iterateTimeout);
+           }, me.iterateTimeout);
 
         };
 
@@ -909,10 +908,10 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
     callAsync : function (fn, scope) {
         scope = scope || this;
 
-        var interval = setInterval(function() {
+       var interval = setInterval(function() {
             clearInterval(interval);
             fn.apply(scope, Ext.Array.slice(arguments, 2));
-        }, this.iterateTimeout);
+       }, 1);
     },
 
 
@@ -1018,7 +1017,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
                     me.scrollTo(endIndex + 1, function () {
                         next(endIndex + 1, callback, scope, config);
                     });
-                });
+               });
 
             } else {
                 me.callAsync(function () {
@@ -2806,7 +2805,7 @@ Ext.define('DSch.plugin.Export', {
      * @returns {Array[Sch.plugin.exporter.AbstractExporter]} List of exporters.
      */
     buildExporters : function () {
-        return ['DSch.plugin.exporter.MultiPageVertical','DSch.plugin.exporter.SinglePage' ];//  'DSch.plugin.exporter.SinglePage','DSch.plugin.exporter.MultiPage',
+        return ['DSch.plugin.exporter.MultiPageVertical'];//  'DSch.plugin.exporter.SinglePage','DSch.plugin.exporter.MultiPage',
     },
 
     /**
@@ -2925,7 +2924,7 @@ Ext.define('DSch.plugin.Export', {
         var me           = this,
             view         = me.scheduler.getSchedulingView(),
             activeDialog = me.getActiveExportDialog();
-
+        window.appState.killExport = false;
         // only one active dialog is allowed
         if (activeDialog) {
             activeDialog.destroy();
@@ -2957,7 +2956,11 @@ Ext.define('DSch.plugin.Export', {
 
         activeDialog = me.getActiveExportDialog();
 
-        activeDialog.on('destroy', me.onExportDialogDestroy, me);
+        activeDialog.on('destroy', function(){
+            window.appState.killExport = true;
+            me.unmask();
+            me.onExportDialogDestroy();
+        }, me);
 
         // if the dialog has a progress bar onboard
         if (activeDialog.progressBar) {
@@ -3059,7 +3062,9 @@ Ext.define('DSch.plugin.Export', {
      * @param {Function} [errback] Optional function that will be called if export backend script returns error.
      */
     doExport : function (conf, callback, errback, scope) {
-
+        if(window.appState.killExport){
+            return;
+        }
         var me          = this,
             component   = me.scheduler,
             config      = me.getExportConfig(conf);
@@ -3086,6 +3091,9 @@ Ext.define('DSch.plugin.Export', {
             me.mask();
 
             me.exporter.extractPages(component, config, function (pages) {
+                if(window.appState.killExport){
+                    return;
+                }
                 me.onPagesExtracted(pages, component, exporter, config);
             }, me);
         }
@@ -3106,6 +3114,9 @@ Ext.define('DSch.plugin.Export', {
 
     onPageCommit : function (exporter, page, pageNum, total) {
         var me = this;
+        if(window.appState.killExport){
+            return;
+        }
         total   = Math.max(pageNum, total);
         !Ext.isDefined(me.pdfPostTotals) && me.setCalcTotalPdfRequest(total);
         if(me.pdfPostTotals.groupCount === (exporter.extractedPages.length) || me.pdfPostTotals.processGroupsCount === me.pdfPostTotals.groupTotalCount){
@@ -3246,7 +3257,9 @@ Ext.define('DSch.plugin.Export', {
     doRequest:function(exportedPages, config){
         var me          = this,
             component   = me.scheduler;
-
+        if(window.appState.killExport){
+            return;
+        }
         if (!me.test && !me.debug) {
 
             if (me.printServer) {
@@ -3278,10 +3291,14 @@ Ext.define('DSch.plugin.Export', {
                     delete me.pdfPostTotals;
                 }else{
                     window.doRequestId = window.setInterval(function(){
+
                         if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal){
                             window.clearInterval(window.doRequestId);
                             Ext.Ajax.request(ajaxConfig);
                             delete me.pdfPostTotals;
+                        }else if(window.appState.killExport){
+                            window.clearInterval(window.doRequestId);
+                            return;
                         }
                     },500);
                 }
@@ -3469,6 +3486,7 @@ Ext.define('DSch.plugin.Export', {
     setCalcTotalPdfRequest:function(pageCount){
         var me = this;
         var calGroupTotal = Math.floor(Math.sqrt(pageCount));
+        calGroupTotal  = calGroupTotal > 10 ? 10 : calGroupTotal;//max export per request to 10 pages.
         var regularGroupTotalCount = calGroupTotal * calGroupTotal;
         var remainderTotalCount = Math.abs(regularGroupTotalCount - pageCount);
         me.pdfPostTotals          = {
