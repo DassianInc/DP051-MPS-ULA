@@ -49,7 +49,7 @@ Temporary Items
 .sencha/
 ext/
 build/
-fonts/
+#fonts/
 sass/
 testing/
 desktop/

@@ -125,6 +125,15 @@
             "bundle": true
         },
         {
+            "path": "resources/bluebird.js",
+            "remote": true
+        },
+        {
+            "path": "resources/overrides.js",
+            //"x-compile": true,
+            "remote": true
+        },
+        {
             "path": "resources/jquery.js",
             //"x-compile": true,
             "remote": true

@@ -23,6 +23,7 @@ Ext.define('MyApp.view.MyPanel12', {
         'Ext.toolbar.Spacer',
         'Ext.form.field.ComboBox',
         'Ext.toolbar.TextItem',
+        'Ext.grid.filters.filter.*',
         'Ext.tree.Panel'
     ],
 
@@ -31,7 +32,6 @@ Ext.define('MyApp.view.MyPanel12', {
     layout: 'card',
     header: false,
     title: 'My Panel',
-
     initComponent: function() {
         var me = this;
         var ganttConfig = me.processGanttPanel({
@@ -84,10 +84,10 @@ Ext.define('MyApp.view.MyPanel12', {
                     xtype: 'button',
                     height: 35,
                     width: 35,
-                    icon: 'images/power.png',
+                    //icon: 'images/power.png',
                     iconAlign: 'bottom',
-                    scale: 'large',
-                    text: '',
+                    scale: 'small',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-play-circle fa-2x'></i></span>",
                     tooltip: 'Run',
                     listeners: {
                         click: {
@@ -98,14 +98,14 @@ Ext.define('MyApp.view.MyPanel12', {
                 },
                 {
                     xtype: 'button',
-                    icon: 'images/settings.png',
-                    scale: 'large',
-                    text: '',
+                    //icon: 'images/settings.png',
+                    scale: 'small',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-cog fa-2x'></i></span>",
                     tooltip: 'Selection Settings',
                     listeners: {
                         click: {
-                            fn: me.openSettings,
-                            scope: me
+                            fn: me.openSettings
+                          //  scope: me
                         }
                     }
                 },
@@ -121,16 +121,16 @@ Ext.define('MyApp.view.MyPanel12', {
                     },
                     hidden: true,
                     id: 'exportToExcel',
-                    icon: 'images/excel.png',
-                    scale: 'large',
-                    text: ''
+                    //icon: 'images/excel.png',
+                    scale: 'small',
+                    text:"Excel"
                 },
                 {
                     xtype: 'button',
                     id: 'printToPdf',
-                    icon: 'images/pdf.png',
-                    scale: 'large',
-                    text: '',
+                    //icon: 'images/pdf.png',
+                    scale: 'small',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-file-pdf-o fa-2x'></i></span>",
                     tooltip: 'Print to PDF'
                 },
                 {
@@ -139,9 +139,9 @@ Ext.define('MyApp.view.MyPanel12', {
                     //id: '',
                     itemId: 'expand',
                     width: 35,
-                    icon: 'images/expand.png',
-                    scale: 'large',
-                    text: '',
+                    //icon: 'images/expand.png',
+                    scale: 'small',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-plus-square fa-2x'></i></span>",
                     tooltip: 'Expand All'
                 },
                 {
@@ -149,10 +149,26 @@ Ext.define('MyApp.view.MyPanel12', {
                     height: 35,
                     itemId: 'minimize',
                     width: 35,
-                    icon: 'images/minimize.png',
-                    scale: 'large',
-                    text: '',
+                    //icon: 'images/minimize.png',
+                    scale: 'small',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-minus-square fa-2x'></i></span>",
                     tooltip: 'Minimize All'
+                },
+                {
+                    xtype: 'button',
+                    id:'refresh',
+                    tooltip: 'Refresh to clear sort',
+                    scale: 'small',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-refresh fa-2x'></i></span>",
+                    handler: function( btn, e, opts ) {
+                        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                        var store = ganttPanel.getStore();
+                        store.sorters.clear();
+                        Ext.each(store.data.originalMap,function(key){
+                            store.add(store.getById(key));
+                        });
+                        ganttPanel.getView().refresh();
+                    }
                 },
                 {
                     xtype: 'button',
@@ -177,8 +193,9 @@ Ext.define('MyApp.view.MyPanel12', {
                     itemId: 'showBaseline',
                     width: 35,
                     enableToggle: true,
-                    icon: 'images/baseline.png',
-                    scale: 'large',
+                    //icon: 'images/baseline.png',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-bold fa-2x'></i></span>",
+                    scale: 'small',
                     tooltip: 'Toggle Baseline',
                     listeners: {
                         afterrender: {
@@ -199,8 +216,9 @@ Ext.define('MyApp.view.MyPanel12', {
                     itemId: 'showLabels',
                     width: 35,
                     enableToggle: true,
-                    icon: 'images/labels.png',
-                    scale: 'large',
+                    text:"<span style='padding-top:10px;'><i class='fa fa-tags fa-2x'></i></span>",
+                    //icon: 'images/labels.png',
+                    scale: 'small',
                     tooltip: 'Toggle Labels'
                 },
                 {
@@ -296,10 +314,11 @@ Ext.define('MyApp.view.MyPanel12', {
                 {
                     xtype: 'tbtext',
                     id: 'recordCount',
-                    text: 'Record Count: None Loaded'
+                    text: 'Record Count: 0'
                 }
             ]
         }];
+
 
         me.callParent(arguments);
     },
@@ -329,7 +348,7 @@ Ext.define('MyApp.view.MyPanel12', {
                 no: 'No'
             }
         });
-        if (promptShow == -1){
+        if (promptShow === -1){
             prompt.show({
                 title: 'Full Schedule?',
                 msg: 'No selection data input. Would you like to view the full schedule?',
@@ -443,10 +462,15 @@ Ext.define('MyApp.view.MyPanel12', {
                             callback: function() {
                                 Ext.suspendLayouts();
                                 taskStore.load({
-                                    callback: function(){
+                                    callback: function(resp,opt,d){
                                         Ext.resumeLayouts(true);
                                         var recordCountButton = Ext.ComponentManager.get('recordCount');
                                         var recordCount = taskStore.getCount();
+
+                                        taskStore.data.originalMap = [];
+                                        $.each(taskStore.data.map,function(key){
+                                            taskStore.data.originalMap.push(key);
+                                        });
                                         recordCountButton.setText('Record Count: '+recordCount);
                                         ganttPanel.setLoading(false);
                                     }
@@ -468,35 +492,28 @@ Ext.define('MyApp.view.MyPanel12', {
 
             //column variant
             var columnVariantIndex = passedConfigStore.findExact('type','columnVariant');
-            if (columnVariantIndex != '-1'){
+            if (columnVariantIndex > -1){
                 var columnVariantRecord = passedConfigStore.getAt(columnVariantIndex);
                 var columnVariant = columnVariantRecord.get('value');
                 var columnVariantMsg = '';
-            } else {
-
-
             }
 
             //selection variant
             var selectionVariantIndex = passedConfigStore.findExact('type','selectionVariant');
-            if (selectionVariantIndex != '-1'){
+            if (selectionVariantIndex > -1){
                 var selectionVariantRecord = passedConfigStore.getAt(selectionVariantIndex);
                 var selectionVariant = selectionVariantRecord.get('value');
                 var selectionVariantMsg = '';
-            } else {
-
             }
             var versionIndex = passedConfigStore.findExact('type','version');
-            if (versionIndex != '-1') {
+            if (versionIndex > -1) {
                 var versionRecord = passedConfigStore.getAt(versionIndex);
                 var version = versionRecord.get('value');
                 var versionMsg = '';
-            } else {
-
             }
             //mission Options
             var missionOptionsIndex = passedObjectsStore.findExact('type','missionOptions');
-            if (missionOptionsIndex == -1) {
+            if (missionOptionsIndex === -1) {
                 var missionOptionsInit = '';
                 var missionOptionsType = 'missionOptions';
                 passedObjectsStore.add({
@@ -506,7 +523,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }
             //produciton end items
             var productionEndItemsOptionsIndex = passedObjectsStore.findExact('type','productionEndItemsOptions');
-            if (productionEndItemsOptionsIndex == -1) {
+            if (productionEndItemsOptionsIndex === -1) {
                 var productionEndItemsOptionsInit = '';
                 var productionEndItemsOptionsType = 'productionEndItemsOptions';
                 passedObjectsStore.add(
@@ -515,7 +532,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }
             //major shipped end items
             var majorShippedEndItemsOptionsIndex = passedObjectsStore.findExact('type','majorShippedEndItemsOptions');
-            if (majorShippedEndItemsOptionsIndex == -1) {
+            if (majorShippedEndItemsOptionsIndex === -1) {
                 var majorShippedEndItemsOptionsInit = '';
                 var majorShippedEndItemsOptionsType = 'majorShippedEndItemsOptions';
                 passedObjectsStore.add(
@@ -524,7 +541,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }
             // sort by
             var sortByIndex = passedObjectsStore.findExact('type','sortBy');
-            if (sortByIndex == -1) {
+            if (sortByIndex === -1) {
                 var sortByInit = '';
                 var sortByType = 'sortBy';
                 passedObjectsStore.add(
@@ -533,7 +550,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }
             //show details
             var showDetailsIndex = passedObjectsStore.findExact('type','showDetails');
-            if (showDetailsIndex == -1) {
+            if (showDetailsIndex === -1) {
                 var showDetailsInit = 'No';
                 var showDetailsType = 'showDetails';
                 passedObjectsStore.add(
@@ -542,7 +559,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }
             //baseline options
             var baselineOptionsIndex = passedObjectsStore.findExact('type','baselineOptions');
-            if (baselineOptionsIndex == -1) {
+            if (baselineOptionsIndex === -1) {
                 var baselineOptionsInit = '';
                 var baselineOptionsType = 'baselineOptions';
                 passedObjectsStore.add(
@@ -588,14 +605,23 @@ Ext.define('MyApp.view.MyPanel12', {
     },
 
     openSettings: function(button, e, eOpts) {
+        var me = this;
+        e.preventDefault();
+        e.stopPropagation();
         Ext.require([
             'Ext.grid.*',
             'Ext.data.*',
             'Ext.util.*',
             'Ext.grid.plugin.BufferedRenderer'
         ]);
-        var me = this;
+
         //get stores
+        //create the window
+       /* var selectionWindow = window.appState.selectionWindow;//Ext.get('selectionWindow')
+        if (Ext.isDefined(selectionWindow) && !selectionWindow.isDestroyed) {
+            selectionWindow.show();
+            return;
+        }*/
         var NetworkStoreXml = Ext.getStore('NetworkStoreXml');
         var PartNumberStoreXml = Ext.getStore('PartNumberStoreXml');
         var ControlPointStoreXml = Ext.getStore('ControlPointStoreXml');
@@ -610,6 +636,7 @@ Ext.define('MyApp.view.MyPanel12', {
         var NotesStoreXml = Ext.getStore('NotesStoreXml');
         var SearchStoreXml = Ext.getStore('SearchStoreXml');
         var TaskStoreXml = Ext.getStore('TaskStoreXml');
+        var selectionVariantStore = Ext.getStore('SelectionVariantStoreXml');
         var GanttConfigStoreXml = Ext.getStore('GanttConfigStoreXml');
         var resultsStore = Ext.getStore('Results');
         var sortByStore = Ext.getStore('SortByStore');
@@ -641,7 +668,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }});
         */
         //define selection window
-        var selectionWindow = Ext.ComponentQuery.query('selectionwindow[fieldname='+me.itemId+']')[0];
+        //var selectionWindow = Ext.ComponentQuery.query('selectionwindow[fieldname='+me.itemId+']')[0];
 
         var clickMenu = Ext.menu.Menu({
             id:'nodeClickMenu',
@@ -658,7 +685,8 @@ Ext.define('MyApp.view.MyPanel12', {
             ]
 
         });
-        //define selected nodes panel
+
+        // Left Menu selectionTree Panel ------------------------------------------------------------------------------
         var selectionTree = new Ext.tree.Panel ({
             title: 'Selected Objects',
             region: 'west',
@@ -1187,7 +1215,6 @@ Ext.define('MyApp.view.MyPanel12', {
                 });
             }
         });
-
         Ext.define('Ext.ux.PartNumberCustomTrigger', {
             extend: 'Ext.form.field.Trigger',
             alias: 'widget.partnumbercustomtrigger',
@@ -1418,7 +1445,8 @@ Ext.define('MyApp.view.MyPanel12', {
                 });
             }
         });
-        //Save Selection Variant
+
+        // saveForm ---Save Selection Variant-----------------------------------------------------------------------
         var saveForm = new Ext.FormPanel ({
             title: 'Save Options',
             padding: 10,
@@ -1426,7 +1454,49 @@ Ext.define('MyApp.view.MyPanel12', {
                 pack: 'center'
             },
             border: '0',
-            items: [{
+            items: [
+            {
+                xtype: 'combobox',
+                flex: 3,
+                id: 'availableVariants',
+                fieldLabel: 'Available',
+                inputId: 'selectAvailableVariants',
+                name: 'availableVariants',
+                value: 'Select',
+                displayField: 'description',
+                forceSelection: false,
+                queryMode: 'local',
+                width: 400,
+                store: selectionVariantStore,
+                listeners: {
+                    select: {
+                        fn: function (comp,val,opt) {
+                           Ext.MessageBox.confirm(
+                                'Confirm',
+                                'Override: '+val.get('description'),
+                                function (e) {
+                                    if (e === 'yes') {
+                                        var form = comp.ownerCt;
+                                        form.items.map['saveSelectionVariantName'].setValue(val.get('name'));
+                                        var description = val.get('description');
+                                        if(description.indexOf('-') > -1){
+                                            var descArray = description.split('-');
+                                            descArray.shift();
+                                            description = descArray.join('').trim();
+                                        }
+                                        form.items.map['saveSelectionVariantDescription'].setValue(description);
+                                        form.items.map['variantType'].setValue(val.get('type') === 'G'?'Global':'User');
+                                        console.log(JSON.stringify(val.data));
+                                        window.setTimeout(function(){
+                                            Ext.MessageBox.alert('Override','Click Save Variant to override.');
+                                        },1)
+                                    }
+                                  });
+                        },
+                        scope: me
+                    }
+                }
+            },{
                 xtype: 'textfield',
                 flex: 1,
                 id: 'saveSelectionVariantName',
@@ -1458,12 +1528,12 @@ Ext.define('MyApp.view.MyPanel12', {
             }
             ]});
         var userGlobalIndex = GanttConfigStoreXml.findExact('name','saveGlobal');
-        if (userGlobalIndex == -1){
+        if (userGlobalIndex === -1){
             var variantType = Ext.ComponentManager.get('variantType');
             if(variantType !== undefined){
                 variantType.hide();
             }
-            var selectionVariantStore = Ext.getStore('SelectionVariantStoreXml');
+            //var selectionVariantStore = Ext.getStore('SelectionVariantStoreXml');
             var count = selectionVariantStore.count();
             for (i = 0; i < count; i++) {
                 var record = selectionVariantStore.getAt(i);
@@ -1503,7 +1573,7 @@ Ext.define('MyApp.view.MyPanel12', {
         //get summary value if existing
         //mission Options
         var missionOptionsIndex = paramStore.findExact('name','missionOptions');
-        if (missionOptionsIndex != -1) {
+        if (missionOptionsIndex !== -1) {
             var missionOptionsRecord = paramStore.getAt(missionOptionsIndex);
             var missionOptionsInit = missionOptionsRecord.get('value');
         } else {
@@ -1511,7 +1581,7 @@ Ext.define('MyApp.view.MyPanel12', {
         }
         //produciton end items
         var productionEndItemsOptionsIndex = paramStore.findExact('name','productionEndItemsOptions');
-        if (productionEndItemsOptionsIndex != -1) {
+        if (productionEndItemsOptionsIndex !== -1) {
             var productionEndItemsOptionsRecord = paramStore.getAt(productionEndItemsOptionsIndex);
             var productionEndItemsOptionsInit = productionEndItemsOptionsRecord.get('value');
         } else {
@@ -1519,7 +1589,7 @@ Ext.define('MyApp.view.MyPanel12', {
         }
         //major shipped end items
         var majorShippedEndItemsOptionsIndex = paramStore.findExact('name','majorShippedEndItemsOptions');
-        if (majorShippedEndItemsOptionsIndex != -1){
+        if (majorShippedEndItemsOptionsIndex !== -1){
             var majorShippedEndItemsOptionsRecord = paramStore.getAt(majorShippedEndItemsOptionsIndex);
             var majorShippedEndItemsOptionsInit = majorShippedEndItemsOptionsRecord.get('value');
         } else {
@@ -1527,7 +1597,7 @@ Ext.define('MyApp.view.MyPanel12', {
         }
         // sort by
         var sortByIndex = paramStore.findExact('name','sortBy');
-        if (sortByIndex != -1) {
+        if (sortByIndex !== -1) {
             var sortByRecord = paramStore.getAt(sortByIndex);
             var sortByInit = sortByRecord.get('value');
         } else {
@@ -1535,7 +1605,7 @@ Ext.define('MyApp.view.MyPanel12', {
         }
         // show details
         var showDetailsIndex = paramStore.findExact('name','showDetails');
-        if (showDetailsIndex != -1) {
+        if (showDetailsIndex !== -1) {
             var showDetailsRecord = paramStore.getAt(showDetailsIndex);
             var showDetailsInit = showDetailsRecord.get('value');
         } else {
@@ -1547,13 +1617,14 @@ Ext.define('MyApp.view.MyPanel12', {
         }
         // baseline options
         var baselineOptionsIndex = paramStore.findExact('name','baselineOptions');
-        if (baselineOptionsIndex != -1) {
+        if (baselineOptionsIndex !== -1) {
             var baselineOptionsRecord = paramStore.getAt(baselineOptionsIndex);
             var baselineOptionsInit = baselineOptionsRecord.get('value');
         } else {
             var baselineOptionsInit = '';
         }
-        //summary options form
+
+        // summaryOptionsForm ------------------------------------------------------------------------------
         var summaryOptionsForm = new Ext.FormPanel ({
             title: 'Summary Options',
             layout: 'vbox',
@@ -1584,7 +1655,7 @@ Ext.define('MyApp.view.MyPanel12', {
                             var missionOptionsIndex = passedObjectsStore.findExact('type','missionOptions');
                             var type = 'missionOptions';
                             var number = missionOptionsValue.value;
-                            if (missionOptionsIndex == -1){
+                            if (missionOptionsIndex === -1){
                                 passedObjectsStore.add(
                                     {type: type, number: number}
                                 );
@@ -1626,7 +1697,7 @@ Ext.define('MyApp.view.MyPanel12', {
                             var majorShippedEndItemsOptionsIndex = passedObjectsStore.findExact('type','majorShippedEndItemsOptions');
                             var type = 'majorShippedEndItemsOptions';
                             var number = majorShippedEndItemsValue.value;
-                            if (majorShippedEndItemsOptionsIndex == -1){
+                            if (majorShippedEndItemsOptionsIndex === -1){
                                 passedObjectsStore.add(
                                     {type: type, number: number}
                                 );
@@ -1666,7 +1737,7 @@ Ext.define('MyApp.view.MyPanel12', {
                             var productionEndItemsOptionsIndex = passedObjectsStore.findExact('type','productionEndItemsOptions');
                             var type = 'productionEndItemsOptions';
                             var number = productionEndItemsOptionValue.value;
-                            if (productionEndItemsOptionsIndex == -1){
+                            if (productionEndItemsOptionsIndex === -1){
                                 passedObjectsStore.add(
                                     {type: type, number: number}
                                 );
@@ -1707,7 +1778,7 @@ Ext.define('MyApp.view.MyPanel12', {
                             var sortByIndex = passedObjectsStore.findExact('type','sortBy');
                             var type = 'sortBy';
                             var number = sortByValue.value;
-                            if (sortByIndex == -1){
+                            if (sortByIndex === -1){
                                 passedObjectsStore.add(
                                     {type: type, number: number}
                                 );
@@ -1749,7 +1820,7 @@ Ext.define('MyApp.view.MyPanel12', {
                             var baselineOptionsIndex = passedObjectsStore.findExact('type','baselineOptions');
                             var type = 'baselineOptions';
                             var number = baselineOptionsValue.value;
-                            if (baselineOptionsIndex == -1){
+                            if (baselineOptionsIndex === -1){
                                 passedObjectsStore.add(
                                     {type: type, number: number}
                                 );
@@ -1802,7 +1873,7 @@ Ext.define('MyApp.view.MyPanel12', {
                                 default:
                                     value = 'T';
                             }
-                            if (showDetailsIndex == -1) {
+                            if (showDetailsIndex === -1) {
                                 passedObjectsStore.add(
                                     {type: name, number: value}
                                 );
@@ -1820,9 +1891,15 @@ Ext.define('MyApp.view.MyPanel12', {
                 icon: 'images/close-icon.png',
                 text: '',
                 tooltip: 'Apply Options',
-                handler: function (button, e){
-                    var selectionWindow = Ext.get('selectionWindow');
-                    selectionWindow.hide();
+                handler: function (button, e,opt){
+                    //var selectionWindow = Ext.get('selectionWindow');
+                    window.appState.selectionWindow.close();
+                    Ext.MessageBox.confirm(
+                        'Confirm',
+                        'Would you like to reload data?',
+                        function (e) {
+                           e === 'yes' && me.up('panel').openSettings1(button, e,opt);
+                        });
                 }
             }
             ]
@@ -1831,31 +1908,31 @@ Ext.define('MyApp.view.MyPanel12', {
             text: 'Save Variant',
             dock: 'right',
             handler: function(button, e) {
-                var taskStore = Ext.getStore('taskStore');
-                var passedObjectsStore = Ext.getStore('PassedObjectsStoreXml');
-                var paramStore = Ext.getStore('ParamStoreXml');
-                var selectionVariantStore = Ext.getStore('SelectionVariantStoreXml');
-                var batch = {};
+                var taskStore = Ext.getStore('taskStore'),
+                    passedObjectsStore = Ext.getStore('PassedObjectsStoreXml'),
+                    paramStore = Ext.getStore('ParamStoreXml'),
+                    selectionVariantStore = Ext.getStore('SelectionVariantStoreXml'),
+                    batch = {};
                 batch.proxy = taskStore.getProxy();
-                var saveNameInput = saveInput.value;
-                var saveDescriptionInput = descriptionInput.value;
-                var variantTypeInput = saveVariantTypeInput.value;
-                var missionOptionsInput = missionOptionsValue.value;
-                var productionEndItemsOptionInput = productionEndItemsOptionValue.value;
-                var majorShippedEndItemsInput = majorShippedEndItemsValue.value;
-                var sortByInput = sortByValue.value;
-                var showDetailsInput = showDetailsValue.value;
-                var baselineOptionsInput = baselineOptionsValue.value;
-                var variantTypeExists = passedObjectsStore.findExact('type','variantType');
-                var saveNameExists = passedObjectsStore.findExact('type','saveName');
-                var saveDescriptionExists = passedObjectsStore.findExact('type','saveDescription');
-                var missionOptionsExists = passedObjectsStore.findExact('type','missionOptions');
-                var productionEndItemsOptionsExists = passedObjectsStore.findExact('type','productionEndItemsOptions');
-                var majorShippedEndItemsOptionsExists = passedObjectsStore.findExact('type','majorShippedEndItemsOptions');
-                var showDetailsExists = passedObjectsStore.findExact('type','showDetails');
-                var sortByExists = passedObjectsStore.findExact('type','sortBy');
-                var baselineOptionsExists = passedObjectsStore.findExact('type','baselineOptions');
-                if (variantTypeExists == -1){
+                var saveNameInput = saveInput.value,
+                    saveDescriptionInput = descriptionInput.value,
+                    variantTypeInput = saveVariantTypeInput.value,
+                    missionOptionsInput = missionOptionsValue.value,
+                    productionEndItemsOptionInput = productionEndItemsOptionValue.value,
+                    majorShippedEndItemsInput = majorShippedEndItemsValue.value,
+                    sortByInput = sortByValue.value,
+                    showDetailsInput = showDetailsValue.value,
+                    baselineOptionsInput = baselineOptionsValue.value,
+                    variantTypeExists = passedObjectsStore.findExact('type','variantType'),
+                    saveNameExists = passedObjectsStore.findExact('type','saveName'),
+                    saveDescriptionExists = passedObjectsStore.findExact('type','saveDescription'),
+                    missionOptionsExists = passedObjectsStore.findExact('type','missionOptions'),
+                    productionEndItemsOptionsExists = passedObjectsStore.findExact('type','productionEndItemsOptions'),
+                    majorShippedEndItemsOptionsExists = passedObjectsStore.findExact('type','majorShippedEndItemsOptions'),
+                    showDetailsExists = passedObjectsStore.findExact('type','showDetails'),
+                    sortByExists = passedObjectsStore.findExact('type','sortBy'),
+                    baselineOptionsExists = passedObjectsStore.findExact('type','baselineOptions');
+                if (variantTypeExists === -1){
                     if (variantTypeInput == 'Global') {
                         variantTypeInput = 'G';
                     } else {
@@ -1865,7 +1942,7 @@ Ext.define('MyApp.view.MyPanel12', {
                         {type: 'variantType', number: variantTypeInput}
                     );
                 }
-                if (saveNameExists == -1) {
+                if (saveNameExists === -1) {
                     passedObjectsStore.add(
                         {type: 'saveName', number: saveNameInput}
                     );
@@ -1881,44 +1958,44 @@ Ext.define('MyApp.view.MyPanel12', {
                         selectionVariantStore.sync();
                     }
                 }
-                if (saveDescriptionExists == -1){
+                if (saveDescriptionExists === -1){
                     passedObjectsStore.add(
                         {type: 'saveDescription', number: saveDescriptionInput}
                     );
                 }
-                if (missionOptionsExists == -1){
+                if (missionOptionsExists === -1){
                     passedObjectsStore.add(
                         {type: 'missionOptions', number: missionOptionsInput}
                     );
                 }
-                if (productionEndItemsOptionsExists == -1){
+                if (productionEndItemsOptionsExists === -1){
                     passedObjectsStore.add(
                         {type: 'productionEndItemsOptions', number: productionEndItemsOptionInput}
                     );
                 }
-                if (majorShippedEndItemsOptionsExists == -1){
+                if (majorShippedEndItemsOptionsExists === -1){
                     passedObjectsStore.add(
                         {type: 'majorShippedEndItemsOptions', number: majorShippedEndItemsInput}
                     );
                 }
-                if (sortByExists == -1){
+                if (sortByExists === -1){
                     passedObjectsStore.add(
                         {type: 'sortBy', number: sortByInput}
                     );
                 }
-                if (showDetailsExists == -1){
+                if (showDetailsExists === -1){
                     passedObjectsStore.add(
                         {type: 'showDetails', number: showDetailsInput}
                     );
                 }
-                if (baselineOptionsExists == -1){
+                if (baselineOptionsExists === -1){
                     passedObjectsStore.add(
                         {type: 'baselineOptions', number: baselineOptionsInput}
                     );
                 }
                 var passedObjects = passedObjectsStore.getRange();
                 var count = passedObjects.length;
-                for (i = 0; i < count; i++) {
+                for (var i = 0; i < count; i++) {
                     var number = passedObjectsStore.getAt(i).get('number');
                     var type = passedObjectsStore.getAt(i).get('type');
                     batch.proxy.setExtraParam(type+'-'+i,number);
@@ -1934,7 +2011,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }
         });
         var globalUser = Ext.getStore('GanttConfigStoreXml').findExact('name','saveGlobal');
-        if (globalUser != -1) {
+        if (globalUser !== -1) {
             globalUser = Ext.getStore('GanttConfigStoreXml').getAt(globalUser).get('value');
             if (globalUser === 'X'){
                 globalUser = true;
@@ -1944,7 +2021,7 @@ Ext.define('MyApp.view.MyPanel12', {
         } else {
             globalUser = false;
         }
-        var selectionVariantStore = Ext.getStore('SelectionVariantStoreXml');
+
         var count = selectionVariantStore.count();
         for (i = 0; i < count; i++) {
             var record = selectionVariantStore.getAt(i);
@@ -1956,7 +2033,7 @@ Ext.define('MyApp.view.MyPanel12', {
                     type: record.get('type')
                 });
             } else {
-                if (record.get('type') == 'User') {
+                if (record.get('type') === 'User') {
                     deleteStore.add({
                         name: record.get('name'),
                         description: record.get('description'),
@@ -1966,7 +2043,8 @@ Ext.define('MyApp.view.MyPanel12', {
             }
         }
         deleteStore.commitChanges();
-        var deleteStore = main.getDeleteStore(userGlobalIndex);
+        var deleteStoreByUser = main.getDeleteStore(userGlobalIndex);
+        // deleteForm ------------------------------------------------------------------------------
         var deleteForm = new Ext.FormPanel ({
             title: 'Delete Selection Variant',
             layout: {
@@ -1981,24 +2059,24 @@ Ext.define('MyApp.view.MyPanel12', {
                 id: 'deleteSelectionVariantName',
                 fieldLabel: 'Delete',
                 inputId: 'deleteInput',
-                store: deleteStore,
+                store: deleteStoreByUser,
                 displayField: 'description',
                 width: 400,
                 listeners: {
                     select: {
                         fn: function(){
-                            var me = this;
+                            //var me = this;
                             var taskStore = Ext.getStore('taskStore');
                             var deleteNameInput = deleteInput.value;
                             var deletedRecordIndex = selectionVariantStore.findExact('description',deleteNameInput);
-                            if (deletedRecordIndex != -1) {
+                            if (deletedRecordIndex !== -1) {
                                 var deletedRecord = selectionVariantStore.getAt(deletedRecordIndex);
                                 var deletedRecordName = deleteNameInput;
                                 var confirm = Ext.MessageBox.confirm(
                                     'Confirm',
                                     'Delete Variant: '&deletedRecordName,
                                     function (e){
-                                        if (e=='yes') {
+                                        if (e === 'yes') {
                                             var selectionVariantStore = Ext.getStore('SelectionVariantStoreXml');
                                             var taskStore = Ext.getStore('taskStore');
                                             var deleteNameInput = deleteInput.value;
@@ -2062,7 +2140,6 @@ Ext.define('MyApp.view.MyPanel12', {
                 emptyText: 'Network Search'
             }]
         });
-
         var materialForm = new Ext.FormPanel ({
             title: 'Material',
             header: false,
@@ -2175,7 +2252,7 @@ Ext.define('MyApp.view.MyPanel12', {
 
         // define toolbar
 
-        //define tab panel and tabs
+        // selection Tab Panel ------------------------------------------------------------------------------
         var selectionTabPanel = new Ext.tab.Panel ({
             activeTab:1,
             region: 'center',
@@ -2238,27 +2315,23 @@ Ext.define('MyApp.view.MyPanel12', {
             ]
         });
 
-        //create the window
-        var selectionWindow = Ext.get('selectionWindow');
-        if (selectionWindow === null) {
-            selectionWindow =
-                Ext.create('Ext.window.Window', {
-                    title: 'Selection Criteria',
-                    height: 500,
-                    width: 800,
-                    id: 'selectionWindow',
-                    itemId: 'selectionWindow',
-                    constrain: true,
-                    layout:'border',
-                    defaults: {
-                        collapsible: true,
-                        bodyStyle: 'padding:15px'
-                    },
-                    items: [selectionTree, selectionTabPanel]
-                }).show();
-        } else {
-            selectionWindow.show();
-        }
+        // Main selection Window Panel ------------------------------------------------------------------------------
+        window.appState.selectionWindow = Ext.create('Ext.window.Window', {
+                title: 'Selection Criteria',
+                height: 500,
+                width: 800,
+                id: 'selectionWindow',
+                itemId: 'selectionWindow',
+                constrain: true,
+                layout:'border',
+                defaults: {
+                    collapsible: true,
+                    bodyStyle: 'padding:15px'
+                },
+                items: [selectionTree, selectionTabPanel]
+            });
+
+        window.appState.selectionWindow.show();
     },
 
     onShowBaselineAfterRender: function(component, eOpts) {
@@ -2649,7 +2722,7 @@ Ext.define('MyApp.view.MyPanel12', {
                 name: 'ganttViewChanged'
             });
         }
-        record = 'length' in records ? records[0] : records;
+        var record = 'length' in records ? records[0] : records;
         main.changeGanttView(record.get('name'));
 
     }

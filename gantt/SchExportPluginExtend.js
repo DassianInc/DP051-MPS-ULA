@@ -779,8 +779,8 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         var me          = this,
             callbacks   = me.callbacks;
 
-        callbacks.success.call(callbacks.scope, me.renderPages(pages));
-
+        //callbacks.success.call(callbacks.scope, me.renderPages(pages));
+        callbacks.success.call(callbacks.scope, []);
         // resume garbage collecting
         Ext.enableGarbageCollector = me.enableGarbageCollector;
         Ext.dom.GarbageCollector.resume();
@@ -1005,32 +1005,37 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         }
 
 
-        me.fireEvent('collectrows', me, startIndex, index, count);
+        startIndex === 0 && me.fireEvent('collectrows', me, startIndex, index, count);
 
+       var promiseIteration = callback.call(me, me.lockedRows, me.normalRows,startIndex);
 
+        promiseIteration.then(function(currentIndex){
+            if (!collected && me.isBuffered()) {
+
+                if (endIndex + 1 < count) {
+                  //  me.callAsync(function () {
+                        me.scrollTo(endIndex + 1, function () {
+                            next(endIndex + 1, callback, scope, config);
+                        });
+                  //  });
+
+                } else {
+                    callback.call(scope || me, me.lockedRows, me.normalRows,endIndex + 1);
+                    /* me.callAsync(function () {
+                         me.scrollTo(0, function () {
+                             callback.call(scope || me, me.lockedRows, me.normalRows);
+                         });
+                     });*/
+                }
+
+                // if we already collected all the needed rows - invoke the final step
+            }else {
+                callback.call(scope || me, me.lockedRows, me.normalRows,endIndex + 1);
+           }
+        });
         // if we are in the buffered mode (and not collected all the requested rows yet)
         // we need to scroll further
-        if (!collected && me.isBuffered()) {
 
-            if (endIndex + 1 < count) {
-                me.callAsync(function () {
-                    me.scrollTo(endIndex + 1, function () {
-                        next(endIndex + 1, callback, scope, config);
-                    });
-               });
-
-            } else {
-                me.callAsync(function () {
-                    me.scrollTo(0, function () {
-                        callback.call(scope || me, me.lockedRows, me.normalRows);
-                    });
-                });
-            }
-
-            // if we already collected all the needed rows - invoke the final step
-        } else {
-            callback.call(scope || me, me.lockedRows, me.normalRows);
-        }
     },
 
     /**
@@ -2145,7 +2150,6 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
         exporterId : 'multipagevertical'
     },
 
-
     minRowHeight          : 20,
 
     minAverageColumnWidth : 100,
@@ -2154,7 +2158,129 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
 
     visibleColumnsWidth   : 0,
 
-    onRowsCollected : function (lockedRows, normalRows) {
+    /**
+     * onRowsCollected
+     * @description takes all rows and will decide whether to recurse till all available rows have been
+       copied. Addtionally sets vital values lastWholePageIndex and maxRows to better manage async processes.
+     * @param lockedRows
+     * @param normalRows
+     * @param rowIndex
+     * @returns {*}
+     */
+    onRowsCollected : function (lockedRows, normalRows,rowIndex) {
+        var me          = this;
+        if(window.appState.killExport){
+            me.onPagesExtracted();
+        }
+        me.lastWholePageIndex = typeof me.lastWholePageIndex === 'undefined' ? rowIndex : me.lastWholePageIndex;
+        return new Promise(function(resolve,reject){
+           var obj = iteratePage(me.lastWholePageIndex < rowIndex && rowIndex !== normalRows.length ? me.lastWholePageIndex : rowIndex);
+            resolve(obj.index);
+        });
+        function iteratePage(rIndex){
+            // me.iterateAsync(function (next, rowIndex) {
+            if (rIndex === normalRows.length) {
+                var checkForRemainder = null;
+                /** Check if any items are awaiting to be copied to page **/
+                Ext.each(normalRows,function(value,index){
+                    if(value !== null && checkForRemainder === null){
+                        checkForRemainder = index;
+                    }
+                });
+                if(checkForRemainder != null){
+                /** Recurse over until all items have been successfully pulled and copied to page **/
+                  var intervalId =  setInterval(function(){
+                        var q =  processPage(checkForRemainder);
+                        if(q.index !== normalRows.length){
+                            rIndex = checkForRemainder = q.index;
+
+                        }else{
+                            clearInterval(intervalId);
+                /** When complete trigger final step to build pdf **/
+                            me.onPagesExtracted();
+                        }
+                    },100);
+
+                }else{
+                    me.onPagesExtracted();
+                }
+
+                return {
+                    hasRemainder : false,
+                    index:rIndex
+                };;
+            }
+            /** Should there not be enough rows to process a full page return out and wait for more **/
+            if(Ext.isDefined(rIndex) && Ext.isDefined(me.maxRows)){
+                if(!(((lockedRows.length-1) - rIndex) > me.maxRows)) {
+                    return {
+                        hasRemainder : false,
+                        index:rIndex
+                    };
+                }
+            }
+            /** Having enough to process a page, we can begin recursivly extracting all until there is not enough
+             *  Then process will return index of last index and release promise on promise "promiseIteration"
+             * **/
+            var p = processPage(rIndex)
+            if(p.hasRemainder){
+                p = iteratePage(p.index);
+            }
+            return p;
+            //next( index );
+
+            //}, me, 0);
+        }
+
+        function processPage(rIndex){
+            var index       = rIndex,
+                spaceLeft   = me.printHeight,
+                rowsHeight  = 0,
+                lockeds     = [],
+                normals     = [],
+                newPage     = false,
+                normal,
+                locked;
+
+            me.startPage();
+            var captureMaxRows = rIndex === 0;
+
+            while (!newPage && index < normalRows.length) {
+
+                normal      = normalRows[index];
+                locked      = lockedRows[index];
+                spaceLeft   -= normal.height;
+
+                if (spaceLeft > 0) {
+                    rowsHeight  += normal.height;
+                    locked && lockeds.push(locked);
+                    normals.push(normal);
+                    normalRows[index] = null;//memory management
+                    lockedRows[index] = null;//memory management
+                    index++;
+                }
+                else {
+                    newPage = true;
+                }
+
+            }
+            if(captureMaxRows){
+                me.maxRows = index;
+            }
+
+            me.fillGrids(lockeds, normals);
+            me.commitPage({ rowIndex : index, rowsHeight : rowsHeight });
+            me.secondaryCanvasOffset -= rowsHeight;
+            me.lastWholePageIndex = index;
+            return {
+                hasRemainder : ((lockedRows.length-1) - index) > me.maxRows,
+                index:index
+            };
+        }
+    },
+
+
+    __onRowsCollected : function (lockedRows, normalRows) {
         var me          = this;
 
         me.iterateAsync(function (next, rowIndex) {
@@ -2210,9 +2336,16 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
         view.dom.style.overflow = 'visible';
     },
 
-
+    /**
+     * getExpectedNumberOfPages
+     * @description calc total pages by maxRows which is set on 0 index when creating first page
+        This proccess the number of records by the max number of rows.
+        This function will by the time it reaches onCommitPage have this calculation properly.
+     * @returns {number}
+     */
     getExpectedNumberOfPages : function () {
-        return Math.ceil(this.normalRowsHeight / this.printHeight);
+        var maxRows = Ext.isDefined(this.maxRows) ? this.maxRows : 30;
+        return Math.ceil(this.normalView.getStore().data.length / maxRows);//this.normalRowsHeight / this.printHeight
     },
 
 
@@ -3119,21 +3252,24 @@ Ext.define('DSch.plugin.Export', {
         }
         total   = Math.max(pageNum, total);
         !Ext.isDefined(me.pdfPostTotals) && me.setCalcTotalPdfRequest(total);
-        if(me.pdfPostTotals.groupCount === (exporter.extractedPages.length) || me.pdfPostTotals.processGroupsCount === me.pdfPostTotals.groupTotalCount){
-            if(me.pdfPostTotals.processGroupsCount === me.pdfPostTotals.groupTotalCount){
-                if(me.pdfPostTotals.remainder != (exporter.extractedPages.length)){
-                    return;
-                }
-                me.pdfPostTotals.processGroupsCount += 1;
-            }else{
-                me.pdfPostTotals.processGroupsCount += me.pdfPostTotals.groupCount;
-            }
-
-            var promise = this.postPageToPDF(exporter, page, pageNum, total);
+        if(me.pdfPostTotals.groupCount != exporter.extractedPages.length && me.pdfPostTotals.processGroupsCount < me.pdfPostTotals.groupTotalCount){
+                return;
+        }
+        //else if(me.pdfPostTotals.processGroupsCount < me.pdfPostTotals.groupsTotal) {
+        //       if(me.pdfPostTotals.remainder != (exporter.extractedPages.length)){
+        //        return;
+        //        }
+        //
+        //}
+            me.pdfPostTotals.processGroupsCount += 1;
+           if(me.pdfPostTotals.processGroupsCount > me.pdfPostTotals.groupsTotal){
+               me.pdfPostTotals.groupsTotal = me.pdfPostTotals.processGroupsCount;
+           }
+            var promise = me.postPageToPDF(exporter, page, pageNum, total);
             promise.done(function(){
                 me.fireEvent('updateprogressbar', 0.2 + 0.6 * pageNum / total, Ext.String.format(me.L('builtPage'), pageNum, total));
             });
-        }
+
 
     },
 
@@ -3148,27 +3284,18 @@ Ext.define('DSch.plugin.Export', {
                 pageNum : p.number
             });
         });
-        //var html = exporter.applyPageTpl(page);
-        //exporter.extractedPages.pop();
-        exporter.extractedPages = [];// empty for memory
 
-       /*Ext.Ajax.on('beforerequest', function( conn, options, eOpt){
-           debugger;
-            //conn.setCors(true);
-        });*/
+        if(htmlArray.length === exporter.extractedPages.length){
+            exporter.extractedPages = [];// empty for memory
+        }
+
         var ajaxConfig = {
             type        : 'POST',
             url         : me.printPDFServer,
             timeout     : me.timeout,
             useDefaultXhrHeader : false,
             params      : Ext.apply({
-                //html        : html,
                 pages         : {array:JSON.stringify(htmlArray)}
-                //pageNum     : pageNum
-                //format      : me.exporter.getPaperFormat(),
-                //orientation : me.exporter.exportConfig.orientation,
-                //range       : me.exporter.exportConfig.range,
-                //fileFormat  : me.fileFormat
             }, this.getParameters()),
             success     : function(){
                 promise.resolve();
@@ -3176,8 +3303,22 @@ Ext.define('DSch.plugin.Export', {
                 console.log(pageNum+' :page saved');
             },
             failure     : function(){
-                promise.reject();
-                me.pdfPostTotals.groupsComplete += 1;
+                Ext.MessageBox.confirm(
+                    'Failed:',
+                    'Trying page again '+pageNum,
+                    function (e) {
+                        ajaxConfig.failure = function(){
+                            Ext.toast('Failed page again '+pageNum, 'Failed', 't');
+                            me.pdfPostTotals.groupsComplete += 1;
+                            promise.reject();
+                        }
+                        e === 'yes' && Ext.Ajax.request(ajaxConfig);
+                        if(e === 'no'){
+                            me.pdfPostTotals.groupsComplete += 1;
+                            promise.reject();
+                        }
+                    });
+
                 console.log(pageNum+' :page failed');
             },
             scope       : me
@@ -3258,6 +3399,7 @@ Ext.define('DSch.plugin.Export', {
         var me          = this,
             component   = me.scheduler;
         if(window.appState.killExport){
+            me.onExportFailure('Canceled Print');
             return;
         }
         if (!me.test && !me.debug) {
@@ -3288,17 +3430,24 @@ Ext.define('DSch.plugin.Export', {
 
                 if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal){
                     Ext.Ajax.request(ajaxConfig);
+                    Ext.toast('Generating PDF', 'Please Wait', 't');
                     delete me.pdfPostTotals;
                 }else{
+                    var random = 0;
+                    window.toastOnRequest = window.setInterval(function(){
+                        var textToast = ['Generating PDF','Still working'];
+                        Ext.toast(textToast[random], 'Please Wait', 't');
+                        random = random === 0 ? 1 : 0;
+                    },4e3);
                     window.doRequestId = window.setInterval(function(){
-
-                        if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal){
+                        if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.processGroupsCount){
                             window.clearInterval(window.doRequestId);
+                            window.clearInterval(window.toastOnRequest);
                             Ext.Ajax.request(ajaxConfig);
                             delete me.pdfPostTotals;
                         }else if(window.appState.killExport){
+                            window.clearInterval(window.toastOnRequest);
                             window.clearInterval(window.doRequestId);
-                            return;
                         }
                     },500);
                 }
@@ -3480,21 +3629,21 @@ Ext.define('DSch.plugin.Export', {
 
     /**
      * @private
-     * This Calc will be used to reduce pdf posts to server by grouping pages together minimizing network latency
+     * Calc will be used to reduce pdf posts to server by grouping pages together minimizing network latency
      * calc: Math.floor(Math.sqrt(pageCount))
      **/
     setCalcTotalPdfRequest:function(pageCount){
         var me = this;
         var calGroupTotal = Math.floor(Math.sqrt(pageCount));
-        calGroupTotal  = calGroupTotal > 10 ? 10 : calGroupTotal;//max export per request to 10 pages.
-        var regularGroupTotalCount = calGroupTotal * calGroupTotal;
-        var remainderTotalCount = Math.abs(regularGroupTotalCount - pageCount);
+        calGroupTotal  = calGroupTotal > 6 ? 6 : calGroupTotal;//max export per request to 10 pages.
+        var regularGroupTotalCount = Math.floor(pageCount / calGroupTotal);
+        var remainderTotalCount = Math.abs((regularGroupTotalCount*calGroupTotal) - pageCount);
         me.pdfPostTotals          = {
-                    total                   : pageCount,
-                    processGroupsCount      : 0, //count how many groups process to decide if remainder should be evaluated
+                    total                   : pageCount,//total pages
+                    processGroupsCount      : 0, //count requests made prior
                     groupCount              : calGroupTotal,// wait for this many pages before processing create_htmlToPdf
                     groupsComplete          : 0,// count how may groups have completed, will equal groupsTotal
-                    groupsTotal             : remainderTotalCount > 0 ? calGroupTotal + 1 : calGroupTotal, //when done wait for groupsComplete count before toPdf
+                    groupsTotal             : remainderTotalCount > 0 ? regularGroupTotalCount + remainderTotalCount : regularGroupTotalCount, //when done wait for groupsComplete count before toPdf
                     groupTotalCount         : regularGroupTotalCount,// total number of pages squared
                     remainder               : remainderTotalCount,// remainder after squared from total pages
                     hasRemainder            : remainderTotalCount > 0//check if has remainder

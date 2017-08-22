@@ -124,6 +124,304 @@
             var versionSelectedRecord = ganttConfigStore.findExact('name','version');
             var versionRecord = ganttConfigStore.getAt(versionSelectedRecord);
             var versionValue = versionRecord.get('value');
+
+            //status date
+            var statusDateSelectedRecord = ganttConfigStore.findExact('name','statusDate');
+            var statusDateRecord = ganttConfigStore.getAt(statusDateSelectedRecord);
+            var statusDateValue = statusDateRecord.get('value');
+
+            var lineStore = Ext.create('Ext.data.JsonStore', {
+                model : 'MyApp.model.Line',
+                data  : [
+                    {
+                        Date : new Date(statusDateValue),
+                        Text : 'Status Date',
+                        Cls  : 'important'
+                    }
+                ]
+            });
+            if (ganttExists != -1){
+                var ganttPanelCmp = Ext.getCmp('ganttPanel');
+                ganttPanelCmp.lockedGrid.reconfigure(null, me.ganttColumns());
+
+                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                var lockedGrid = ganttPanel.lockedGrid;
+                lockedGrid.addEvents({
+                    itemClick: function() {
+                        console.log('josh');
+                    }
+                });
+                var cols = lockedGrid.columns;
+                var count = 0;
+                for (var i=0; i < cols.length; i++) {
+                    var col = cols[i];
+                    if (col.hidden === false || col.hidden === undefined) {
+                        count = count + 1;
+                    }
+                    console.log(count);
+                }
+
+            } else {
+                yesNoStore.add({
+                    name: 'ganttExists'
+                });
+
+                var tpl = me.getBodyTpl();
+                var header = me.getHeaderTpl();
+                var footer = me.getFooterTpl();
+                component.returnValue = Ext.applyIf(config, {
+                    taskStore: me.taskStore,
+                    lockedGridConfig:{
+                        width: panelThird,
+                        resizable: 'w e'
+                    },
+                    readOnly: true,
+                    baselineVisible: false,
+                    viewPreset: 'year',
+                    width: panelWidth,
+                    listeners: {
+                        itemclick: {
+                            fn: function () {
+                                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                                var lockedGrid = ganttPanel.lockedGrid;
+                               /* Ext.mixin.Observable#addEvents" is deprecated.
+                               lockedGrid.addEvents({
+                                    itemClick: function() {
+                                        console.log('josh');
+                                    }
+                                });*/
+                                var cols = lockedGrid.columns;
+                                var count = 0;
+                                for (var i=0; i < cols.length; i++) {
+                                    var col = cols[i];
+                                    if (col.hidden === false || col.hidden === undefined) {
+                                        count = count + 1;
+                                    }
+                                }
+                            },
+                            scope: me
+                        }
+                    },
+                    plugins: [
+                        Ext.create("Sch.plugin.Lines", {
+                            showHeaderElements : true,
+                            innerTpl           : '<span class="line-text">{Text}</span>',
+                            store              : lineStore
+                        }),
+                        Ext.create("DSch.plugin.Export", {
+                            pluginId: 'exportServer',
+                            name:'Export',
+                            //tpl : me.getTpl(),
+                            printServer     : window.server,
+                            printPDFServer  : window.server,
+                            tpl : tpl,
+                            headerTpl : header,
+                            //headerTplDataFn:header,
+                            //headerTplDataFnScope:me,
+                            footerTpl : footer,
+                            //footerTplDataFn:footer,
+                            //footerTplDataFnScope:me,
+                            afterExport :  function (gantt) {
+                                Ext.Ajax.useDefaultXhrHeader = true;
+                            },
+                            beforeExport : function (gantt) {
+                                Ext.Ajax.useDefaultXhrHeader = false;
+                            }
+                        })
+                        //new Sch.plugin.ExcelExport()
+                    ],
+                    height: panelHeight-75,
+                    startDate: new Date(startValue),
+                    endDate: new Date(finishValue),
+                    rightLabelField: {
+                        renderer : function (value, record){
+                            var color = record.get('color');
+                            var depth = record.getDepth();
+                            if (color == 'red' && depth < 3) {
+                                var rightLabel = record.get('Note');
+                                return rightLabel;
+                            } if (color == 'lightBlue') {
+                                rightLabel = 0;
+                                if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
+                                    var diff =  (+record.get('EndDate')) - (+record.get('StartDate'));
+                                    var day = 86400000;
+                                    var days = day > Math.abs(diff) ? 0 : Math.abs(diff) / day;
+                                    rightLabel = days <= 1 ? 0 : days -1 ;
+                                }else{
+                                    rightLabel = record.get('smDuration');
+                                    rightLabel = Math.round(rightLabel);
+                                }
+                                return Math.floor(rightLabel)+' days';
+                            } else {
+                                 rightLabel = record.get('EndDate');
+                                var mth = rightLabel.getUTCMonth()+1;
+                                day = rightLabel.getUTCDate();
+                                if (day-1===0) {
+                                    switch (mth) {
+                                        case 1:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 2:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 3:
+                                            mth = mth -1;
+                                            day = '28';
+                                            break;
+                                        case 4:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 5:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                        case 6:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 7:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                        case 8:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 9:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 10:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                        case 11:
+                                            mth = mth -1;
+                                            day = '31';
+                                            break;
+                                        case 12:
+                                            mth = mth -1;
+                                            day = '30';
+                                            break;
+                                    }
+                                } else {
+                                    day = day-1;
+                                }
+                                var yr = rightLabel.getUTCFullYear();
+                                rightLabel = mth+'/'+day+'/'+yr;
+                                return rightLabel;
+                            }
+                        }
+                    },
+                    leftLabelField: {
+                        renderer : function (value, record){
+                            var color = record.get('color');
+                            if (color !=='lightBlue'){
+                                var leftLabel = record.get('StartDate');
+                                var mth = leftLabel.getUTCMonth()+1;
+                                var day = leftLabel.getUTCDate();
+                                var yr = leftLabel.getUTCFullYear();
+                                leftLabel = mth+'/'+day+'/'+yr;
+                                return leftLabel;
+                            } else {
+                                var leftLabelAlt = 'MR';
+                                return leftLabelAlt;
+                            }
+                        }
+                    },
+                    eventRenderer : function (task) {
+                        var color = task.get('color');
+                        var style = Ext.String.format('background-color: #{0};border-color:#{1}');
+                        if (color !=='') {
+                            switch (color) {
+                                case 'red':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FF0000', 'FF0000');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ff0000', 'ff0000');
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                //orange
+                                case 'orange':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFA500', 'FFA500');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ffa500', 'ffa500');
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'blue':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '9B9BD7', '9B9BD7');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'yellow':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'gray':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'BEBEB1', 'BEBEB1');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'green':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                                case 'lightBlue':
+                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                    cls = style;
+                                    return {
+                                        style: style,
+                                        progressBarStyle: progressBarStyle,
+                                        cls: cls
+                                    };
+                            }
+                        } else {
+                            //green
+                            style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                            progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                            cls = style;
+                            return {
+                                style: style,
+                                progressBarStyle: progressBarStyle,
+                                cls: cls
+                            };
+                        }
+                    },
+                    columns: me.ganttColumns()
+                });
+            }
+
+        },
+
+        ganttColumns:function(){
+            var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
             try {
                 //text01
                 var text01SelectedRecord = ganttConfigStore.findExact('name','text01');
@@ -458,1218 +756,930 @@
             } catch(e) {
                 console.log(e);
             }
-            //status date
-            var statusDateSelectedRecord = ganttConfigStore.findExact('name','statusDate');
-            var statusDateRecord = ganttConfigStore.getAt(statusDateSelectedRecord);
-            var statusDateValue = statusDateRecord.get('value');
-
-            var lineStore = Ext.create('Ext.data.JsonStore', {
-                model : 'MyApp.model.Line',
-                data  : [
-                    {
-                        Date : new Date(statusDateValue),
-                        Text : 'Status Date',
-                        Cls  : 'important'
-                    }
-                ]
-            });
-            if (ganttExists != -1){
-                var ganttPanelCmp = Ext.getCmp('ganttPanel');
-                ganttPanelCmp.lockedGrid.reconfigure(null, [
-                    {
-                        xtype : 'gridcolumn',
-                        dataIndex: 'program',
-                        header: 'Prog',
-                        width: 60
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'tailNumber',
-                        header: 'Tail Number',
-                        width: 60
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'primaryMission',
-                        header: 'Primary Mission',
-                        width: 75
-                    },{
-                        xtype: 'treecolumn',
-                        header: 'Task',
-                        sortable: false,
-                        dataIndex: 'Name',
-                        width: 250,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            var backgroundColor = record.get('color');
-                            if (backgroundColor !== ""){
-                                switch (backgroundColor) {
-                                    case 'red':
-                                        metadata.style = "background-color:#ff6666;";
-                                        return value;
-                                    case 'gray':
-                                        metadata.style = "background-color:#b2b2b2";
-                                        return value;
-                                    case 'orange':
-                                        metadata.style = "background-color:#FFA500";
-                                        return value;
-                                    case 'blue':
-                                        metadata.style = "background-color:#7f7fff";
-                                        return value;
-                                    case 'yellow':
-                                        metadata.style = "background-color:#ffff00";
-                                        return value;
-                                    case 'green':
-                                        if (record.data.depth < 4) {
-                                            metadata.style = "background-color:#80B280";
-                                        }
-                                        return value;
-                                    case 'lightBlue':
-                                        return value;
-                                    case 'euTracker':
-                                        return value;
-                                }
-                            } else {
-                                return value;
-                            }
-                        }
-                    },{
-                        xtype : 'startdatecolumn',
-                        dateFormat: 'm/d/Y',
-                        dataIndex: 'StartDate',
-                        hidden: true
-                    },{
-                        xtype : 'enddatecolumn',
-                        dateFormat: 'm/d/Y',
-                        dataIndex: 'EndDate',
-                        hidden: true
-                    },{
-                        xtype : 'baselinestartdatecolumn',
-                        dataIndex: 'BaselineStartDate',
-                        dateFormat: 'm-d-Y',
-                        hidden: true
-                    },{
-                        xtype : 'baselineenddatecolumn',
-                        dataIndex: 'BaselineEndDate',
-                        dateFormat: 'm/d/Y',
-                        hidden: true
-                    },{
-                        xtype : 'durationcolumn',
-                        hidden: true
-                    },{
-                        xtype : 'datecolumn',
-                        dataIndex: 'actualStartDate',
-                        header: 'Actual Start',
-                        dateFormat: 'm/d/Y',
-                        hidden: true
-                    },{
-                        xtype : 'datecolumn',
-                        dataIndex: 'actualEndDate',
-                        header: 'Actual Finish',
-                        dateFormat: 'm-d-Y',
-                        hidden: true
-                    },{
-                        xtype : 'percentdonecolumn',
-                        width : 50,
-                        dataIndex: 'PercentDone',
-                        hidden: true
-                    },{
-                        xtype : 'predecessorcolumn',
-                        hidden: true
-                    },{
-                        xtype : 'notecolumn',
-                        hidden: true
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'outline',
-                        header: 'Outline',
-                        hidden: true
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'color',
-                        header: 'Color',
-                        hidden: true
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text01',
-                        header: text01Value,
-                        hidden: text01Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text02',
-                        header: text02Value,
-                        hidden: text02Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text03',
-                        header: text03Value,
-                        hidden: text03Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text04',
-                        header: text04Value,
-                        hidden: text04Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text05',
-                        header: text05Value,
-                        hidden: text05Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text06',
-                        header: text06Value,
-                        hidden: text06Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text07',
-                        header: text07Value,
-                        hidden: text07Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text08',
-                        header: text08Value,
-                        hidden: text08Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text09',
-                        header: text09Value,
-                        hidden: text09Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text10',
-                        header: text10Value,
-                        hidden: text10Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text11',
-                        header: text11Value,
-                        hidden: text11Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text12',
-                        header: text12Value,
-                        hidden: text12Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text13',
-                        header: text13Value,
-                        hidden: text13Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text14',
-                        header: text14Value,
-                        hidden: text14Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    },{
-                        xtype : 'gridcolumn',
-                        dataIndex: 'text15',
-                        header: text15Value,
-                        hidden: text15Hide,
-                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                            switch (value) {
-                                //active
-                                case '#ICON_1#':
-                                    metadata.css = 'ula-icon-2';
-                                    return;
-                                //complete
-                                case '#ICON_2#':
-                                    metadata.css = 'ula-icon-3';
-                                    return;
-                                //not started
-                                case '#ICON_3#':
-                                    metadata.css = 'ula-icon-1';
-                                    return;
-                                default:
-                                    return value;
-                            }
-                        }
-                    }
-                ]);
-
-                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                var lockedGrid = ganttPanel.lockedGrid;
-                lockedGrid.addEvents({
-                    itemClick: function() {
-                        console.log('josh');
-                    }
-                });
-                var cols = lockedGrid.columns;
-                var count = 0;
-                for (var i=0; i < cols.length; i++) {
-                    var col = cols[i];
-                    if (col.hidden === false || col.hidden === undefined) {
-                        count = count + 1;
-                    }
-                    console.log(count);
-                }
-
-            } else {
-                yesNoStore.add({
-                    name: 'ganttExists'
-                });
-
-                var tpl = me.getBodyTpl();
-                var header = me.getHeaderTpl();
-                var footer = me.getFooterTpl();
-                component.returnValue = Ext.applyIf(config, {
-                    taskStore: me.taskStore,
-                    lockedGridConfig:{
-                        width: panelThird,
-                        resizable: 'w e'
-                    },
-                    readOnly: true,
-                    baselineVisible: false,
-                    viewPreset: 'year',
-                    width: panelWidth,
-                    listeners: {
-                        itemclick: {
-                            fn: function () {
-                                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                                var lockedGrid = ganttPanel.lockedGrid;
-                               /* Ext.mixin.Observable#addEvents" is deprecated.
-                               lockedGrid.addEvents({
-                                    itemClick: function() {
-                                        console.log('josh');
-                                    }
-                                });*/
-                                var cols = lockedGrid.columns;
-                                var count = 0;
-                                for (var i=0; i < cols.length; i++) {
-                                    var col = cols[i];
-                                    if (col.hidden === false || col.hidden === undefined) {
-                                        count = count + 1;
-                                    }
-                                }
-                            },
-                            scope: me
-                        }
-                    },
-                    plugins: [
-                        Ext.create("Sch.plugin.Lines", {
-                            showHeaderElements : true,
-                            innerTpl           : '<span class="line-text">{Text}</span>',
-                            store              : lineStore
-                        }),
-                        Ext.create("DSch.plugin.Export", {
-                            pluginId: 'exportServer',
-                            name:'Export',
-                            //tpl : me.getTpl(),
-                            printServer     : window.server,
-                            printPDFServer  : window.server,
-                            tpl : tpl,
-                            headerTpl : header,
-                            //headerTplDataFn:header,
-                            //headerTplDataFnScope:me,
-                            footerTpl : footer,
-                            //footerTplDataFn:footer,
-                            //footerTplDataFnScope:me,
-                            afterExport :  function (gantt) {
-                                Ext.Ajax.useDefaultXhrHeader = true;
-                            },
-                            beforeExport : function (gantt) {
-                                Ext.Ajax.useDefaultXhrHeader = false;
-                            }
-                        }),
-                        //new Sch.plugin.ExcelExport()
-                    ],
-                    height: panelHeight-75,
-                    startDate: new Date(startValue),
-                    endDate: new Date(finishValue),
-                    rightLabelField: {
-                        renderer : function (value, record){
-                            var color = record.get('color');
-                            var depth = record.getDepth();
-                            if (color == 'red' && depth < 3) {
-                                var rightLabel = record.get('Note');
-                                return rightLabel;
-                            } if (color == 'lightBlue') {
-                                rightLabel = 0;
-                                if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
-                                    var diff = (+record.get('StartDate')) - (+record.get('EndDate'));
-                                    var days = 86400000 / Math.abs(diff);
-                                    rightLabel = days > 0 ? days -1 : days;
-                                }else{
-                                    rightLabel = record.get('smDuration');
-                                    rightLabel = Math.round(rightLabel);
-                                }
-                                return Math.floor(rightLabel)+' days';
-                            } else {
-                                 rightLabel = record.get('EndDate');
-                                var mth = rightLabel.getUTCMonth()+1;
-                                var day = rightLabel.getUTCDate();
-                                if (day-1===0) {
-                                    switch (mth) {
-                                        case 1:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 2:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 3:
-                                            mth = mth -1;
-                                            day = '28';
-                                            break;
-                                        case 4:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 5:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                        case 6:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 7:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                        case 8:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 9:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 10:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                        case 11:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 12:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                    }
-                                } else {
-                                    day = day-1;
-                                }
-                                var yr = rightLabel.getUTCFullYear();
-                                rightLabel = mth+'/'+day+'/'+yr;
-                                return rightLabel;
-                            }
-                        }
-                    },
-                    leftLabelField: {
-                        renderer : function (value, record){
-                            var color = record.get('color');
-                            if (color !=='lightBlue'){
-                                var leftLabel = record.get('StartDate');
-                                var mth = leftLabel.getUTCMonth()+1;
-                                var day = leftLabel.getUTCDate();
-                                var yr = leftLabel.getUTCFullYear();
-                                leftLabel = mth+'/'+day+'/'+yr;
-                                return leftLabel;
-                            } else {
-                                var leftLabelAlt = 'MR';
-                                return leftLabelAlt;
-                            }
-                        }
-                    },
-                    eventRenderer : function (task) {
-                        var color = task.get('color');
-                        var style = Ext.String.format('background-color: #{0};border-color:#{1}');
-                        if (color !=='') {
-                            switch (color) {
+            return [
+                {
+                    xtype : 'gridcolumn',
+                    dataIndex: 'program',
+                    header: 'Prog',
+                    locked : false,
+                    width: 60
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'tailNumber',
+                    header: 'Tail Number',
+                    locked : false,
+                    width: 60
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'primaryMission',
+                    header: 'Primary Mission',
+                    locked : false,
+                    width: 75
+                },{
+                    xtype: 'treecolumn',
+                    header: 'Task Name',
+                    locked : false,
+                    dataIndex: 'Name',
+                    width: 250,
+                    bodyCssClass: 'x-tree-noicon',
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        if (backgroundColor !== ""){
+                            switch (backgroundColor) {
                                 case 'red':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FF0000', 'FF0000');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ff0000', 'ff0000');
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                //orange
-                                case 'orange':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFA500', 'FFA500');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ffa500', 'ffa500');
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                case 'blue':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '9B9BD7', '9B9BD7');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                case 'yellow':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
+                                    metadata.style = "background-color:#ff6666;";
+                                    return value;
                                 case 'gray':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'BEBEB1', 'BEBEB1');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
+                                    metadata.style = "background-color:#b2b2b2";
+                                    return value;
+                                case 'orange':
+                                    metadata.style = "background-color:#FFA500";
+                                    return value;
+                                case 'blue':
+                                    metadata.style = "background-color:#7f7fff";
+                                    return value;
+                                case 'yellow':
+                                    metadata.style = "background-color:#ffff00";
+                                    return value;
                                 case 'green':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
+                                    if (record.data.depth < 4) {
+                                        metadata.style = "background-color:#397D02";
+                                    }
+                                    return value;
                                 case 'lightBlue':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
+                                    return value;
+                                case 'euTracker':
+                                    return value;
                             }
                         } else {
-                            //green
-                            style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                            progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                            cls = style;
-                            return {
-                                style: style,
-                                progressBarStyle: progressBarStyle,
-                                cls: cls
-                            };
+                            return value;
                         }
-                    },
-                    columns: [
-                        {
-                            xtype : 'gridcolumn',
-                            dataIndex: 'program',
-                            header: 'Prog',
-                            width: 60
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'tailNumber',
-                            header: 'Tail Number',
-                            width: 60
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'primaryMission',
-                            header: 'Primary Mission',
-                            width: 75
-                        },{
-                            xtype: 'treecolumn',
-                            header: 'Task Name',
-                            sortable: false,
-                            dataIndex: 'Name',
-                            width: 250,
-                            bodyCssClass: 'x-tree-noicon',
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                if (backgroundColor !== ""){
-                                    switch (backgroundColor) {
-                                        case 'red':
-                                            metadata.style = "background-color:#ff6666;";
-                                            return value;
-                                        case 'gray':
-                                            metadata.style = "background-color:#b2b2b2";
-                                            return value;
-                                        case 'orange':
-                                            metadata.style = "background-color:#FFA500";
-                                            return value;
-                                        case 'blue':
-                                            metadata.style = "background-color:#7f7fff";
-                                            return value;
-                                        case 'yellow':
-                                            metadata.style = "background-color:#ffff00";
-                                            return value;
-                                        case 'green':
-                                            if (record.data.depth < 4) {
-                                                metadata.style = "background-color:#397D02";
-                                            }
-                                            return value;
-                                        case 'lightBlue':
-                                            return value;
-                                        case 'euTracker':
-                                            return value;
-                                    }
-                                } else {
-                                    return value;
-                                }
-                            }
-                        },{
-                            xtype : 'startdatecolumn',
-                            dateFormat: 'm/d/Y',
-                            hidden: true
-                        },{
-                            xtype : 'enddatecolumn',
-                            dateFormat: 'm/d/Y',
-                            hidden: true
-                        },{
-                            //hidden : true,
-                            xtype : 'baselinestartdatecolumn',
-                            dateFormat: 'm/d/Y',
-                            hidden: true
-                        },{
-                            //hidden : true,
-                            xtype : 'baselineenddatecolumn',
-                            dateFormat: 'm/d/Y',
-                            hidden: true
-                        },{
-                            xtype : 'durationcolumn',
-                            hidden: true
-                        },{
-                            xtype : 'datecolumn',
-                            dataIndex: 'actualStartDate',
-                            header: 'Actual Start',
-                            dateFormat: 'm/d/Y',
-                            hidden: true
-                        },{
-                            xtype : 'datecolumn',
-                            dataIndex: 'actualEndDate',
-                            header: 'Actual Finish',
-                            dateFormat: 'm/d/Y',
-                            hidden: true
-                        },{
-                            xtype : 'percentdonecolumn',
-                            width : 50,
-                            hidden: true
-                        },{
-                            xtype : 'predecessorcolumn',
-                            hidden: true
-                        },{
-                            xtype : 'notecolumn',
-                            hidden: true
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'outline',
-                            header: 'Outline',
-                            hidden: true
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'color',
-                            header: 'Color',
-                            hidden: true
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text01',
-                            header: text01Value,
-                            hidden: text01Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text02',
-                            header: text02Value,
-                            hidden: text02Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text03',
-                            header: text03Value,
-                            hidden: text03Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text04',
-                            header: text04Value,
-                            hidden: text04Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text05',
-                            header: text05Value,
-                            hidden: text05Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text06',
-                            header: text06Value,
-                            hidden: text06Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text07',
-                            header: text07Value,
-                            hidden: text07Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text08',
-                            header: text08Value,
-                            hidden: text08Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                var backgroundColor = record.get('color');
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text09',
-                            header: text09Value,
-                            hidden: text09Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text10',
-                            header: text10Value,
-                            hidden: text10Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text11',
-                            header: text11Value,
-                            hidden: text11Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text12',
-                            header: text12Value,
-                            hidden: text12Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text13',
-                            header: text13Value,
-                            hidden: text13Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text14',
-                            header: text14Value,
-                            hidden: text14Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
-                        },{
-                            xtype : 'gridcolumn',
-                            dataIndex: 'text15',
-                            header: text15Value,
-                            hidden: text15Hide,
-                            renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                                switch (value) {
-                                    //active
-                                    case '#ICON_1#':
-                                        metadata.css = 'ula-icon-2';
-                                        return;
-                                    //complete
-                                    case '#ICON_2#':
-                                        metadata.css = 'ula-icon-3';
-                                        return;
-                                    //not started
-                                    case '#ICON_3#':
-                                        metadata.css = 'ula-icon-1';
-                                        return;
-                                    default:
-                                        return value;
-                                }
-                            }
+                    }
+                },{
+                    xtype : 'startdatecolumn',
+                    dateFormat: 'm/d/Y',
+                    hidden: true
+                },{
+                    xtype : 'enddatecolumn',
+                    dateFormat: 'm/d/Y',
+                    hidden: true
+                },{
+                    //hidden : true,
+                    xtype : 'baselinestartdatecolumn',
+                    dateFormat: 'm/d/Y',
+                    hidden: true
+                },{
+                    //hidden : true,
+                    xtype : 'baselineenddatecolumn',
+                    dateFormat: 'm/d/Y',
+                    hidden: true
+                },{
+                    xtype : 'durationcolumn',
+                    hidden: true
+                },{
+                    xtype : 'datecolumn',
+                    dataIndex: 'actualStartDate',
+                    header: 'Actual Start',
+                    dateFormat: 'm/d/Y',
+                    hidden: true
+                },{
+                    xtype : 'datecolumn',
+                    dataIndex: 'actualEndDate',
+                    header: 'Actual Finish',
+                    dateFormat: 'm/d/Y',
+                    hidden: true
+                },{
+                    xtype : 'percentdonecolumn',
+                    width : 50,
+                    hidden: true
+                },{
+                    xtype : 'predecessorcolumn',
+                    hidden: true
+                },{
+                    xtype : 'notecolumn',
+                    hidden: true
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'outline',
+                    header: 'Outline',
+                    hidden: true
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'color',
+                    header: 'Color',
+                    hidden: true
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text01',
+                    header: text01Value,
+                    hidden: text01Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
                         }
-                    ]
-                });
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text02',
+                    header: text02Value,
+                    hidden: text02Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text03',
+                    header: text03Value,
+                    hidden: text03Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text04',
+                    header: text04Value,
+                    hidden: text04Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text05',
+                    header: text05Value,
+                    hidden: text05Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text06',
+                    header: text06Value,
+                    hidden: text06Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text07',
+                    header: text07Value,
+                    hidden: text07Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text08',
+                    header: text08Value,
+                    hidden: text08Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        var backgroundColor = record.get('color');
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text09',
+                    header: text09Value,
+                    hidden: text09Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text10',
+                    header: text10Value,
+                    hidden: text10Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text11',
+                    header: text11Value,
+                    hidden: text11Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text12',
+                    header: text12Value,
+                    hidden: text12Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text13',
+                    header: text13Value,
+                    hidden: text13Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text14',
+                    header: text14Value,
+                    hidden: text14Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                },{
+                    xtype : 'gridcolumn',
+                    dataIndex: 'text15',
+                    header: text15Value,
+                    hidden: text15Hide,
+                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                        switch (value) {
+                            //active
+                            case '#ICON_1#':
+                                metadata.css = 'ula-icon-2';
+                                return;
+                            //complete
+                            case '#ICON_2#':
+                                metadata.css = 'ula-icon-3';
+                                return;
+                            //not started
+                            case '#ICON_3#':
+                                metadata.css = 'ula-icon-1';
+                                return;
+                            default:
+                                return value;
+                        }
+                    }
+                }
+            ];
+           /* {
+            xtype : 'gridcolumn',
+                dataIndex: 'program',
+                header: 'Prog',
+                width: 60
+        },{
+    xtype : 'gridcolumn',
+        dataIndex: 'tailNumber',
+        header: 'Tail Number',
+        width: 60
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'primaryMission',
+        header: 'Primary Mission',
+        width: 75
+},{
+    xtype: 'treecolumn',
+        header: 'Task',
+        sortable: false,
+        dataIndex: 'Name',
+        width: 250,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        var backgroundColor = record.get('color');
+        if (backgroundColor !== ""){
+            switch (backgroundColor) {
+                case 'red':
+                    metadata.style = "background-color:#ff6666;";
+                    return value;
+                case 'gray':
+                    metadata.style = "background-color:#b2b2b2";
+                    return value;
+                case 'orange':
+                    metadata.style = "background-color:#FFA500";
+                    return value;
+                case 'blue':
+                    metadata.style = "background-color:#7f7fff";
+                    return value;
+                case 'yellow':
+                    metadata.style = "background-color:#ffff00";
+                    return value;
+                case 'green':
+                    if (record.data.depth < 4) {
+                        metadata.style = "background-color:#80B280";
+                    }
+                    return value;
+                case 'lightBlue':
+                    return value;
+                case 'euTracker':
+                    return value;
             }
-
+        } else {
+            return value;
+        }
+    }
+},{
+    xtype : 'startdatecolumn',
+        dateFormat: 'm/d/Y',
+        dataIndex: 'StartDate',
+        hidden: true
+},{
+    xtype : 'enddatecolumn',
+        dateFormat: 'm/d/Y',
+        dataIndex: 'EndDate',
+        hidden: true
+},{
+    xtype : 'baselinestartdatecolumn',
+        dataIndex: 'BaselineStartDate',
+        dateFormat: 'm-d-Y',
+        hidden: true
+},{
+    xtype : 'baselineenddatecolumn',
+        dataIndex: 'BaselineEndDate',
+        dateFormat: 'm/d/Y',
+        hidden: true
+},{
+    xtype : 'durationcolumn',
+        hidden: true
+},{
+    xtype : 'datecolumn',
+        dataIndex: 'actualStartDate',
+        header: 'Actual Start',
+        dateFormat: 'm/d/Y',
+        hidden: true
+},{
+    xtype : 'datecolumn',
+        dataIndex: 'actualEndDate',
+        header: 'Actual Finish',
+        dateFormat: 'm-d-Y',
+        hidden: true
+},{
+    xtype : 'percentdonecolumn',
+        width : 50,
+        dataIndex: 'PercentDone',
+        hidden: true
+},{
+    xtype : 'predecessorcolumn',
+        hidden: true
+},{
+    xtype : 'notecolumn',
+        hidden: true
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'outline',
+        header: 'Outline',
+        hidden: true
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'color',
+        header: 'Color',
+        hidden: true
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text01',
+        header: text01Value,
+        hidden: text01Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text02',
+        header: text02Value,
+        hidden: text02Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text03',
+        header: text03Value,
+        hidden: text03Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text04',
+        header: text04Value,
+        hidden: text04Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text05',
+        header: text05Value,
+        hidden: text05Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text06',
+        header: text06Value,
+        hidden: text06Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text07',
+        header: text07Value,
+        hidden: text07Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text08',
+        header: text08Value,
+        hidden: text08Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text09',
+        header: text09Value,
+        hidden: text09Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text10',
+        header: text10Value,
+        hidden: text10Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text11',
+        header: text11Value,
+        hidden: text11Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text12',
+        header: text12Value,
+        hidden: text12Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text13',
+        header: text13Value,
+        hidden: text13Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text14',
+        header: text14Value,
+        hidden: text14Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+},{
+    xtype : 'gridcolumn',
+        dataIndex: 'text15',
+        header: text15Value,
+        hidden: text15Hide,
+        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+        switch (value) {
+            //active
+            case '#ICON_1#':
+                metadata.css = 'ula-icon-2';
+                return;
+            //complete
+            case '#ICON_2#':
+                metadata.css = 'ula-icon-3';
+                return;
+            //not started
+            case '#ICON_3#':
+                metadata.css = 'ula-icon-1';
+                return;
+            default:
+                return value;
+        }
+    }
+}
+**/
         },
 
         onExpandClick: function(button, e, eOpts) {
@@ -1705,35 +1715,43 @@
                 main.changeGanttView('Year');
             }
             main.updateInternalStore('currentTime',time);
-            server.printServer = window.printServer+'topdf/toPdf.php?now='+time;
-            server.printPDFServer = window.printServer+'topdf/createHtmlPage.php?now='+time;
+            server.printServer = window.printServer+window.namespace+'buildPDF.php?now='+time;
+            server.printPDFServer = window.printServer+window.namespace+'createHtmlPage.php?now='+time;
 
             server.setFileFormat('pdf');
             ganttPanel.showExportDialog();
         },
 
-        setServer:function(){
+        requestServer:function(){
+            var me = this;
             return $.ajax({
                 url: '/dsnwebui/dsnwebui_rest/ServerStoreXml',
                 method: 'GET',
                 success: function(res) {
                     var server = res.getElementsByTagName("number")[0].firstChild.valueOf().textContent;
-                    window.server = server;
-                    window.printServer = server;//'http://192.168.2.98:8002/'
-                    window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
-                    window.serverResources = window.printServer+'resources/';
+                    me.setServer(server);
                 },
                 error: function(res) {
                     alert('No entry maintained for source server in Z051ULA_MD01');
                 }
-            })
-
-
+            });
         },
-
+        setServer:function(server){
+            var defer = $.Deferred();
+            window.server = server;
+            window.printServer = server;//'http://192.168.2.98:8002/'
+            window.namespace = 'htmlToPdf/';
+            //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
+            //window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/'
+            window.serverResources = window.printServer+'resources/';
+            defer.resolve();
+            return defer.promise();
+        },
         onLaunch: function() {
             var me = this;
-           var promise =  me.setServer();
+           var promise =  me.requestServer();
+           /* development // me.setServer(window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/')// */
+           /* production //me.requestServer();*/
             promise.done(function(){
                 // get users
                 me.getStore('UserStoreXml').load({
@@ -1793,11 +1811,11 @@
                     action: 'read',
                     scope: me
                 });
-                var ParamStoreXml = me.getStore('PassedObjectsStoreXml').load({
+                var PassedObjectsStoreXml = me.getStore('PassedObjectsStoreXml').load({
                     action: 'read',
                     scope: me,
                     callback: function () {
-                        ParamStoreXml.each(
+                        PassedObjectsStoreXml.each(//was : ParamStoreXml
                             function (record) {
                                 var name = record.get('name');
                                 var value = record.get('value');
@@ -1974,6 +1992,7 @@
 
         init: function(application) {
             var me=this;
+            window.appState = {};
             Ext.require('Gnt.model.Task');
             Ext.define('taskStoreModel', {
                 extend : 'Gnt.model.Task',

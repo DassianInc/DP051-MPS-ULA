@@ -2,7 +2,8 @@ Ext.define('MyApp.view.Main', {
     extend: 'Ext.container.Container',
     requires:[
         'Ext.tab.Panel',
-        'Ext.layout.container.Border'
+        'Ext.layout.container.Border',
+        'Ext.window.Toast'
     ],
     
     xtype: 'app-main',
