@@ -1,0 +1,13 @@
+.sch-ganttpanel-highlightweekends .sch-dayheadercell-6, /* Saturday */
+.sch-ganttpanel-highlightweekends .sch-dayheadercell-0 /* Sunday */
+ {
+    background-image : url('../images/column-weekend-header-bg.gif');
+    background-image : -webkit-gradient(linear, #E3E4E6, #DDEEEE);
+    background-image : -moz-linear-gradient(top, #E3E4E6 50%, #DDEEEE 50%);
+    background-image : linear-gradient(top, #E3E4E6 80%, #DDEEEE 80%);
+}
+
+.sch-dependency-line,
+.sch-dependency-arrow {
+    border-color : magenta;
+}

@@ -1,0 +1,23 @@
+.x-ie .sch-ganttview td.sch-timetd {
+    background-image : none !important; /* z-index hack for IE, keeping dependencylines above rows */
+}
+
+/* Keeping dependencylines under tasks */
+.sch-ganttview td.sch-timetd {
+    position : static !important;
+}
+
+/* Make sure row element doesn't make dependency line unreachable
+ https://www.assembla.com/spaces/bryntum/tickets/2391
+/* See tests 201_create.t.js and 052_dependency_events.t.js */
+.sch-ganttview .x-grid-item-focused .x-grid-cell-inner {
+    z-index : auto;
+}
+
+
+/* The dependency view element is at 1st position in the Ext JS grid view itemcontainer which
+    breaks some CSS rules in Ext JS (using :first-child)
+*/
+.x-ie8m .sch-ganttview.x-grid-with-row-lines .x-grid-item[data-recordindex="0"] {
+    margin-top : 0;
+}

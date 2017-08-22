@@ -1,0 +1,12 @@
+@media print
+{
+    .sch-gantt-parenttask-bar,
+    .sch-gantt-task-bar,
+    .sch-gantt-milestone-diamond
+    {
+        -webkit-box-shadow: none;
+        -moz-box-shadow: none;
+        -ms-box-shadow: none;
+        box-shadow: none;
+    }
+}

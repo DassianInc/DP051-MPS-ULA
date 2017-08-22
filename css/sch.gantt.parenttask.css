@@ -1,0 +1,93 @@
+.sch-gantt-parenttask-bar {
+    height           : 59%;
+    line-height      : 7px; /* IE Quirks */
+    border           : 1px solid red;
+    position         : relative;
+}
+
+.sch-gantt-parenttask-bar .sch-gantt-progress-bar {
+    overflow         : hidden;
+}
+
+.sch-gantt-parenttask-arrow {
+    border             : 0;
+    height             : 0;
+    width              : 0;
+    position           : absolute;
+    border-color       : inherit;
+    border-left-color  : transparent !important;
+    border-right-color : transparent !important;
+    border-style       : solid;
+}
+
+/* Hide parent arrows if not part of the view */
+.sch-ltr .sch-event-startsoutside .sch-gantt-parenttask-leftarrow,
+.sch-ltr .sch-event-endsoutside .sch-gantt-parenttask-rightarrow {
+    display : none;
+}
+
+.sch-gantt-parenttask-leftarrow {
+    left         : -1px;
+    border-width : 8px 8px 0 0;
+}
+
+.sch-gantt-no-task-border .sch-gantt-parenttask-leftarrow{
+    left         : 0;
+}
+
+.sch-gantt-parenttask-rightarrow {
+    right        : -1px;
+    border-width : 8px 0 0 8px;
+}
+
+.sch-gantt-no-task-border .sch-gantt-parenttask-rightarrow{
+    right         : 0;
+}
+
+.sch-gantt-parent-task .sch-gantt-labelct-right {
+    margin-left : 8px;
+}
+
+/* BASELINE STYLING           */
+/* ---------------------    */
+.sch-ganttpanel-showbaseline .sch-gantt-parenttask-bar {
+    height : 50%;
+}
+
+.sch-gantt-parenttask-baseline {
+    display : none;
+    z-index : 0 !important;
+}
+
+.sch-gantt-parenttask-baseline .sch-gantt-parenttask-bar {
+    cursor        : auto !important;
+    height        : 40%;
+    top           : 50%;
+    border        : 1px solid;
+    overflow      : hidden !important;
+    border-radius : 2px;
+}
+
+.sch-gantt-parenttask-baseline .sch-gantt-parenttask-arrow {
+    display : none;
+}
+
+.sch-gantt-parenttask-baseline .sch-gantt-parenttask-bar {
+    left : 0;
+}
+
+.sch-ganttpanel-showbaseline .sch-gantt-parenttask-baseline {
+    display : block;
+}
+
+/* ROLLUP STYLING           */
+/* ---------------------    */
+
+/* Container el holding all the rollup task elements */
+.sch-rollup-wrap {
+    position : absolute;
+    top      : 58%;
+    height   : 7px;
+    z-index  : 1;
+}
+

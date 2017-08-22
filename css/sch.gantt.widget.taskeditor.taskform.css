@@ -1,0 +1,20 @@
+.gnt-taskeditor-window .x-window-body {
+    background : #fff;
+}
+
+.gnt-taskeditor-taskform fieldset {
+    padding       : 0;
+    margin        : 5px 0;
+    border-bottom : 0;
+    border-left   : 0;
+    border-right  : 0;
+    border-radius : 0;
+}
+
+.gnt-taskeditor-taskform .x-field {
+    margin-left:8px;
+}
+
+.gnt-baselinefield .x-form-item-label {
+    color : #999;
+}

@@ -1,0 +1,11 @@
+.gnt-assignmentgrid .x-grid-dirty-cell
+{
+    background-image:none;
+}
+.gnt-assignmentgrid .x-grid-item .x-form-invalid,
+.gnt-assignmentgrid .x-grid-item-selected .x-form-invalid
+{
+    background-image: url(../images/invalid_line.gif);
+    background-repeat: repeat-x;
+    background-position: bottom;
+}

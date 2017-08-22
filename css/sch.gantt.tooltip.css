@@ -1,0 +1,16 @@
+.sch-timetipwrap table {
+    min-width : 110px;
+}
+
+.sch-timetipwrap td {
+    vertical-align : top;
+    padding-bottom : 3px;
+}
+
+.sch-timetipwrap td.sch-gantt-tip-desc {
+    width : 80%;
+}
+
+.sch-timetipwrap td.sch-gantt-tip-value {
+    width : 20%;
+}
