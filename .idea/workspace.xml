@@ -2,16 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9794019c-5fcc-4aa0-96f0-7ce532fd9dc5" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app.json" afterPath="$PROJECT_DIR$/app.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/controller/Main.js" afterPath="$PROJECT_DIR$/app/controller/Main.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/view/Main.js" afterPath="$PROJECT_DIR$/app/view/Main.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/view/MyPanel12.js" afterPath="$PROJECT_DIR$/app/view/MyPanel12.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gantt/SchExportPluginExtend.js" afterPath="$PROJECT_DIR$/gantt/SchExportPluginExtend.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/readme.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/bluebird.js" afterPath="$PROJECT_DIR$/resources/bluebird.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/overrides.js" afterPath="$PROJECT_DIR$/resources/overrides.js" />
     </list>
     <ignored path="MPS-PDN-ULA.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -955,7 +947,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/app/store/ModelUnitStoreXml.js" />
         <option value="$PROJECT_DIR$/app/store/IntegrationPointStoreXml.js" />
         <option value="$PROJECT_DIR$/app/store/GanttConfigStoreXml.js" />
         <option value="$PROJECT_DIR$/app/store/FieldStoreXml.js" />
@@ -997,7 +988,6 @@
         <option value="$PROJECT_DIR$/../../servers/default_port.conf" />
         <option value="$PROJECT_DIR$/resources/bluebird.js" />
         <option value="$PROJECT_DIR$/app.json" />
-        <option value="$PROJECT_DIR$/index.html" />
         <option value="$PROJECT_DIR$/../../conf/nginx.conf" />
         <option value="$PROJECT_DIR$/../../servers/mps_ula_v1.conf" />
         <option value="$PROJECT_DIR$/app/controller/Main.js" />
@@ -1006,6 +996,8 @@
         <option value="$PROJECT_DIR$/ext/src/window/Toast.js" />
         <option value="$PROJECT_DIR$/gantt/SchExportPluginExtend.js" />
         <option value="$PROJECT_DIR$/build/testing/MyApp/index.html" />
+        <option value="$PROJECT_DIR$/index.html" />
+        <option value="$PROJECT_DIR$/readme.md" />
       </list>
     </option>
   </component>
@@ -1025,7 +1017,7 @@
   <component name="NodeModulesDirectoryManager">
     <handled-path value="$PROJECT_DIR$/gantt-pro-3.0.12/tests/node_modules" />
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="1">
     <option name="x" value="-4" />
     <option name="width" value="1639" />
     <option name="height" value="1038" />
@@ -1052,29 +1044,6 @@
             <path>
               <item name="MPS-PDN-ULA" type="b2602c69:ProjectViewProjectNode" />
               <item name="MPS-PDN-ULA" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MPS-PDN-ULA" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MPS-PDN-ULA" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MPS-PDN-ULA" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MPS-PDN-ULA" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MPS-PDN-ULA" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MPS-PDN-ULA" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-              <item name="testing" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MPS-PDN-ULA" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MPS-PDN-ULA" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-              <item name="testing" type="462c0819:PsiDirectoryNode" />
-              <item name="MyApp" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -1252,12 +1221,12 @@
       <workItem from="1502750954534" duration="2426000" />
       <workItem from="1502908708632" duration="11569000" />
       <workItem from="1503007428747" duration="25120000" />
-      <workItem from="1503331989264" duration="41666000" />
+      <workItem from="1503331989264" duration="42443000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="347058000" />
+    <option name="totallyTimeSpent" value="347835000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1269,9 +1238,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-4" y="0" width="1639" height="1038" extended-state="0" />
+    <frame x="-4" y="0" width="1639" height="1038" extended-state="1" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2129397" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2129397" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32988507" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32988507" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32947975" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -1343,20 +1313,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/build/production/MyApp/resources/MyApp-all.css">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="528">
-          <caret line="0" column="2103" lean-forward="false" selection-start-line="0" selection-start-column="2103" selection-end-line="0" selection-end-column="2103" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ext/packages/sencha-core/src/data/Connection.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5720">
-          <caret line="379" column="34" lean-forward="false" selection-start-line="379" selection-start-column="27" selection-end-line="379" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/store/GanttViewStore.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="563">
@@ -10427,14 +10383,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="132">
-          <caret line="6" column="73" lean-forward="false" selection-start-line="6" selection-start-column="73" selection-end-line="6" selection-end-column="73" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/build.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-286">
@@ -11358,6 +11306,35 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="418">
           <caret line="19" column="90" lean-forward="false" selection-start-line="19" selection-start-column="90" selection-end-line="19" selection-end-column="90" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/package.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/readme.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="66">
+            <caret line="3" column="13" lean-forward="true" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
+            <folding />
+          </first_editor>
+          <second_editor>
+            <js_state />
+          </second_editor>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="572">
+          <caret line="26" column="8" lean-forward="true" selection-start-line="26" selection-start-column="8" selection-end-line="26" selection-end-column="8" />
           <folding />
         </state>
       </provider>
