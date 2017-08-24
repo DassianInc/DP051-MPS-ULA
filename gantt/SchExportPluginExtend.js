@@ -527,9 +527,10 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         component.getSchedulingView().timeAxisViewModel.suppressFit = true;
         component.timeAxis.autoAdjust                               = false;
         //expand grids in case they're collapsed
-        component.normalGrid.expand();
-        component.lockedGrid.expand();
-
+        if(!config.onlyVisibleRows){
+            component.normalGrid.expand();
+            component.lockedGrid.expand();
+        }
         // remember view regions (to be able to decide on rows visibility if requested)
         me.lockedBox = me.lockedView.getBox();
         me.normalBox = me.normalView.getBox();
@@ -544,12 +545,12 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         config.beforeExport && config.beforeExport(component, me.ticks);
 
         me.prepareColumns(config.columns);
-
         // For Tree grid, optionally expand all nodes
-        if (me.expandAllBeforeExport && component.expandAll) {
-            component.expandAll();
+        if(!config.onlyVisibleRows){
+            if (me.expandAllBeforeExport && component.expandAll) {
+                component.expandAll();
+            }
         }
-
         // resizes the component to fit it into specified paper size (depending on pagination rules)
         me.fitComponentIntoPage();
 
@@ -1004,8 +1005,8 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
             index++;
         }
 
-
-        startIndex === 0 && me.fireEvent('collectrows', me, startIndex, index, count);
+        var totalRows = this.exportConfig.rowsRange != null && this.exportConfig.rowsRange[1] < count ? this.exportConfig.rowsRange[1]+1 : count;
+        startIndex === 0 && me.fireEvent('collectrows', me, startIndex, index, totalRows);
 
        var promiseIteration = callback.call(me, me.lockedRows, me.normalRows,startIndex);
 
@@ -2345,7 +2346,8 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
      */
     getExpectedNumberOfPages : function () {
         var maxRows = Ext.isDefined(this.maxRows) ? this.maxRows : 30;
-        return Math.ceil(this.normalView.getStore().data.length / maxRows);//this.normalRowsHeight / this.printHeight
+        var range = this.exportConfig.rowsRange;
+        return range != null && this.exportConfig.rowsRange[1] <= this.maxRows ? 1 : Math.ceil(this.normalView.getStore().data.length / maxRows);//this.normalRowsHeight / this.printHeight
     },
 
 
@@ -2623,7 +2625,8 @@ Ext.define('DSch.plugin.Export', {
         'DSch.plugin.exporter.SinglePage',
         'DSch.plugin.exporter.MultiPage',
         'DSch.plugin.exporter.MultiPageVertical',
-        'Sch.widget.ExportDialog'
+        'Sch.widget.ExportDialog',
+        'Ext.window.Toast'
     ],
 
     lockableScope           : 'top',
@@ -3201,7 +3204,7 @@ Ext.define('DSch.plugin.Export', {
         var me          = this,
             component   = me.scheduler,
             config      = me.getExportConfig(conf);
-
+            config.onlyVisibleRows = config.rowsRange === 'visible';
         me.callbacks     = {
             success     : callback || Ext.emptyFn,
             failure     : errback || Ext.emptyFn,
@@ -3252,25 +3255,20 @@ Ext.define('DSch.plugin.Export', {
         }
         total   = Math.max(pageNum, total);
         !Ext.isDefined(me.pdfPostTotals) && me.setCalcTotalPdfRequest(total);
-        if(me.pdfPostTotals.groupCount != exporter.extractedPages.length && me.pdfPostTotals.processGroupsCount < me.pdfPostTotals.groupTotalCount){
+        if(me.pdfPostTotals.processGroupsCount != me.pdfPostTotals.groupTotalCount){
+            if(me.pdfPostTotals.groupCount != exporter.extractedPages.length){
                 return;
+            }
         }
-        //else if(me.pdfPostTotals.processGroupsCount < me.pdfPostTotals.groupsTotal) {
-        //       if(me.pdfPostTotals.remainder != (exporter.extractedPages.length)){
-        //        return;
-        //        }
-        //
-        //}
-            me.pdfPostTotals.processGroupsCount += 1;
-           if(me.pdfPostTotals.processGroupsCount > me.pdfPostTotals.groupsTotal){
-               me.pdfPostTotals.groupsTotal = me.pdfPostTotals.processGroupsCount;
-           }
-            var promise = me.postPageToPDF(exporter, page, pageNum, total);
-            promise.done(function(){
-                me.fireEvent('updateprogressbar', 0.2 + 0.6 * pageNum / total, Ext.String.format(me.L('builtPage'), pageNum, total));
-            });
+        me.pdfPostTotals.processGroupsCount += 1;
 
-
+        var promise = me.postPageToPDF(exporter, page, pageNum, total);
+        promise.done(function(){
+            if(me.pdfPostTotals.processGroupsCount > me.pdfPostTotals.groupsTotal){
+                me.pdfPostTotals.groupsTotal = me.pdfPostTotals.processGroupsCount;
+            }
+            me.fireEvent('updateprogressbar', 0.2 + 0.6 * pageNum / total, Ext.String.format(me.L('builtPage'), pageNum, total));
+        });
     },
 
     postPageToPDF:function(exporter, page, pageNum, total){
@@ -3637,16 +3635,24 @@ Ext.define('DSch.plugin.Export', {
         var calGroupTotal = Math.floor(Math.sqrt(pageCount));
         calGroupTotal  = calGroupTotal > 6 ? 6 : calGroupTotal;//max export per request to 10 pages.
         var regularGroupTotalCount = Math.floor(pageCount / calGroupTotal);
-        var remainderTotalCount = Math.abs((regularGroupTotalCount*calGroupTotal) - pageCount);
+        var remainderTotalCount = Math.abs(pageCount - (regularGroupTotalCount * calGroupTotal));
         me.pdfPostTotals          = {
-                    total                   : pageCount,//total pages
-                    processGroupsCount      : 0, //count requests made prior
-                    groupCount              : calGroupTotal,// wait for this many pages before processing create_htmlToPdf
-                    groupsComplete          : 0,// count how may groups have completed, will equal groupsTotal
-                    groupsTotal             : remainderTotalCount > 0 ? regularGroupTotalCount + remainderTotalCount : regularGroupTotalCount, //when done wait for groupsComplete count before toPdf
-                    groupTotalCount         : regularGroupTotalCount,// total number of pages squared
-                    remainder               : remainderTotalCount,// remainder after squared from total pages
-                    hasRemainder            : remainderTotalCount > 0//check if has remainder
+            // wait for this many pages before processing create_htmlToPdf
+            groupCount              : calGroupTotal,
+            // total number of pages squared
+            groupTotalCount         : regularGroupTotalCount,
+            // count how may groups have completed, will equal groupsTotal
+            groupsComplete          : 0,
+            //when done wait for groupsComplete count before toPdf
+            groupsTotal             : remainderTotalCount > 0 ? regularGroupTotalCount + remainderTotalCount : regularGroupTotalCount,
+            //check if has remainder
+            hasRemainder            : remainderTotalCount > 0,
+            //count requests made prior
+            processGroupsCount      : 0,
+            // remainder after squared from total pages
+            remainder               : remainderTotalCount,
+
+            total                   : pageCount//total pages
         };
     }
 });

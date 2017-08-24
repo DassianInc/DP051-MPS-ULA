@@ -146,11 +146,11 @@
 
                 var ganttPanel = Ext.ComponentManager.get('ganttPanel');
                 var lockedGrid = ganttPanel.lockedGrid;
-                lockedGrid.addEvents({
+                /*lockedGrid.addEvents({
                     itemClick: function() {
                         console.log('josh');
                     }
-                });
+                });*/
                 var cols = lockedGrid.columns;
                 var count = 0;
                 for (var i=0; i < cols.length; i++) {
@@ -781,6 +781,7 @@
                     locked : false,
                     dataIndex: 'Name',
                     width: 250,
+                    iconCls :'no-icon',
                     bodyCssClass: 'x-tree-noicon',
                     renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
                         var backgroundColor = record.get('color');

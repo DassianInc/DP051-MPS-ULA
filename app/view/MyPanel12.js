@@ -2438,6 +2438,10 @@ Ext.define('MyApp.view.MyPanel12', {
                         value :''
                     });
                 }
+                if (!me.eventTrigger){
+                    // lazy instantiation of event trigger object
+                    me.eventTrigger = Ext.create('widget.eventtrigger');
+                }
                 me.eventTrigger.fireEvent('ganttConfig');//doFireEvent
                 ganttPanel.setLoading(false);
             }
