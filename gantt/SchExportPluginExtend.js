@@ -3213,26 +3213,37 @@ Ext.define('DSch.plugin.Export', {
 
         var exporter    = me.exporter = me.getExporter(config.exporterId);
 
-        // if we have exporter
-        if (exporter && me.fireEvent('beforeexport', component, exporter, config) !== false) {
+        var establishConn = $.ajax({
+            url:me.printPDFServer,
+            type:'GET'
+        }).success(function(res){
+            console.log('server responsed');
+        });
+        Ext.toast('Establish Connection', 'Connection', 't');
+        establishConn.then(function(){
+            // if we have exporter
+            Ext.toast('Established Connection Complete', 'Connection', 't');
+            if (exporter && me.fireEvent('beforeexport', component, exporter, config) !== false) {
 
-            var activeDialog = this.getActiveExportDialog(),
-                progressBar  = activeDialog && activeDialog.progressBar;
+                var activeDialog = me.getActiveExportDialog(),
+                    progressBar  = activeDialog && activeDialog.progressBar;
 
-            // if export dialog is used and progress bar is there, let's make it visible
-            if (progressBar) {
-                progressBar.show();
-            }
-
-            me.mask();
-
-            me.exporter.extractPages(component, config, function (pages) {
-                if(window.appState.killExport){
-                    return;
+                // if export dialog is used and progress bar is there, let's make it visible
+                if (progressBar) {
+                    progressBar.show();
                 }
-                me.onPagesExtracted(pages, component, exporter, config);
-            }, me);
-        }
+
+                me.mask();
+
+                me.exporter.extractPages(component, config, function (pages) {
+                    if(window.appState.killExport){
+                        return;
+                    }
+                    me.onPagesExtracted(pages, component, exporter, config);
+                }, me);
+            }
+        });
+
     },
 
 
