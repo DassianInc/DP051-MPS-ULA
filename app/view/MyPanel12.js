@@ -13,6 +13,9 @@
  * Do NOT hand edit this file.
  */
 
+var start = new Date();
+var end = new Date(new Date().setFullYear(start.getFullYear()+1));
+
 Ext.define('MyApp.view.MyPanel12', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.mypanel',
@@ -41,6 +44,8 @@ Ext.define('MyApp.view.MyPanel12', {
             autoFitOnLoad: true,
             autoRender: true,
             autoShow: true,
+            startDate:start,
+            endDate:end,
             cls: 'x-tree-noicon',
             id: 'ganttPanel',
             itemId: 'ganttPanel',
@@ -593,6 +598,11 @@ Ext.define('MyApp.view.MyPanel12', {
                             });
                             var recordCountButton = Ext.ComponentManager.get('recordCount');
                             var recordCount = taskStore.getCount();
+
+                            taskStore.data.originalMap = [];
+                            $.each(taskStore.data.map,function(key){
+                                taskStore.data.originalMap.push(key);
+                            });
                             recordCountButton.setText('Record Count: '+recordCount);
                             ganttPanel.setLoading(false);
                         }

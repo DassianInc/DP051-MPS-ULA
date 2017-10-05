@@ -1740,7 +1740,10 @@
         setServer:function(server){
             var defer = $.Deferred();
             window.server = server;
-            window.printServer = server;//'http://192.168.2.98:8002/'
+            if(window.server.substr(window.server.length-1) !== '/'){
+                window.server += '/';
+            }
+            window.printServer = window.server;//'http://192.168.2.98:8002/'
             window.namespace = 'htmlToPdf/';
             //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
             //window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/'
@@ -2181,7 +2184,7 @@
                     var finishRecordIndex = ganttConfigStore.findExact('name','finish');
                     if (finishRecordIndex != -1) {
                         var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value'));
+                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
                         var finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+20);
@@ -2191,7 +2194,7 @@
                     startRecordIndex = ganttConfigStore.findExact('name','start');
                     if (startRecordIndex != -1) {
                         var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value'));
+                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
                         var startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-20);
@@ -2204,7 +2207,7 @@
                     var finishRecordIndex = ganttConfigStore.findExact('name','finish');
                     if (finishRecordIndex != -1) {
                         var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value'));
+                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
                         var finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+20);
@@ -2214,7 +2217,7 @@
                     startRecordIndex = ganttConfigStore.findExact('name','start');
                     if (startRecordIndex != -1) {
                         var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value'));
+                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
                         var startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-20);
@@ -2227,7 +2230,7 @@
                     var finishRecordIndex = ganttConfigStore.findExact('name','finish');
                     if (finishRecordIndex != -1) {
                         var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value'));
+                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
                         var finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+12);
@@ -2237,7 +2240,7 @@
                     startRecordIndex = ganttConfigStore.findExact('name','start');
                     if (startRecordIndex != -1) {
                         var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value'));
+                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
                         var startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-12);
@@ -2250,7 +2253,7 @@
                     var finishRecordIndex = ganttConfigStore.findExact('name','finish');
                     if (finishRecordIndex != -1) {
                         var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value'));
+                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
                         var finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+6);
@@ -2260,7 +2263,7 @@
                     startRecordIndex = ganttConfigStore.findExact('name','start');
                     if (startRecordIndex != -1) {
                         var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value'));
+                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
                         var startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-6);
@@ -2273,7 +2276,7 @@
                     var finishRecordIndex = ganttConfigStore.findExact('name','finish');
                     if (finishRecordIndex != -1) {
                         var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value'));
+                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
                         var finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+4);
@@ -2283,7 +2286,7 @@
                     startRecordIndex = ganttConfigStore.findExact('name','start');
                     if (startRecordIndex != -1) {
                         var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value'));
+                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
                         var startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-4);
