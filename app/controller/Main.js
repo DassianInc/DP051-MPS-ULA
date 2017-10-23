@@ -241,7 +241,11 @@
                                 var rightLabel = record.get('Note');
                                 return rightLabel;
                             } if (color == 'lightBlue') {
-                                rightLabel = 0;
+                                var durationRecordIndex = ganttConfigStore.findExact('value','Duration');
+                                var durationRecord = ganttConfigStore.getAt(durationRecordIndex);
+                                var duration = Number(record.get(durationRecord.get('name')));//example: text03 = Duration
+                                return isNaN(duration) ? record.get(durationRecord.get('name')) : (duration === 1 ? duration +' day' : duration+' days');
+                               /* rightLabel = 0;
                                 if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
                                     var diff =  (+record.get('EndDate')) - (+record.get('StartDate'));
                                     var day = 86400000;
@@ -251,11 +255,14 @@
                                     rightLabel = record.get('smDuration');
                                     rightLabel = Math.round(rightLabel);
                                 }
-                                return Math.floor(rightLabel)+' days';
+                                return Math.floor(rightLabel)+' days';*/
                             } else {
-                                 rightLabel = record.get('EndDate');
+                                var endDateRecordIndex = ganttConfigStore.findExact('value','Finish');
+                                var endDateRecord = ganttConfigStore.getAt(endDateRecordIndex);
+                                var endDate =  record.get(endDateRecord.get('name'));//example: text02 = Finish or endDate
+                                 rightLabel = new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
                                 var mth = rightLabel.getUTCMonth()+1;
-                                day = rightLabel.getUTCDate();
+                                var day = rightLabel.getUTCDate();
                                 if (day-1===0) {
                                     switch (mth) {
                                         case 1:
@@ -307,9 +314,9 @@
                                             day = '30';
                                             break;
                                     }
-                                } else {
+                                } /*else {
                                     day = day-1;
-                                }
+                                }*/
                                 var yr = rightLabel.getUTCFullYear();
                                 rightLabel = mth+'/'+day+'/'+yr;
                                 return rightLabel;
@@ -320,7 +327,10 @@
                         renderer : function (value, record){
                             var color = record.get('color');
                             if (color !=='lightBlue'){
-                                var leftLabel = record.get('StartDate');
+                                var startDateRecordIndex = ganttConfigStore.findExact('value','Start');
+                                var startDateRecord = ganttConfigStore.getAt(startDateRecordIndex);
+                                var startDate =  record.get(startDateRecord.get('name'));//example: text02 = Finish or endDate
+                              var leftLabel = new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
                                 var mth = leftLabel.getUTCMonth()+1;
                                 var day = leftLabel.getUTCDate();
                                 var yr = leftLabel.getUTCFullYear();
