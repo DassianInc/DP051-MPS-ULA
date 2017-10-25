@@ -1392,7 +1392,7 @@ Ext.define('MyApp.view.MyPanel12', {
             extend: 'Ext.form.field.Trigger',
             alias: 'widget.namecustomtrigger',
             // override onTriggerClick
-            onTriggerClick: function(field) {
+            onTriggerClick: function(field){
                 var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
                 ganttConfigStore.add({
                     name: 'noPrompt',
@@ -1400,12 +1400,12 @@ Ext.define('MyApp.view.MyPanel12', {
                 });
                 var updated = 'false';
                 passedObjectsStore.add(
-                    {type: 'name', number: nameInput.value}
+                    {type: 'name', number: field.value}
                 );
                 var nameParentNode = SelectedObjectStoreXml.getNodeById("nameParentNode");
                 var nameChildNode = nameParentNode.appendChild({
                     type: 'Name',
-                    number: nameInput.value,
+                    number: field.value,
                     leaf: true
                 });
             }
@@ -1414,7 +1414,7 @@ Ext.define('MyApp.view.MyPanel12', {
             extend: 'Ext.form.field.Trigger',
             alias: 'widget.notescustomtrigger',
             // override onTriggerClick
-            onTriggerClick: function(field) {
+            onTriggerClick: function(field){
                 var updated = 'false';
                 var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
                 ganttConfigStore.add({
@@ -1422,12 +1422,12 @@ Ext.define('MyApp.view.MyPanel12', {
                     value: ''
                 });
                 passedObjectsStore.add(
-                    {type: 'notes', number: notesInput.value}
+                    {type: 'notes', number: field.value}
                 );
                 var notesParentNode = SelectedObjectStoreXml.getNodeById("notesParentNode");
                 var notesChildNode = notesParentNode.appendChild({
                     type: 'Notes',
-                    number: notesInput.value,
+                    number: field.value,
                     leaf: true
                 });
             }

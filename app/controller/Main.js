@@ -2352,7 +2352,7 @@
                                         '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
                                 '</div>'+
                                 '<div style="width:30%;float:left;text-align:right;">'+
-                                    '<img src="'+window.serverResources+'images/ula-logo.png" width="100px" align="right"></img>' +
+                                    '<img src="'+window.serverResources+'images/ula-logo-op.jpg" width="100px" align="right"></img>' +
                                 '</div>'+
 
 
@@ -2472,8 +2472,8 @@
                             '</tpl>' +
                             '<tpl>' +
                                 '<div class="ula-print-header">' +
-                                        '<img src="'+window.server+'images/ula-logo-2.jpg" width="100px" align="right"></img>' +
-                                        '<img src="'+window.server+'images/ula-logo.png" width="150px" align="left"></img>' +
+                                        //'<img src="'+window.server+'images/ula-logo-2.jpg" width="100px" align="right"></img>' +
+                                        '<img src="'+window.server+'images/ula-logo-op.jpg" width="100px" align="left"></img>' +
                                         '<h4>MASTER PRODUCTION SCHEDULE (MPS)</h4>' +
                                         '<h5>{[this.getPrintTitle()]}</h5>' +
                                         '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
