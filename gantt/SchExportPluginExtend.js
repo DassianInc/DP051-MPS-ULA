@@ -3367,7 +3367,13 @@ Ext.define('DSch.plugin.Export', {
 
         if (me.openAfterExport) {
             setTimeout(function() {
-                window.open(result.url, 'ExportedPanel');
+                //window.open(result.url, 'ExportedPanel');
+                Ext.MessageBox.show({
+                         title:'Download.',
+                         msg: '<a target="_blank" href="'+result.url+'">Click here to download</a>',
+                         buttons: Ext.Msg.CANCEL,
+                         icon: Ext.Msg.INFO
+                    });
             }, 0);
         }
     },
