@@ -261,8 +261,12 @@
                                 var endDateRecord = ganttConfigStore.getAt(endDateRecordIndex);
                                 var endDate =  record.get(endDateRecord.get('name'));//example: text02 = Finish or endDate
                                  rightLabel = new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
+                                if(rightLabel == 'Invalid Date'){
+                                    return endDate;
+                                }
                                 var mth = rightLabel.getUTCMonth()+1;
                                 var day = rightLabel.getUTCDate();
+                                var yr = rightLabel.getUTCFullYear();
                                 if (day-1===0) {
                                     switch (mth) {
                                         case 1:
@@ -317,7 +321,6 @@
                                 } /*else {
                                     day = day-1;
                                 }*/
-                                var yr = rightLabel.getUTCFullYear();
                                 rightLabel = mth+'/'+day+'/'+yr;
                                 return rightLabel;
                             }
@@ -331,6 +334,9 @@
                                 var startDateRecord = ganttConfigStore.getAt(startDateRecordIndex);
                                 var startDate =  record.get(startDateRecord.get('name'));//example: text02 = Finish or endDate
                               var leftLabel = new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
+                                if(leftLabel == 'Invalid Date'){
+                                    return startDate;
+                                }
                                 var mth = leftLabel.getUTCMonth()+1;
                                 var day = leftLabel.getUTCDate();
                                 var yr = leftLabel.getUTCFullYear();
@@ -1739,7 +1745,11 @@
                 url: '/dsnwebui/dsnwebui_rest/ServerStoreXml',
                 method: 'GET',
                 success: function(res) {
-                    var server = res.getElementsByTagName("number")[0].firstChild.valueOf().textContent;
+                    /** TODO change value of in IE **/
+                    var server = res.childNodes[0].textContent;
+                    if(typeof server === 'undefined'){//res.getElementsByTagName("number")[0].firstChild.valueOf().textContent;
+                        alert('No entry maintained for source server in Z051ULA_MD01');
+                    }
                     me.setServer(server);
                 },
                 error: function(res) {
@@ -1753,7 +1763,9 @@
             if(window.server.substr(window.server.length-1) !== '/'){
                 window.server += '/';
             }
+            //dev: window.printServer = 'http://localhost:8999/'//
             window.printServer = window.server;//'http://192.168.2.98:8002/'
+
             window.namespace = 'htmlToPdf/';
             //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
             //window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/'
