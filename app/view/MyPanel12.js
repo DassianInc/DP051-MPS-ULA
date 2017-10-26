@@ -709,17 +709,20 @@ Ext.define('MyApp.view.MyPanel12', {
             rootVisible: false,
             listeners: {
                 itemclick: function(me,record,item,index,e,eOpts){
+                    if(typeof clickMenu === 'object'){
+                        clickMenu.destroy();
+                    }
                     var clickMenu = new Ext.menu.Menu({
                         items: [
                             {
-                                id:'delete',
+                                id:'deleteSelectedObjects_'+record.internalId+''+index,
                                 text:'Delete',
                                 handler: function () {
-                                    record.remove();
                                     var passedObjectsStore = Ext.getStore('PassedObjectsStoreXml');
                                     var selectedRecordIndex = passedObjectsStore.findExact('number',record.get('number'));
                                     var selectedRecord = passedObjectsStore.getAt(selectedRecordIndex);
                                     passedObjectsStore.remove(selectedRecord);
+                                    record.remove();
                                 }
                             }
                         ]
