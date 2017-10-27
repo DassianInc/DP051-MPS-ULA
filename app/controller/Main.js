@@ -241,10 +241,14 @@
                                 var rightLabel = record.get('Note');
                                 return rightLabel;
                             } if (color == 'lightBlue') {
+
                                 var durationRecordIndex = ganttConfigStore.findExact('value','Duration');
                                 var durationRecord = ganttConfigStore.getAt(durationRecordIndex);
                                 var duration = Number(record.get(durationRecord.get('name')));//example: text03 = Duration
-                                return isNaN(duration) ? record.get(durationRecord.get('name')) : (duration === 1 ? duration +' day' : duration+' days');
+                                if(duration === ''){
+                                    duration = record.get('smDuration');
+                                }
+                                return isNaN(duration) ? 0 : (duration === 1 ? duration +' day' : duration+' days');
                                /* rightLabel = 0;
                                 if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
                                     var diff =  (+record.get('EndDate')) - (+record.get('StartDate'));
@@ -257,9 +261,13 @@
                                 }
                                 return Math.floor(rightLabel)+' days';*/
                             } else {
+
                                 var endDateRecordIndex = ganttConfigStore.findExact('value','Finish');
                                 var endDateRecord = ganttConfigStore.getAt(endDateRecordIndex);
                                 var endDate =  record.get(endDateRecord.get('name'));//example: text02 = Finish or endDate
+                                if(endDate === ''){
+                                    endDate = record.get('EndDate');
+                                }
                                  rightLabel = new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
                                 if(rightLabel == 'Invalid Date'){
                                     return endDate;
@@ -333,6 +341,9 @@
                                 var startDateRecordIndex = ganttConfigStore.findExact('value','Start');
                                 var startDateRecord = ganttConfigStore.getAt(startDateRecordIndex);
                                 var startDate =  record.get(startDateRecord.get('name'));//example: text02 = Finish or endDate
+                                if(startDate === ''){
+                                    startDate = record.get('StartDate');
+                                }
                               var leftLabel = new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
                                 if(leftLabel == 'Invalid Date'){
                                     return startDate;
@@ -1763,8 +1774,8 @@
             if(window.server.substr(window.server.length-1) !== '/'){
                 window.server += '/';
             }
-            //dev: window.printServer = 'http://localhost:8999/'//
-            window.printServer = window.server;//'http://192.168.2.98:8002/'
+            window.printServer = 'http://localhost:8999/'//
+            //dev:  window.printServer = window.server;//'http://192.168.2.98:8002/'
 
             window.namespace = 'htmlToPdf/';
             //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
