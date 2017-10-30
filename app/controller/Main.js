@@ -1774,8 +1774,8 @@
             if(window.server.substr(window.server.length-1) !== '/'){
                 window.server += '/';
             }
-            window.printServer = 'http://localhost:8999/'//
-            //dev:  window.printServer = window.server;//'http://192.168.2.98:8002/'
+            //dev:  window.printServer = 'http://localhost:8999/'//
+            window.printServer = window.server;
 
             window.namespace = 'htmlToPdf/';
             //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
@@ -2372,7 +2372,7 @@
                                 '<div style="width:36%;float:left;text-align:center;">'+
                                         '<h5><b>MASTER PRODUCTION SCHEDULE (MPS)</b></h5>' +
                                         '<p>{[this.getPrintTitle()]}</p>' +
-                                        '<p>~ United Launch Alliance (ULA) Proprietary Information ~</p>' +
+                                        '<p>~ ULA Proprietary Information ~</p>' +
                                 '</div>'+
                                 '<div style="width:30%;float:left;text-align:right;">'+
                                     '<img src="'+window.serverResources+'images/ula-logo-op.jpg" width="100px" align="right"></img>' +
