@@ -92,11 +92,17 @@
         onEventTriggerGanttConfig: function(component, config, eventOptions) {
 
             var me = this;
+            if(!Ext.isDefined(component)){
+                component = Ext.ComponentManager.get('myPanel');
+                config = me.myPanelConfig;
+            }
+            me.myPanelConfig = config;
+            var mainView = Ext.ComponentManager.get('mainView');//Ext.widget('mainview');
             var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
             var yesNoStore  = Ext.getStore('YesNoStore');
             var selectedRecord;
             var ganttExists = yesNoStore.findExact('name','ganttExists');
-            var mainView = Ext.ComponentManager.get('mainView');//Ext.widget('mainview');
+
             var panelWidth = mainView.getWidth();
             var panelHeight = mainView.getHeight();
             var panelThird = panelWidth/3;
@@ -104,13 +110,13 @@
             var finishRecordIndex = ganttConfigStore.findExact('name','finish');
             var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
             var finishValue = finishRecord.get('value');
-            finishValue = new Date(finishValue);
+            finishValue = new Date(finishValue.replace(/\D/ig,'-'));
             finishValue = finishValue.setMonth(finishValue.getMonth()+6);
             //startDate
             var startRecordIndex = ganttConfigStore.findExact('name','start');
             var startRecord = ganttConfigStore.getAt(startRecordIndex);
             var startValue = startRecord.get('value');
-            startValue = new Date(startValue);
+            startValue = new Date(startValue.replace(/\D/ig,'-'));
             startValue = startValue.setMonth(startValue.getMonth()-6);
             //columnVariant
             var columnVariantSelectedRecord = ganttConfigStore.findExact('name','columnVariant');
@@ -134,62 +140,61 @@
                 model : 'MyApp.model.Line',
                 data  : [
                     {
-                        Date : new Date(statusDateValue),
+                        Date : new Date(statusDateValue.replace(/\D/ig,'-')),
                         Text : 'Status Date',
                         Cls  : 'important'
                     }
                 ]
             });
-            if (ganttExists != -1){
+           if (ganttExists != -1){
                 var ganttPanelCmp = Ext.getCmp('ganttPanel');
                 ganttPanelCmp.lockedGrid.reconfigure(null, me.ganttColumns());
 
                 var ganttPanel = Ext.ComponentManager.get('ganttPanel');
                 var lockedGrid = ganttPanel.lockedGrid;
-                /*lockedGrid.addEvents({
-                    itemClick: function() {
-                        console.log('josh');
-                    }
-                });*/
+                //lockedGrid.addEvents({
+                //    itemClick: function() {
+                //        console.log('josh');
+                //    }
+                //});
                 var cols = lockedGrid.columns;
                 var count = 0;
                 for (var i=0; i < cols.length; i++) {
                     var col = cols[i];
-                    if (col.hidden === false || col.hidden === undefined) {
-                        count = count + 1;
+                    if (col.hidden === false || typeof col.hidden === 'undefined') {
+                        count++;
                     }
-                    console.log(count);
+                   // console.log(count);
                 }
 
             } else {
+               var tpl = me.getBodyTpl();
+               var header = me.getHeaderTpl();
+               var footer = me.getFooterTpl();
                 yesNoStore.add({
                     name: 'ganttExists'
                 });
-
-                var tpl = me.getBodyTpl();
-                var header = me.getHeaderTpl();
-                var footer = me.getFooterTpl();
-                component.returnValue = Ext.applyIf(config, {
-                    taskStore: me.taskStore,
-                    lockedGridConfig:{
-                        width: panelThird,
-                        resizable: 'w e'
-                    },
-                    readOnly: true,
-                    baselineVisible: false,
-                    viewPreset: 'year',
-                    width: panelWidth,
-                    listeners: {
-                        itemclick: {
-                            fn: function () {
-                                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                                var lockedGrid = ganttPanel.lockedGrid;
+               component.returnValue = Ext.applyIf(config, {
+                   taskStore: me.taskStore,
+                   lockedGridConfig:{
+                       width: panelThird,
+                       resizable: 'w e'
+                   },
+                   readOnly: true,
+                   baselineVisible: false,
+                   viewPreset: 'year',
+                   width: panelWidth,
+                   listeners: {
+                       itemclick: {
+                           fn: function () {
+                               var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                               var lockedGrid = ganttPanel.lockedGrid;
                                /* Ext.mixin.Observable#addEvents" is deprecated.
                                lockedGrid.addEvents({
                                     itemClick: function() {
                                         console.log('josh');
                                     }
-                                });*/
+                                });
                                 var cols = lockedGrid.columns;
                                 var count = 0;
                                 for (var i=0; i < cols.length; i++) {
@@ -197,58 +202,58 @@
                                     if (col.hidden === false || col.hidden === undefined) {
                                         count = count + 1;
                                     }
-                                }
-                            },
-                            scope: me
-                        }
-                    },
-                    plugins: [
-                        Ext.create("Sch.plugin.Lines", {
-                            showHeaderElements : true,
-                            innerTpl           : '<span class="line-text">{Text}</span>',
-                            store              : lineStore
-                        }),
-                        Ext.create("DSch.plugin.Export", {
-                            pluginId: 'exportServer',
-                            name:'Export',
-                            //tpl : me.getTpl(),
-                            printServer     : window.server,
-                            printPDFServer  : window.server,
-                            tpl : tpl,
-                            headerTpl : header,
-                            //headerTplDataFn:header,
-                            //headerTplDataFnScope:me,
-                            footerTpl : footer,
-                            //footerTplDataFn:footer,
-                            //footerTplDataFnScope:me,
-                            afterExport :  function (gantt) {
-                                Ext.Ajax.useDefaultXhrHeader = true;
-                            },
-                            beforeExport : function (gantt) {
-                                Ext.Ajax.useDefaultXhrHeader = false;
-                            }
-                        })
-                        //new Sch.plugin.ExcelExport()
-                    ],
-                    height: panelHeight-75,
-                    startDate: new Date(startValue),
-                    endDate: new Date(finishValue),
-                    rightLabelField: {
-                        renderer : function (value, record){
-                            var color = record.get('color');
-                            var depth = record.getDepth();
-                            if (color == 'red' && depth < 3) {
-                                var rightLabel = record.get('Note');
-                                return rightLabel;
-                            } if (color == 'lightBlue') {
+                                }*/
+                           },
+                           scope: me
+                       }
+                   },
+                   plugins: [
+                       Ext.create("Sch.plugin.Lines", {
+                           showHeaderElements : true,
+                           innerTpl           : '<span class="line-text">{Text}</span>',
+                           store              : lineStore
+                       }),
+                       Ext.create("DSch.plugin.Export", {
+                           pluginId: 'exportServer',
+                           name:'Export',
+                           //tpl : me.getTpl(),
+                           printServer     : window.server,
+                           printPDFServer  : window.server,
+                           tpl : tpl,
+                           headerTpl : header,
+                           footerTpl : footer,
+                           afterExport :  function (gantt) {
+                               Ext.Ajax.useDefaultXhrHeader = true;
+                           },
+                           beforeExport : function (gantt) {
+                               Ext.Ajax.useDefaultXhrHeader = false;
+                           }
+                       })
+                       //new Sch.plugin.ExcelExport()
+                   ],
+                   height: panelHeight-75,
+                   startDate: new Date(startValue),
+                   endDate: new Date(finishValue),
+                   rightLabelField: {
+                       renderer : function (value, record){
+                           var color = record.get('color');
+                           var depth = record.getDepth();
+                           if (color == 'red' && depth < 3) {
+                               var rightLabel = record.get('Note');
+                               return rightLabel;
+                           } if (color == 'lightBlue') {
 
-                                var durationRecordIndex = ganttConfigStore.findExact('value','Duration');
-                                var durationRecord = ganttConfigStore.getAt(durationRecordIndex);
-                                var duration = Number(record.get(durationRecord.get('name')));//example: text03 = Duration
-                                if(duration === ''){
-                                    duration = record.get('smDuration');
-                                }
-                                return isNaN(duration) ? 0 : (duration === 1 ? duration +' day' : duration+' days');
+                               var durationRecordIndex = ganttConfigStore.findExact('value','Duration');
+                               if(durationRecordIndex != -1){
+                                   var durationRecord = ganttConfigStore.getAt(durationRecordIndex);
+                                   var duration = Ext.isDefined(record.get(durationRecord.get('name'))) ? Number(record.get(durationRecord.get('name'))) : 0;//example: text03 = Duration
+                               }else{
+                                   duration = '';
+                               }
+                               if(duration === ''){
+                                   duration = record.get('smDuration');
+                               }
+                               return isNaN(duration) || duration === '' ? 0+' days' : (duration === 1 ? duration +' day' : duration+' days');
                                /* rightLabel = 0;
                                 if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
                                     var diff =  (+record.get('EndDate')) - (+record.get('StartDate'));
@@ -260,530 +265,249 @@
                                     rightLabel = Math.round(rightLabel);
                                 }
                                 return Math.floor(rightLabel)+' days';*/
-                            } else {
+                           } else {
 
-                                var endDateRecordIndex = ganttConfigStore.findExact('value','Finish');
-                                var endDateRecord = ganttConfigStore.getAt(endDateRecordIndex);
-                                var endDate =  record.get(endDateRecord.get('name'));//example: text02 = Finish or endDate
-                                if(endDate === ''){
-                                    endDate = record.get('EndDate');
-                                }
-                                 rightLabel = new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
-                                if(rightLabel == 'Invalid Date'){
-                                    return endDate;
-                                }
-                                var mth = rightLabel.getUTCMonth()+1;
-                                var day = rightLabel.getUTCDate();
-                                var yr = rightLabel.getUTCFullYear();
-                                if (day-1===0) {
-                                    switch (mth) {
-                                        case 1:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 2:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 3:
-                                            mth = mth -1;
-                                            day = '28';
-                                            break;
-                                        case 4:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 5:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                        case 6:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 7:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                        case 8:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 9:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 10:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                        case 11:
-                                            mth = mth -1;
-                                            day = '31';
-                                            break;
-                                        case 12:
-                                            mth = mth -1;
-                                            day = '30';
-                                            break;
-                                    }
-                                } /*else {
+                               var endDateRecordIndex = ganttConfigStore.findExact('value','Finish');
+                               if(endDateRecordIndex != -1){
+                                   var endDateRecord = ganttConfigStore.getAt(endDateRecordIndex);
+                                   var endDate =  record.get(endDateRecord.get('name'));//example: text02 = Finish or endDate
+                               }else{
+                                   endDate = '';
+                               }
+
+                               if(!Ext.isDefined(endDate) || endDate === ''){
+                                   endDate = record.get('EndDate');
+                               }
+                               rightLabel = typeof endDate === 'object' ? endDate : new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
+                               if(rightLabel == 'Invalid Date'){
+                                   return endDate;
+                               }
+                               var mth = rightLabel.getUTCMonth()+1;
+                               var day = rightLabel.getUTCDate();
+                               var yr = rightLabel.getUTCFullYear();
+                               if (day-1===0) {
+                                   switch (mth) {
+                                       case 1:
+                                           mth = mth -1;
+                                           day = '31';
+                                           break;
+                                       case 2:
+                                           mth = mth -1;
+                                           day = '31';
+                                           break;
+                                       case 3:
+                                           mth = mth -1;
+                                           day = '28';
+                                           break;
+                                       case 4:
+                                           mth = mth -1;
+                                           day = '31';
+                                           break;
+                                       case 5:
+                                           mth = mth -1;
+                                           day = '30';
+                                           break;
+                                       case 6:
+                                           mth = mth -1;
+                                           day = '31';
+                                           break;
+                                       case 7:
+                                           mth = mth -1;
+                                           day = '30';
+                                           break;
+                                       case 8:
+                                           mth = mth -1;
+                                           day = '31';
+                                           break;
+                                       case 9:
+                                           mth = mth -1;
+                                           day = '31';
+                                           break;
+                                       case 10:
+                                           mth = mth -1;
+                                           day = '30';
+                                           break;
+                                       case 11:
+                                           mth = mth -1;
+                                           day = '31';
+                                           break;
+                                       case 12:
+                                           mth = mth -1;
+                                           day = '30';
+                                           break;
+                                   }
+                               } /*else {
                                     day = day-1;
                                 }*/
-                                rightLabel = mth+'/'+day+'/'+yr;
-                                return rightLabel;
-                            }
-                        }
-                    },
-                    leftLabelField: {
-                        renderer : function (value, record){
-                            var color = record.get('color');
-                            if (color !=='lightBlue'){
-                                var startDateRecordIndex = ganttConfigStore.findExact('value','Start');
-                                var startDateRecord = ganttConfigStore.getAt(startDateRecordIndex);
-                                var startDate =  record.get(startDateRecord.get('name'));//example: text02 = Finish or endDate
-                                if(startDate === ''){
-                                    startDate = record.get('StartDate');
-                                }
-                              var leftLabel = new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
-                                if(leftLabel == 'Invalid Date'){
-                                    return startDate;
-                                }
-                                var mth = leftLabel.getUTCMonth()+1;
-                                var day = leftLabel.getUTCDate();
-                                var yr = leftLabel.getUTCFullYear();
-                                leftLabel = mth+'/'+day+'/'+yr;
-                                return leftLabel;
-                            } else {
-                                var leftLabelAlt = 'MR';
-                                return leftLabelAlt;
-                            }
-                        }
-                    },
-                    eventRenderer : function (task) {
-                        var color = task.get('color');
-                        var style = Ext.String.format('background-color: #{0};border-color:#{1}');
-                        if (color !=='') {
-                            switch (color) {
-                                case 'red':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FF0000', 'FF0000');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ff0000', 'ff0000');
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                //orange
-                                case 'orange':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFA500', 'FFA500');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ffa500', 'ffa500');
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                case 'blue':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '9B9BD7', '9B9BD7');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                case 'yellow':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                case 'gray':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', 'BEBEB1', 'BEBEB1');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                case 'green':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                                case 'lightBlue':
-                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                                    cls = style;
-                                    return {
-                                        style: style,
-                                        progressBarStyle: progressBarStyle,
-                                        cls: cls
-                                    };
-                            }
-                        } else {
-                            //green
-                            style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
-                            progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
-                            cls = style;
-                            return {
-                                style: style,
-                                progressBarStyle: progressBarStyle,
-                                cls: cls
-                            };
-                        }
-                    },
-                    columns: me.ganttColumns()
-                });
+                               rightLabel = mth+'/'+day+'/'+yr;
+                               return rightLabel;
+                           }
+                       }
+                   },
+                   leftLabelField: {
+                       renderer : function (value, record){
+                           var color = record.get('color');
+                           if (color !=='lightBlue'){
+                               var startDateRecordIndex = ganttConfigStore.findExact('value','Start');
+                               if(startDateRecordIndex != -1){
+                                   var startDateRecord = ganttConfigStore.getAt(startDateRecordIndex);
+                                   var startDate =  record.get(startDateRecord.get('name'));//example: text02 = Finish or endDate
+                               }else{
+                                   startDate = '';
+                               }
+                               if(!Ext.isDefined(startDate) || startDate === ''){
+                                   startDate = record.get('StartDate');
+                               }
+                               var leftLabel = typeof startDate === 'object' ? startDate : new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
+                               if(leftLabel == 'Invalid Date'){
+                                   return startDate;
+                               }
+                               var mth = leftLabel.getUTCMonth()+1;
+                               var day = leftLabel.getUTCDate();
+                               var yr = leftLabel.getUTCFullYear();
+                               leftLabel = mth+'/'+day+'/'+yr;
+                               return leftLabel;
+                           } else {
+                               var leftLabelAlt = 'MR';
+                               return leftLabelAlt;
+                           }
+                       }
+                   },
+                   eventRenderer : function (task) {
+                       var color = task.get('color');
+                       var style = Ext.String.format('background-color: #{0};border-color:#{1}');
+                       if (color !=='') {
+                           switch (color) {
+                               case 'red':
+                                   style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FF0000', 'FF0000');
+                                   progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                   cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ff0000', 'ff0000');
+                                   return {
+                                       style: style,
+                                       progressBarStyle: progressBarStyle,
+                                       cls: cls
+                                   };
+                               //orange
+                               case 'orange':
+                                   style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFA500', 'FFA500');
+                                   progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                   cls = Ext.String.format('background-color: #{0};border-color:#{1}', 'ffa500', 'ffa500');
+                                   return {
+                                       style: style,
+                                       progressBarStyle: progressBarStyle,
+                                       cls: cls
+                                   };
+                               case 'blue':
+                                   style = Ext.String.format('background-color: #{0};border-color:#{1}', '9B9BD7', '9B9BD7');
+                                   progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                   cls = style;
+                                   return {
+                                       style: style,
+                                       progressBarStyle: progressBarStyle,
+                                       cls: cls
+                                   };
+                               case 'yellow':
+                                   style = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
+                                   progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', 'FFFF80', 'FFFF80');
+                                   cls = style;
+                                   return {
+                                       style: style,
+                                       progressBarStyle: progressBarStyle,
+                                       cls: cls
+                                   };
+                               case 'gray':
+                                   style = Ext.String.format('background-color: #{0};border-color:#{1}', 'BEBEB1', 'BEBEB1');
+                                   progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                   cls = style;
+                                   return {
+                                       style: style,
+                                       progressBarStyle: progressBarStyle,
+                                       cls: cls
+                                   };
+                               case 'green':
+                                   style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                                   progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                   cls = style;
+                                   return {
+                                       style: style,
+                                       progressBarStyle: progressBarStyle,
+                                       cls: cls
+                                   };
+                               case 'lightBlue':
+                                   style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                                   progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                                   cls = style;
+                                   return {
+                                       style: style,
+                                       progressBarStyle: progressBarStyle,
+                                       cls: cls
+                                   };
+                           }
+                       } else {
+                           //green
+                           style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
+                           progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
+                           cls = style;
+                           return {
+                               style: style,
+                               progressBarStyle: progressBarStyle,
+                               cls: cls
+                           };
+                       }
+                   },
+                   columns: me.ganttColumns()
+               });
             }
+
+
+                console.log('end reformat');
 
         },
 
         ganttColumns:function(){
-            var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
+            var searchText = "Icon FA Icon S/T Icon Fab",
+                textArray = [],
+                ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
+                ganttConfigStore.filter(function(model){
+                    return model.get('name').indexOf('text') > -1
+                });
+
             try {
-                //text01
-                var text01SelectedRecord = ganttConfigStore.findExact('name','text01');
-                var text01Record = ganttConfigStore.getAt(text01SelectedRecord);
-                var text01Value = text01Record.get('value');
-                switch (text01Value) {
-                    case 'Not Used':
-                        var text01Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text01columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text01columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text01columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text01Hide = false;
-                        var text01columnType = 'gridcolumn';
-                        break;
-                }
-                //text02
-                var text02SelectedRecord = ganttConfigStore.findExact('name','text02');
-                var text02Record = ganttConfigStore.getAt(text02SelectedRecord);
-                var text02Value = text02Record.get('value');
-                switch (text02Value) {
-                    case 'Not Used':
-                        var text02Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text02columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text02columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text02columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text02Hide = false;
-                        var text02columnType = 'gridcolumn';
-                        break;
-                }
-                //text03
-                var text03SelectedRecord = ganttConfigStore.findExact('name','text03');
-                var text03Record = ganttConfigStore.getAt(text03SelectedRecord);
-                var text03Value = text03Record.get('value');
-                switch (text03Value) {
-                    case 'Not Used':
-                        var text03Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text03columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text03columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text03columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text03Hide = false;
-                        var text03columnType = 'gridcolumn';
-                        break;
-                }
-                //text04
-                var text04SelectedRecord = ganttConfigStore.findExact('name','text04');
-                var text04Record = ganttConfigStore.getAt(text04SelectedRecord);
-                var text04Value = text04Record.get('value');
-                switch (text04Value) {
-                    case 'Not Used':
-                        var text04Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text04columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text04olumnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text04columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text04Hide = false;
-                        var text04columnType = 'gridcolumn';
-                        break;
-                }
-                //text05
-                var text05SelectedRecord = ganttConfigStore.findExact('name','text05');
-                var text05Record = ganttConfigStore.getAt(text05SelectedRecord);
-                var text05Value = text05Record.get('value');
-                switch (text05Value) {
-                    case 'Not Used':
-                        var text05Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text05columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text05columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text05columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text05Hide = false;
-                        var text05columnType = 'gridcolumn';
-                        break;
-                }
-                //text06
-                var text06SelectedRecord = ganttConfigStore.findExact('name','text06');
-                var text06Record = ganttConfigStore.getAt(text06SelectedRecord);
-                var text06Value = text06Record.get('value');
-                switch (text06Value) {
-                    case 'Not Used':
-                        var text06Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text06columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text06columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text06columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text06Hide = false;
-                        var text06columnType = 'gridcolumn';
-                        break;
-                }
-                //text07
-                var text07SelectedRecord = ganttConfigStore.findExact('name','text07');
-                var text07Record = ganttConfigStore.getAt(text07SelectedRecord);
-                var text07Value = text07Record.get('value');
-                switch (text07Value) {
-                    case 'Not Used':
-                        var text07Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text07columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text07columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text07columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text07Hide = false;
-                        var text07columnType = 'gridcolumn';
-                        break;
-                }
-                //text08
-                var text08SelectedRecord = ganttConfigStore.findExact('name','text08');
-                var text08Record = ganttConfigStore.getAt(text08SelectedRecord);
-                var text08Value = text08Record.get('value');
-                switch (text08Value) {
-                    case 'Not Used':
-                        var text08Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text08columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text08columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text08columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text08Hide = false;
-                        var text08columnType = 'gridcolumn';
-                        break;
-                }
-                //text09
-                var text09SelectedRecord = ganttConfigStore.findExact('name','text09');
-                var text09Record = ganttConfigStore.getAt(text09SelectedRecord);
-                var text09Value = text09Record.get('value');
-                switch (text09Value) {
-                    case 'Not Used':
-                        var text09Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text09columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text09columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text09columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text09Hide = false;
-                        var text09columnType = 'gridcolumn';
-                        break;
-                }
-                //text10
-                var text10SelectedRecord = ganttConfigStore.findExact('name','text10');
-                var text10Record = ganttConfigStore.getAt(text10SelectedRecord);
-                var text10Value = text10Record.get('value');
-                switch (text10Value) {
-                    case 'Not Used':
-                        var text10Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text10columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text10columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text10columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text010Hide = false;
-                        var text10columnType = 'gridcolumn';
-                        break;
-                }
-                //text11
-                var text11SelectedRecord = ganttConfigStore.findExact('name','text11');
-                var text11Record = ganttConfigStore.getAt(text11SelectedRecord);
-                var text11Value = text11Record.get('value');
-                switch (text11Value) {
-                    case 'Not Used':
-                        var text11Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text11columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text11columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text11columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text011Hide = false;
-                        var text11columnType = 'gridcolumn';
-                        break;
-                }
-                //text12
-                var text12SelectedRecord = ganttConfigStore.findExact('name','text12');
-                var text12Record = ganttConfigStore.getAt(text12SelectedRecord);
-                var text12Value = text12Record.get('value');
-                switch (text12Value) {
-                    case 'Not Used':
-                        var text12Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text12columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text12columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text12columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text12Hide = false;
-                        var text12columnType = 'gridcolumn';
-                        break;
-                }
-                //text13
-                var text13SelectedRecord = ganttConfigStore.findExact('name','text13');
-                var text13Record = ganttConfigStore.getAt(text13SelectedRecord);
-                var text13Value = text13Record.get('value');
-                switch (text13Value) {
-                    case 'Not Used':
-                        var text13Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text13columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text13columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text13columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text13Hide = false;
-                        var text13columnType = 'gridcolumn';
-                        break;
-                }
-                //text14
-                var text14SelectedRecord = ganttConfigStore.findExact('name','text14');
-                var text14Record = ganttConfigStore.getAt(text14SelectedRecord);
-                var text14Value = text14Record.get('value');
-                switch (text14Value) {
-                    case 'Not Used':
-                        var text14Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text14columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text14columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text14columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text14Hide = false;
-                        var columnTypemnType = 'gridcolumn';
-                        break;
-                }
-                //text15
-                var text15SelectedRecord = ganttConfigStore.findExact('name','text15');
-                var text15Record = ganttConfigStore.getAt(text15SelectedRecord);
-                var text15Value = text15Record.get('value');
-                switch (text15Value) {
-                    case 'Not Used':
-                        var text15Hide = true;
-                        break;
-                    case 'Icon FA':
-                        var text15columnType = 'templatecolumn';
-                        break;
-                    case 'Icon S/T':
-                        var text15columnType = 'templatecolumn';
-                        break;
-                    case 'Icon Fab':
-                        var text15columnType = 'templatecolumn';
-                        break;
-                    default :
-                        var text15Hide = false;
-                        var text15columnType = 'gridcolumn';
-                        break;
-                }
+                ganttConfigStore.each(function(model){
+                    var textValue = model.get('value');
+                    textArray.push({
+                        xtype : 'gridcolumn',//searchText.indexOf(textValue) > -1 ? 'templatecolumn' : 'gridcolumn',
+                        dataIndex: model.get('name'),//example : 'text01'
+                        header: textValue,
+                        hidden: textValue === 'Not Used',
+                        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
+                            //var backgroundColor = record.get('color');
+                            //value = searchText.indexOf(textValue) > -1 ? '#ICON_3#' : value;
+                            switch (value) {
+                                //active      // execute.png
+                                case '#ICON_1#':
+                                    metadata.css = 'ula-icon-2';
+                                    return '<img class="ula-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAA7hGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS41LWMwMjEgNzkuMTU0OTExLCAyMDEzLzEwLzI5LTExOjQ3OjE2ICAgICAgICAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIKICAgICAgICAgICAgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIgogICAgICAgICAgICB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIKICAgICAgICAgICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIj4KICAgICAgICAgPHhtcDpDcmVhdG9yVG9vbD5BZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpPC94bXA6Q3JlYXRvclRvb2w+CiAgICAgICAgIDx4bXA6Q3JlYXRlRGF0ZT4yMDE0LTA3LTA3VDEwOjQ3OjM4LTA3OjAwPC94bXA6Q3JlYXRlRGF0ZT4KICAgICAgICAgPHhtcDpNb2RpZnlEYXRlPjIwMTQtMDctMDdUMTE6MjQ6NDMtMDc6MDA8L3htcDpNb2RpZnlEYXRlPgogICAgICAgICA8eG1wOk1ldGFkYXRhRGF0ZT4yMDE0LTA3LTA3VDExOjI0OjQzLTA3OjAwPC94bXA6TWV0YWRhdGFEYXRlPgogICAgICAgICA8ZGM6Zm9ybWF0PmltYWdlL3BuZzwvZGM6Zm9ybWF0PgogICAgICAgICA8cGhvdG9zaG9wOkNvbG9yTW9kZT4zPC9waG90b3Nob3A6Q29sb3JNb2RlPgogICAgICAgICA8eG1wTU06SW5zdGFuY2VJRD54bXAuaWlkOmM1NTI3MmUyLTc2MGMtYTI0Yi05MjJhLTE2M2MzZDE3NGI0MzwveG1wTU06SW5zdGFuY2VJRD4KICAgICAgICAgPHhtcE1NOkRvY3VtZW50SUQ+eG1wLmRpZDo1OWRiMjlkNS1hYjJjLTJlNDYtOGZiYy1jNzM0ZWVkNmI2Zjk8L3htcE1NOkRvY3VtZW50SUQ+CiAgICAgICAgIDx4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ+eG1wLmRpZDo1OWRiMjlkNS1hYjJjLTJlNDYtOGZiYy1jNzM0ZWVkNmI2Zjk8L3htcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD4KICAgICAgICAgPHhtcE1NOkhpc3Rvcnk+CiAgICAgICAgICAgIDxyZGY6U2VxPgogICAgICAgICAgICAgICA8cmRmOmxpIHJkZjpwYXJzZVR5cGU9IlJlc291cmNlIj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0OmFjdGlvbj5jcmVhdGVkPC9zdEV2dDphY3Rpb24+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDppbnN0YW5jZUlEPnhtcC5paWQ6NTlkYjI5ZDUtYWIyYy0yZTQ2LThmYmMtYzczNGVlZDZiNmY5PC9zdEV2dDppbnN0YW5jZUlEPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6d2hlbj4yMDE0LTA3LTA3VDEwOjQ3OjM4LTA3OjAwPC9zdEV2dDp3aGVuPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6c29mdHdhcmVBZ2VudD5BZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpPC9zdEV2dDpzb2Z0d2FyZUFnZW50PgogICAgICAgICAgICAgICA8L3JkZjpsaT4KICAgICAgICAgICAgICAgPHJkZjpsaSByZGY6cGFyc2VUeXBlPSJSZXNvdXJjZSI+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDphY3Rpb24+c2F2ZWQ8L3N0RXZ0OmFjdGlvbj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0Omluc3RhbmNlSUQ+eG1wLmlpZDo2YWU1ZmJjOS1iMjI0LWY0NGYtYThkMS1iMzM5NWRhNmUyMjM8L3N0RXZ0Omluc3RhbmNlSUQ+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDp3aGVuPjIwMTQtMDctMDdUMTA6NTQ6MzAtMDc6MDA8L3N0RXZ0OndoZW4+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDpzb2Z0d2FyZUFnZW50PkFkb2JlIFBob3Rvc2hvcCBDQyAoV2luZG93cyk8L3N0RXZ0OnNvZnR3YXJlQWdlbnQ+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDpjaGFuZ2VkPi88L3N0RXZ0OmNoYW5nZWQ+CiAgICAgICAgICAgICAgIDwvcmRmOmxpPgogICAgICAgICAgICAgICA8cmRmOmxpIHJkZjpwYXJzZVR5cGU9IlJlc291cmNlIj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0OmFjdGlvbj5zYXZlZDwvc3RFdnQ6YWN0aW9uPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6aW5zdGFuY2VJRD54bXAuaWlkOmM1NTI3MmUyLTc2MGMtYTI0Yi05MjJhLTE2M2MzZDE3NGI0Mzwvc3RFdnQ6aW5zdGFuY2VJRD4KICAgICAgICAgICAgICAgICAgPHN0RXZ0OndoZW4+MjAxNC0wNy0wN1QxMToyNDo0My0wNzowMDwvc3RFdnQ6d2hlbj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0OnNvZnR3YXJlQWdlbnQ+QWRvYmUgUGhvdG9zaG9wIENDIChXaW5kb3dzKTwvc3RFdnQ6c29mdHdhcmVBZ2VudD4KICAgICAgICAgICAgICAgICAgPHN0RXZ0OmNoYW5nZWQ+Lzwvc3RFdnQ6Y2hhbmdlZD4KICAgICAgICAgICAgICAgPC9yZGY6bGk+CiAgICAgICAgICAgIDwvcmRmOlNlcT4KICAgICAgICAgPC94bXBNTTpIaXN0b3J5PgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICAgICA8dGlmZjpYUmVzb2x1dGlvbj43MjAwMDAvMTAwMDA8L3RpZmY6WFJlc29sdXRpb24+CiAgICAgICAgIDx0aWZmOllSZXNvbHV0aW9uPjcyMDAwMC8xMDAwMDwvdGlmZjpZUmVzb2x1dGlvbj4KICAgICAgICAgPHRpZmY6UmVzb2x1dGlvblVuaXQ+MjwvdGlmZjpSZXNvbHV0aW9uVW5pdD4KICAgICAgICAgPGV4aWY6Q29sb3JTcGFjZT42NTUzNTwvZXhpZjpDb2xvclNwYWNlPgogICAgICAgICA8ZXhpZjpQaXhlbFhEaW1lbnNpb24+MTY8L2V4aWY6UGl4ZWxYRGltZW5zaW9uPgogICAgICAgICA8ZXhpZjpQaXhlbFlEaW1lbnNpb24+MTY8L2V4aWY6UGl4ZWxZRGltZW5zaW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAKPD94cGFja2V0IGVuZD0idyI/PoBhHykAAAAgY0hSTQAAeiUAAICDAAD5/wAAgOkAAHUwAADqYAAAOpgAABdvkl/FRgAAA9JJREFUeNos0utPWwUch/FvT0/bczjtut4vSC0W2MrFMEAL08G4DFCQhES5iHTzBZvROYmKfaMm7oVykWS4RUlMNDNuEe/oBmzi9kbFpRPY2KbMIRe5D5G2UHo9P1+450/45JG0tbVBKmUQCoUwOjqOyopy2O02TN6eEgoK8ntXVpalXV2dh8vLD2yur/sxP/839hcVgggQRRGMRCIBwzAgImxtBcFIGRiNAgYHB5QWi72pvLy68e5qwFBfXwNB4LG5GQAAMAwDhmEgLS4uBsNIJTKZLFsQdhx1OB4QExLwT1xcOOJ2N5QplSrs2i2PWK3JXq/3ZrbFbD5stZr9sZi4zDAMJBWVFdgOBmUZmVkfvfnGW89I2diqSlhbWF1mdp8fWOVjsSBajqRF5HLfrTt3BONOtdn6bvfb39+8MdHA83wQPMcBgMSenNI4PTO1RkQ02H+LDPqLtEM7RoLqGhkNA/TD0CUiIpq4fsOXkbGnRaUUpCajAazL5UIoKqFo2Pf13Owlj9fr07kPidhb+hDe65RCFCWob7TiQOVvGB6eRG723aX7bfrPHCmpcaczGQzLsrzRaHE82/ToscBaxNHw1F/YU+rEj/0Iz0x4vpqaOHrm6qg0YMt0oaU1CpUm0XawuajVbLKkCILAw+1u/mBubjFIFKTujrMEyzT1fDlDvd3VnzxdmyspL3HiwsDLx6eWiNTOP6h/6BoREW1s+IN9fX2nGZ/Pr4vEojzAQ3ufBcgxIBBag3xqcTMSEGnTB4TGpn3/+leJ3W+C0pwEAIhEQvzS4qIWQkKCXq3R53kOVp2Yvz4czD4VJs1LizTa9+HGt57ad86+WPX6dz0nlpUts1R6mYhoM9TueaFXrze4ku12PSxmK+6luHz6uHc+vEXqLiJ45unjoat05twIwTNNwkmiyW0/Xfni5AQAAQByc3LAZj2YidS0FLCcMk/jLDMlyhMw8irQOp6I5343AxRHlVuOntQwHLIIftE69WVVNXsTjbphuUxG7L2NZfl52cfScwuSJm//uY3ZKysXCh5O+kktl8ajEeyTb+Di++fm1vMf07pKSs2VY+Ov/Toy8rPI80FYrVbo9XomLTWlpKOj4/Oa2icPcRLYnn+iuJ0oQkQivVJX3QvA/khhSX1nZ3tfRnr642aTibElJQFqtRpKpRIarQbNTU184b6i/0UYmWVheZW2w1HaodXvAoDMzCw01tVxBoMBarUaOp0OLMuyAAC5XA6O47YVnAJmswXxeNR3vv+bT1UqNWvU7lzQqJTgOA4cnxBSKBQQRREsy+K/AQA87pdYUsrOpAAAAABJRU5ErkJggg=="></img>';
+                                //complete    // G.png
+                                case '#ICON_2#':
+                                    metadata.css = 'ula-icon-3';
+                                    return '<img class="ula-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAOCAYAAADwikbvAAAACXBIWXMAAGIHAABiBwHvW/JZAAA4HGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS41LWMwMjEgNzkuMTU0OTExLCAyMDEzLzEwLzI5LTExOjQ3OjE2ICAgICAgICAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIKICAgICAgICAgICAgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIgogICAgICAgICAgICB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIKICAgICAgICAgICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIj4KICAgICAgICAgPHhtcDpDcmVhdG9yVG9vbD5BZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpPC94bXA6Q3JlYXRvclRvb2w+CiAgICAgICAgIDx4bXA6Q3JlYXRlRGF0ZT4yMDE0LTA4LTE0VDE1OjA0OjQ2LTA3OjAwPC94bXA6Q3JlYXRlRGF0ZT4KICAgICAgICAgPHhtcDpNb2RpZnlEYXRlPjIwMTQtMDgtMTRUMTU6MDU6NDgtMDc6MDA8L3htcDpNb2RpZnlEYXRlPgogICAgICAgICA8eG1wOk1ldGFkYXRhRGF0ZT4yMDE0LTA4LTE0VDE1OjA1OjQ4LTA3OjAwPC94bXA6TWV0YWRhdGFEYXRlPgogICAgICAgICA8ZGM6Zm9ybWF0PmltYWdlL3BuZzwvZGM6Zm9ybWF0PgogICAgICAgICA8cGhvdG9zaG9wOkNvbG9yTW9kZT4zPC9waG90b3Nob3A6Q29sb3JNb2RlPgogICAgICAgICA8eG1wTU06SW5zdGFuY2VJRD54bXAuaWlkOmI0MDJkYzhiLTZmZWItYWE0OC04NzAxLWIzNjg4MGYzN2MxMjwveG1wTU06SW5zdGFuY2VJRD4KICAgICAgICAgPHhtcE1NOkRvY3VtZW50SUQ+eG1wLmRpZDpiNDAyZGM4Yi02ZmViLWFhNDgtODcwMS1iMzY4ODBmMzdjMTI8L3htcE1NOkRvY3VtZW50SUQ+CiAgICAgICAgIDx4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ+eG1wLmRpZDpiNDAyZGM4Yi02ZmViLWFhNDgtODcwMS1iMzY4ODBmMzdjMTI8L3htcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD4KICAgICAgICAgPHhtcE1NOkhpc3Rvcnk+CiAgICAgICAgICAgIDxyZGY6U2VxPgogICAgICAgICAgICAgICA8cmRmOmxpIHJkZjpwYXJzZVR5cGU9IlJlc291cmNlIj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0OmFjdGlvbj5jcmVhdGVkPC9zdEV2dDphY3Rpb24+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDppbnN0YW5jZUlEPnhtcC5paWQ6YjQwMmRjOGItNmZlYi1hYTQ4LTg3MDEtYjM2ODgwZjM3YzEyPC9zdEV2dDppbnN0YW5jZUlEPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6d2hlbj4yMDE0LTA4LTE0VDE1OjA0OjQ2LTA3OjAwPC9zdEV2dDp3aGVuPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6c29mdHdhcmVBZ2VudD5BZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpPC9zdEV2dDpzb2Z0d2FyZUFnZW50PgogICAgICAgICAgICAgICA8L3JkZjpsaT4KICAgICAgICAgICAgPC9yZGY6U2VxPgogICAgICAgICA8L3htcE1NOkhpc3Rvcnk+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgICAgIDx0aWZmOlhSZXNvbHV0aW9uPjYzNzQxMzAvMTAwMDA8L3RpZmY6WFJlc29sdXRpb24+CiAgICAgICAgIDx0aWZmOllSZXNvbHV0aW9uPjYzNzQxMzAvMTAwMDA8L3RpZmY6WVJlc29sdXRpb24+CiAgICAgICAgIDx0aWZmOlJlc29sdXRpb25Vbml0PjI8L3RpZmY6UmVzb2x1dGlvblVuaXQ+CiAgICAgICAgIDxleGlmOkNvbG9yU3BhY2U+NjU1MzU8L2V4aWY6Q29sb3JTcGFjZT4KICAgICAgICAgPGV4aWY6UGl4ZWxYRGltZW5zaW9uPjE1PC9leGlmOlBpeGVsWERpbWVuc2lvbj4KICAgICAgICAgPGV4aWY6UGl4ZWxZRGltZW5zaW9uPjE0PC9leGlmOlBpeGVsWURpbWVuc2lvbj4KICAgICAgPC9yZGY6RGVzY3JpcHRpb24+CiAgIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgCjw/eHBhY2tldCBlbmQ9InciPz7kTVOrAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAEPSURBVHjaYvjPwMCADT+VYlCblsmw8C8TAw8uNQy4JKpbGOYx/Gf4v9eJIYUkzbtdGFIY/kOg1lWGL/8ZGGSJ0nxNk8GD8xtMKwRGLGc4+5+BgRGv5usaDF58H1E1wmDiPIYT/xkYWLFqXh7B0IBdGwIanmN4+0SawQmu+ZwRQ7DRWYaXhDQiQ7edDPfOGzCEM91RZtA6Z8QgxkACOGzLoPiJj0GY4T8DA8NfJgaB2EUMe4ixtbeIYTLWAFsYx1CJSxPnN4b/Z4wZAvFG1R4nhmh0jbyfGP7fVEMEFN5EstkHkUgY/jP8P2zDEEVS8uwoZ+hl+M/wv7OMYRLJafsDP4NodQvDuleiDMq41AAGAD/hDqkvaQZYAAAAAElFTkSuQmCC"></img>';
+                                //not started // F.png
+                                case '#ICON_3#':
+                                    metadata.css = 'ula-icon-1';
+                                    return '<img class="ula-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAACXBIWXMAAAsTAAALEwEAmpwYAAA5yWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS41LWMwMjEgNzkuMTU0OTExLCAyMDEzLzEwLzI5LTExOjQ3OjE2ICAgICAgICAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIKICAgICAgICAgICAgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIgogICAgICAgICAgICB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIKICAgICAgICAgICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIj4KICAgICAgICAgPHhtcDpDcmVhdG9yVG9vbD5BZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpPC94bXA6Q3JlYXRvclRvb2w+CiAgICAgICAgIDx4bXA6Q3JlYXRlRGF0ZT4yMDE0LTA4LTE0VDExOjExLTA3OjAwPC94bXA6Q3JlYXRlRGF0ZT4KICAgICAgICAgPHhtcDpNb2RpZnlEYXRlPjIwMTQtMDgtMTRUMTU6MDk6NDktMDc6MDA8L3htcDpNb2RpZnlEYXRlPgogICAgICAgICA8eG1wOk1ldGFkYXRhRGF0ZT4yMDE0LTA4LTE0VDE1OjA5OjQ5LTA3OjAwPC94bXA6TWV0YWRhdGFEYXRlPgogICAgICAgICA8ZGM6Zm9ybWF0PmltYWdlL3BuZzwvZGM6Zm9ybWF0PgogICAgICAgICA8cGhvdG9zaG9wOkNvbG9yTW9kZT4zPC9waG90b3Nob3A6Q29sb3JNb2RlPgogICAgICAgICA8eG1wTU06SW5zdGFuY2VJRD54bXAuaWlkOjQ1YjJjMDYyLTQ4OTktN2Y0Yy1iMTI2LTY3N2UwYjI0YjM4YTwveG1wTU06SW5zdGFuY2VJRD4KICAgICAgICAgPHhtcE1NOkRvY3VtZW50SUQ+eG1wLmRpZDo0OWQ2MzIzOC03NjZmLTExNGMtYWMyYi1jOTFjOGI0ZWMzNzQ8L3htcE1NOkRvY3VtZW50SUQ+CiAgICAgICAgIDx4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ+eG1wLmRpZDo0OWQ2MzIzOC03NjZmLTExNGMtYWMyYi1jOTFjOGI0ZWMzNzQ8L3htcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD4KICAgICAgICAgPHhtcE1NOkhpc3Rvcnk+CiAgICAgICAgICAgIDxyZGY6U2VxPgogICAgICAgICAgICAgICA8cmRmOmxpIHJkZjpwYXJzZVR5cGU9IlJlc291cmNlIj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0OmFjdGlvbj5jcmVhdGVkPC9zdEV2dDphY3Rpb24+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDppbnN0YW5jZUlEPnhtcC5paWQ6NDlkNjMyMzgtNzY2Zi0xMTRjLWFjMmItYzkxYzhiNGVjMzc0PC9zdEV2dDppbnN0YW5jZUlEPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6d2hlbj4yMDE0LTA4LTE0VDExOjExLTA3OjAwPC9zdEV2dDp3aGVuPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6c29mdHdhcmVBZ2VudD5BZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpPC9zdEV2dDpzb2Z0d2FyZUFnZW50PgogICAgICAgICAgICAgICA8L3JkZjpsaT4KICAgICAgICAgICAgICAgPHJkZjpsaSByZGY6cGFyc2VUeXBlPSJSZXNvdXJjZSI+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDphY3Rpb24+c2F2ZWQ8L3N0RXZ0OmFjdGlvbj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0Omluc3RhbmNlSUQ+eG1wLmlpZDo0NWIyYzA2Mi00ODk5LTdmNGMtYjEyNi02NzdlMGIyNGIzOGE8L3N0RXZ0Omluc3RhbmNlSUQ+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDp3aGVuPjIwMTQtMDgtMTRUMTU6MDk6NDktMDc6MDA8L3N0RXZ0OndoZW4+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDpzb2Z0d2FyZUFnZW50PkFkb2JlIFBob3Rvc2hvcCBDQyAoV2luZG93cyk8L3N0RXZ0OnNvZnR3YXJlQWdlbnQ+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDpjaGFuZ2VkPi88L3N0RXZ0OmNoYW5nZWQ+CiAgICAgICAgICAgICAgIDwvcmRmOmxpPgogICAgICAgICAgICA8L3JkZjpTZXE+CiAgICAgICAgIDwveG1wTU06SGlzdG9yeT4KICAgICAgICAgPHRpZmY6T3JpZW50YXRpb24+MTwvdGlmZjpPcmllbnRhdGlvbj4KICAgICAgICAgPHRpZmY6WFJlc29sdXRpb24+NzIwMDAwLzEwMDAwPC90aWZmOlhSZXNvbHV0aW9uPgogICAgICAgICA8dGlmZjpZUmVzb2x1dGlvbj43MjAwMDAvMTAwMDA8L3RpZmY6WVJlc29sdXRpb24+CiAgICAgICAgIDx0aWZmOlJlc29sdXRpb25Vbml0PjI8L3RpZmY6UmVzb2x1dGlvblVuaXQ+CiAgICAgICAgIDxleGlmOkNvbG9yU3BhY2U+NjU1MzU8L2V4aWY6Q29sb3JTcGFjZT4KICAgICAgICAgPGV4aWY6UGl4ZWxYRGltZW5zaW9uPjE1PC9leGlmOlBpeGVsWERpbWVuc2lvbj4KICAgICAgICAgPGV4aWY6UGl4ZWxZRGltZW5zaW9uPjE1PC9leGlmOlBpeGVsWURpbWVuc2lvbj4KICAgICAgPC9yZGY6RGVzY3JpcHRpb24+CiAgIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgCjw/eHBhY2tldCBlbmQ9InciPz5upWWbAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAALNSURBVHjalJJPaFxVGMV/97773pvMv4wzk0Qbk7QmaZuFNEVsKAhdiF2ocSOWLkRcuC8uCoUuXLrrolLUjVBwIUoDWZgIgiiCjtjBqRXTNsw8JzLJ5N80mUzmvZk3714XGaxbz+Z8HDh88OOIhYUFAIwB2449FbXXj98trZU++8E3di7P2upDGEgDBgCERIZtrLCFWlpaAkBHkE7Il7WTGr55o/AbY5NMDufBaEA8Kf9HKp8ZOLpMhBBmvJ196b13r1+8eNBpxu+V/1pA60/oHoIQ/c+gdQ9LCJTR4VEYBQQik58YPz2Tzg7NlOoB5TOvv+LIr06K6oOrJp6MAITlopsbmObfKG2lALCVgyA9+/29DcpbVcrOCL0zo0wPP/+2q9PXI8f1MSCVpG58NhsVVCYBQhgGbKV+8uLnl0vbhGMn4NysGXscClG4/eFmw/NlaoRIpZg+Pst2sAPSQTmWQUqDbctzlWqvE9a3bsefqdfSnZErx3Zaifvr5a02TezsMVzbRioHIxRgUK0wfkSup9+4dMH+tCd3P/j9lz/OqtWdq156iPYLV25x8OuuaDz4RsSGMEY/ob37eJ9Ia0ZHMgmlwh/3vFXLDJ7/oimSdjMExqcGyc98zaOfv7TKdz+SwqoIISSYfWV0iIk0cdey/vQa96velsvUYUueuICZmsQ8lyGeRk4k3rw8npy+3G2u+GHoXyPqfqySyRRBEJxKZUezT++12nS/bYuV7161guI1J/fOiwN7E88OP9wM3FptZVtajyzXKfmaO1huqIQQ5HK5WcC/s7i8B5w2JlJhZfF9XVkcjOxEphUedgKo42ZIJIfodA4hfQqrVqsxPz9/tlgsNpeXl1YBC9gApg2kejrc70GrPyQZ+g2tuwfQWkN5npcpFotvFQqFKtAFvD7M9f6oe323gPBf1EZDLBZ7bW5uLspms59LKfk/+mcA4mw4Jns1qKUAAAAASUVORK5CYII="></img>';
+                                default:
+                                    return value;
+                            }
+                        }
+                    });
+                });
             } catch(e) {
                 console.log(e);
             }
-            return [
+            ganttConfigStore.clearFilter();
+
+            var staticColumns = [
                 {
                     xtype : 'gridcolumn',
                     dataIndex: 'program',
@@ -896,818 +620,11 @@
                     dataIndex: 'color',
                     header: 'Color',
                     hidden: true
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text01',
-                    header: text01Value,
-                    hidden: text01Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text02',
-                    header: text02Value,
-                    hidden: text02Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text03',
-                    header: text03Value,
-                    hidden: text03Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text04',
-                    header: text04Value,
-                    hidden: text04Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text05',
-                    header: text05Value,
-                    hidden: text05Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text06',
-                    header: text06Value,
-                    hidden: text06Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text07',
-                    header: text07Value,
-                    hidden: text07Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text08',
-                    header: text08Value,
-                    hidden: text08Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        var backgroundColor = record.get('color');
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text09',
-                    header: text09Value,
-                    hidden: text09Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text10',
-                    header: text10Value,
-                    hidden: text10Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text11',
-                    header: text11Value,
-                    hidden: text11Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text12',
-                    header: text12Value,
-                    hidden: text12Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text13',
-                    header: text13Value,
-                    hidden: text13Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text14',
-                    header: text14Value,
-                    hidden: text14Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
-                },{
-                    xtype : 'gridcolumn',
-                    dataIndex: 'text15',
-                    header: text15Value,
-                    hidden: text15Hide,
-                    renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-                        switch (value) {
-                            //active
-                            case '#ICON_1#':
-                                metadata.css = 'ula-icon-2';
-                                return;
-                            //complete
-                            case '#ICON_2#':
-                                metadata.css = 'ula-icon-3';
-                                return;
-                            //not started
-                            case '#ICON_3#':
-                                metadata.css = 'ula-icon-1';
-                                return;
-                            default:
-                                return value;
-                        }
-                    }
                 }
             ];
-           /* {
-            xtype : 'gridcolumn',
-                dataIndex: 'program',
-                header: 'Prog',
-                width: 60
-        },{
-    xtype : 'gridcolumn',
-        dataIndex: 'tailNumber',
-        header: 'Tail Number',
-        width: 60
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'primaryMission',
-        header: 'Primary Mission',
-        width: 75
-},{
-    xtype: 'treecolumn',
-        header: 'Task',
-        sortable: false,
-        dataIndex: 'Name',
-        width: 250,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        var backgroundColor = record.get('color');
-        if (backgroundColor !== ""){
-            switch (backgroundColor) {
-                case 'red':
-                    metadata.style = "background-color:#ff6666;";
-                    return value;
-                case 'gray':
-                    metadata.style = "background-color:#b2b2b2";
-                    return value;
-                case 'orange':
-                    metadata.style = "background-color:#FFA500";
-                    return value;
-                case 'blue':
-                    metadata.style = "background-color:#7f7fff";
-                    return value;
-                case 'yellow':
-                    metadata.style = "background-color:#ffff00";
-                    return value;
-                case 'green':
-                    if (record.data.depth < 4) {
-                        metadata.style = "background-color:#80B280";
-                    }
-                    return value;
-                case 'lightBlue':
-                    return value;
-                case 'euTracker':
-                    return value;
-            }
-        } else {
-            return value;
-        }
-    }
-},{
-    xtype : 'startdatecolumn',
-        dateFormat: 'm/d/Y',
-        dataIndex: 'StartDate',
-        hidden: true
-},{
-    xtype : 'enddatecolumn',
-        dateFormat: 'm/d/Y',
-        dataIndex: 'EndDate',
-        hidden: true
-},{
-    xtype : 'baselinestartdatecolumn',
-        dataIndex: 'BaselineStartDate',
-        dateFormat: 'm-d-Y',
-        hidden: true
-},{
-    xtype : 'baselineenddatecolumn',
-        dataIndex: 'BaselineEndDate',
-        dateFormat: 'm/d/Y',
-        hidden: true
-},{
-    xtype : 'durationcolumn',
-        hidden: true
-},{
-    xtype : 'datecolumn',
-        dataIndex: 'actualStartDate',
-        header: 'Actual Start',
-        dateFormat: 'm/d/Y',
-        hidden: true
-},{
-    xtype : 'datecolumn',
-        dataIndex: 'actualEndDate',
-        header: 'Actual Finish',
-        dateFormat: 'm-d-Y',
-        hidden: true
-},{
-    xtype : 'percentdonecolumn',
-        width : 50,
-        dataIndex: 'PercentDone',
-        hidden: true
-},{
-    xtype : 'predecessorcolumn',
-        hidden: true
-},{
-    xtype : 'notecolumn',
-        hidden: true
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'outline',
-        header: 'Outline',
-        hidden: true
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'color',
-        header: 'Color',
-        hidden: true
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text01',
-        header: text01Value,
-        hidden: text01Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text02',
-        header: text02Value,
-        hidden: text02Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text03',
-        header: text03Value,
-        hidden: text03Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text04',
-        header: text04Value,
-        hidden: text04Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text05',
-        header: text05Value,
-        hidden: text05Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text06',
-        header: text06Value,
-        hidden: text06Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text07',
-        header: text07Value,
-        hidden: text07Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text08',
-        header: text08Value,
-        hidden: text08Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text09',
-        header: text09Value,
-        hidden: text09Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text10',
-        header: text10Value,
-        hidden: text10Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text11',
-        header: text11Value,
-        hidden: text11Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text12',
-        header: text12Value,
-        hidden: text12Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text13',
-        header: text13Value,
-        hidden: text13Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text14',
-        header: text14Value,
-        hidden: text14Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-},{
-    xtype : 'gridcolumn',
-        dataIndex: 'text15',
-        header: text15Value,
-        hidden: text15Hide,
-        renderer: function (value, metadata, record, rowIdx, colIdx, store, view){
-        switch (value) {
-            //active
-            case '#ICON_1#':
-                metadata.css = 'ula-icon-2';
-                return;
-            //complete
-            case '#ICON_2#':
-                metadata.css = 'ula-icon-3';
-                return;
-            //not started
-            case '#ICON_3#':
-                metadata.css = 'ula-icon-1';
-                return;
-            default:
-                return value;
-        }
-    }
-}
-**/
+
+            return staticColumns.concat(textArray);
+
         },
 
         onExpandClick: function(button, e, eOpts) {
@@ -1756,7 +673,6 @@
                 url: '/dsnwebui/dsnwebui_rest/ServerStoreXml',
                 method: 'GET',
                 success: function(res) {
-                    /** TODO change value of in IE **/
                     var server = res.childNodes[0].textContent;
                     if(typeof server === 'undefined'){//res.getElementsByTagName("number")[0].firstChild.valueOf().textContent;
                         alert('No entry maintained for source server in Z051ULA_MD01');
@@ -1769,18 +685,19 @@
             });
         },
         setServer:function(server){
-            var defer = $.Deferred();
-            window.server = server;
-            if(window.server.substr(window.server.length-1) !== '/'){
-                window.server += '/';
-            }
-            //dev:  window.printServer = 'http://localhost:8999/'//
-            window.printServer = window.server;
+            return new Promise(function(resolve,reject){
+                window.server = server;
+                if(window.server.substr(window.server.length-1) !== '/'){
+                    window.server += '/';
+                }
+                //dev:  window.printServer = 'http://localhost:8999/'//
+                window.printServer = window.server;
+                window.namespace = 'htmlToPdf/';
+                window.serverResources = window.printServer+'resources/';
+                //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
+                //window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/'
+            });
 
-            window.namespace = 'htmlToPdf/';
-            //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
-            //window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/'
-            window.serverResources = window.printServer+'resources/';
             defer.resolve();
             return defer.promise();
         },
@@ -1835,6 +752,12 @@
                     action: 'read',
                     scope: me,
                     callback: function (){
+                        /** DEV
+                        GanttConfigStoreXml.getAt(GanttConfigStoreXml.findExact('name','text04')).set('value','Fab');
+                        GanttConfigStoreXml.getAt(GanttConfigStoreXml.findExact('name','text05')).set('value','S/T');
+                        GanttConfigStoreXml.getAt(GanttConfigStoreXml.findExact('name','text06')).set('value','FA');
+
+                        /** DEV **/
                         var myPanel = Ext.widget('mypanel');
                         var mainView = Ext.ComponentManager.get('mainView');
                         mainView.insert(0,myPanel);

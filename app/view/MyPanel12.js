@@ -165,14 +165,10 @@ Ext.define('MyApp.view.MyPanel12', {
                     tooltip: 'Refresh to clear sort',
                     scale: 'small',
                     text:"<span style='padding-top:10px;'><i class='fa fa-refresh fa-2x'></i></span>",
-                    handler: function( btn, e, opts ) {
-                        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                        var store = ganttPanel.getStore();
-                        store.sorters.clear();
-                        Ext.each(store.data.originalMap,function(key){
-                            store.add(store.getById(key));
-                        });
-                        ganttPanel.getView().refresh();
+                    listeners:{
+                        click:{
+                            fn:me.refreshGantt
+                        }
                     }
                 },
                 {
@@ -342,7 +338,15 @@ Ext.define('MyApp.view.MyPanel12', {
         me.eventTrigger.fireEvent('ganttConfig', me, config);
         return me.returnValue;
     },
-
+    refreshGantt:function( btn, e, opts ) {
+        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+        var store = ganttPanel.getStore();
+        store.sorters.clear();
+        Ext.each(store.data.originalMap,function(key){
+            store.add(store.getById(key));
+        });
+        ganttPanel.getView().refresh();
+    },
     openSettings1: function(button, e, eOpts) {
         var me = this;
         var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
@@ -459,13 +463,15 @@ Ext.define('MyApp.view.MyPanel12', {
                         for (i = 0; i < count; i++) {
                             var number = passedObjectsStore.getAt(i).get('number');
                             var type = passedObjectsStore.getAt(i).get('type');
-                            batch.proxy.setExtraParam(type+'-'+i,number);
+                            batch.proxy.setExtraParam(type+'-'+i,Ext.isDefined(number) ? number : '');
                         }
                         ganttPanel.setLoading(true);
+
                         ganttConfigStore.load({
                             batch: batch,
                             callback: function() {
                                 Ext.suspendLayouts();
+                                taskStore.loadRecords([]);
                                 taskStore.load({
                                     callback: function(resp,opt,d){
                                         Ext.resumeLayouts(true);
@@ -477,6 +483,7 @@ Ext.define('MyApp.view.MyPanel12', {
                                             taskStore.data.originalMap.push(key);
                                         });
                                         recordCountButton.setText('Record Count: '+recordCount);
+                                        me.refreshGantt();
                                         ganttPanel.setLoading(false);
                                     }
                                 });
@@ -575,20 +582,21 @@ Ext.define('MyApp.view.MyPanel12', {
             var batch = {};
             batch.proxy = ganttConfigStore.getProxy();
             batch.proxy.extraParams = {};
-            batch.proxy.setExtraParam('columnVariant',columnVariant);
-            batch.proxy.setExtraParam('selectionVariant',selectionVariant);
-            batch.proxy.setExtraParam('version',version);
+            batch.proxy.setExtraParam('columnVariant',Ext.isDefined(columnVariant) ? columnVariant : '');
+            batch.proxy.setExtraParam('selectionVariant',Ext.isDefined(selectionVariant) ? selectionVariant : '');
+            batch.proxy.setExtraParam('version',Ext.isDefined(version) ? version : '');
             var count = passedObjectsStore.count();
-            for (i = 0; i < count; i++) {
+            for (var i = 0; i < count; i++) {
                 var number = passedObjectsStore.getAt(i).get('number');
                 var type = passedObjectsStore.getAt(i).get('type');
-                batch.proxy.setExtraParam(type+'-'+i,number);
+                batch.proxy.setExtraParam(type+'-'+i,Ext.isDefined(number) ? number : '');
             }
             ganttPanel.setLoading(true);
             ganttConfigStore.load({
                 batch: batch,
                 callback: function() {
-                    Ext.suspendLayouts();
+                   Ext.suspendLayouts();
+                    taskStore.loadRecords([]);
                     taskStore.load({
                         callback: function(){
                             Ext.resumeLayouts(true);
@@ -604,6 +612,7 @@ Ext.define('MyApp.view.MyPanel12', {
                                 taskStore.data.originalMap.push(key);
                             });
                             recordCountButton.setText('Record Count: '+recordCount);
+                            me.refreshGantt();
                             ganttPanel.setLoading(false);
                         }
                     });
@@ -617,7 +626,7 @@ Ext.define('MyApp.view.MyPanel12', {
     openSettings: function(button, e, eOpts) {
         var me = this;
         e.preventDefault();
-        e.stopPropagation();
+        //e.stopPropagation();
         Ext.require([
             'Ext.grid.*',
             'Ext.data.*',
