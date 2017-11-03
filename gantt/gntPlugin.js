@@ -42200,9 +42200,14 @@ Ext.define("Gnt.template.ParentTask", {
     /**
      * @cfg {String} innerTpl The template defining the inner visual markup for the task.
      */
-    innerTpl    : '<div class="sch-gantt-progress-bar" style="width:{progressBarWidth}px;{progressBarStyle}">&#160;</div>'+
-        '<div class="sch-gantt-parenttask-arrow sch-gantt-parenttask-leftarrow"></div>' +
-        '<div class="sch-gantt-parenttask-arrow sch-gantt-parenttask-rightarrow"></div>',
+    /** Dassian Modified ch 11/02/17
+     *
+     * Previous version
+     innerTpl    : '<div class="sch-gantt-progress-bar" style="width:{progressBarWidth}px;{progressBarStyle}">&#160;</div>'+
+     '<div class="sch-gantt-parenttask-arrow sch-gantt-parenttask-leftarrow"></div>' +
+     '<div class="sch-gantt-parenttask-arrow sch-gantt-parenttask-rightarrow"></div>',
+     * **/
+    innerTpl    : '<div class="sch-gantt-progress-bar" style="width:{progressBarWidth}px;{progressBarStyle}">&#160;</div>',
 
     getInnerTpl : function(cfg) {
         return '<div id="' + cfg.prefix + '{id}" class="sch-gantt-item sch-gantt-parenttask-bar {cls}" style="width:{width}px; {style}">'+
