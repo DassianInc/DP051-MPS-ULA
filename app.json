@@ -176,13 +176,13 @@
             "bootstrap": true
         },
         {
-            "path": "resources/customCss.css"
+            "path": "resources/css/customCss.css"
         },
         {
-            "path": "resources/bootstrap.css"
+            "path": "resources/css/bootstrap.css"
         },
         {
-            "path": "resources/font-awesome.min.css"
+            "path": "resources/css/font-awesome.min.css"
         },
         {
             "path": "resources/css/sch-gantt-all-debug.css"

@@ -1,7 +1,0 @@
-.gnt-dependencygrid .x-grid-item .x-form-invalid,
-.gnt-dependencygrid .x-grid-item-selected .x-form-invalid
-{
-  background-image: url(../images/invalid_line.gif);
-  background-repeat: repeat-x;
-  background-position: bottom;
-}

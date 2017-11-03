@@ -1793,7 +1793,10 @@ div.sch-gantt-task-bar.sch-event-segmented {
 }
 
 .sch-gantt-label {
-    color : #999;
+    /**
+      Dassian Change 2017/11/01 ch
+     */
+    color : black;
 }
 
 .x-grid-item-selected .sch-gantt-label {
