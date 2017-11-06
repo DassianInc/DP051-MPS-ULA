@@ -3217,36 +3217,35 @@ Ext.define('DSch.plugin.Export', {
             url:me.printPDFServer,
             type:'GET'
         }).success(function(res){
-            console.log('server responsed');
+            console.log('server connected');
+        }).fail(function(res){
+            console.log('server failed');
         });
-        Ext.toast('Establish Connection', 'Connection', 't');
+        //Ext.toast('Establish Connection', 'Connection', 't');
+        console.log('------starting connection------');
         establishConn.then(function(){
-            // if we have exporter
-            Ext.toast('Established Connection Complete', 'Connection', 't');
-            setTimeout(function(){
-                if (exporter && me.fireEvent('beforeexport', component, exporter, config) !== false) {
-
-                    var activeDialog = me.getActiveExportDialog(),
-                        progressBar  = activeDialog && activeDialog.progressBar;
-
-                    // if export dialog is used and progress bar is there, let's make it visible
-                    if (progressBar) {
-                        progressBar.show();
-                    }
-
-                    me.mask();
-
-                    me.exporter.extractPages(component, config, function (pages) {
-                        if(window.appState.killExport){
-                            return;
-                        }
-                        me.onPagesExtracted(pages, component, exporter, config);
-                    }, me);
-                }
-            },10);
-
+            console.log('--------server responsed-------');
+            //Ext.toast('Established Connection Complete', 'Connection', 't');
         });
+        if (exporter && me.fireEvent('beforeexport', component, exporter, config) !== false) {
 
+            var activeDialog = me.getActiveExportDialog(),
+                progressBar  = activeDialog && activeDialog.progressBar;
+
+            // if export dialog is used and progress bar is there, let's make it visible
+            if (progressBar) {
+                progressBar.show();
+            }
+
+            me.mask();
+
+            me.exporter.extractPages(component, config, function (pages) {
+                if(window.appState.killExport){
+                    return;
+                }
+                me.onPagesExtracted(pages, component, exporter, config);
+            }, me);
+        }
     },
 
 
