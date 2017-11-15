@@ -242,8 +242,7 @@
                                var rightLabel = record.get('Note');
                                return rightLabel;
                            } if (color == 'lightBlue') {
-
-                               var durationRecordIndex = ganttConfigStore.findExact('value','Duration');
+                              /* var durationRecordIndex = ganttConfigStore.findExact('value','Duration');
                                if(durationRecordIndex != -1){
                                    var durationRecord = ganttConfigStore.getAt(durationRecordIndex);
                                    var duration = Ext.isDefined(record.get(durationRecord.get('name'))) ? Number(record.get(durationRecord.get('name'))) : 0;//example: text03 = Duration
@@ -252,8 +251,9 @@
                                }
                                if(duration === ''){
                                    duration = record.get('smDuration');
-                               }
-                               return isNaN(duration) || duration === '' ? 0+' days' : (duration === 1 ? duration +' day' : duration+' days');
+                               }*/
+                              var duration = record.get('smDuration');
+                               return isNaN(duration) || Ext.isEmpty(duration) ? 0+' days' : (Number(duration) === 1 ? Number(duration) +' day' : Number(duration)+' days');
                                /* rightLabel = 0;
                                 if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
                                     var diff =  (+record.get('EndDate')) - (+record.get('StartDate'));
@@ -267,7 +267,7 @@
                                 return Math.floor(rightLabel)+' days';*/
                            } else {
 
-                               var endDateRecordIndex = ganttConfigStore.findExact('value','Finish');
+                               /*var endDateRecordIndex = ganttConfigStore.findExact('value','Finish');
                                if(endDateRecordIndex != -1){
                                    var endDateRecord = ganttConfigStore.getAt(endDateRecordIndex);
                                    var endDate =  record.get(endDateRecord.get('name'));//example: text02 = Finish or endDate
@@ -277,8 +277,9 @@
 
                                if(!Ext.isDefined(endDate) || endDate === ''){
                                    endDate = record.get('EndDate');
-                               }
-                               rightLabel = typeof endDate === 'object' ? endDate : new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
+                               }*/
+                               var endDate = Ext.isEmpty(record.get('EndDate')) ? new Date(): record.get('EndDate');
+                               rightLabel = endDate instanceof Date ? endDate : Ext.isNull(endDate) ? 'Invalid Date' : new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
                                if(rightLabel == 'Invalid Date'){
                                    return endDate;
                                }
@@ -348,7 +349,7 @@
                        renderer : function (value, record){
                            var color = record.get('color');
                            if (color !=='lightBlue'){
-                               var startDateRecordIndex = ganttConfigStore.findExact('value','Start');
+                               /*var startDateRecordIndex = ganttConfigStore.findExact('value','Start');
                                if(startDateRecordIndex != -1){
                                    var startDateRecord = ganttConfigStore.getAt(startDateRecordIndex);
                                    var startDate =  record.get(startDateRecord.get('name'));//example: text02 = Finish or endDate
@@ -357,8 +358,9 @@
                                }
                                if(!Ext.isDefined(startDate) || startDate === ''){
                                    startDate = record.get('StartDate');
-                               }
-                               var leftLabel = typeof startDate === 'object' ? startDate : new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
+                               }*/
+                               var startDate = Ext.isEmpty(record.get('StartDate')) ? new Date() : record.get('StartDate');
+                               var leftLabel =  startDate instanceof Date ? startDate : Ext.isNull(startDate) ? 'Invalid Date' : new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
                                if(leftLabel == 'Invalid Date'){
                                    return startDate;
                                }
@@ -690,16 +692,13 @@
                 if(window.server.substr(window.server.length-1) !== '/'){
                     window.server += '/';
                 }
-                //dev:window.printServer = 'http://localhost:8999/'//
-                window.printServer = window.server;
+                //dev: window.printServer = 'http://localhost:8999/'//
+               window.printServer = window.server;
                 window.namespace = 'htmlToPdf/';
                 window.serverResources = window.printServer+'resources/';
                 //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
                 //window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/'
             });
-
-            defer.resolve();
-            return defer.promise();
         },
         onLaunch: function() {
             var me = this;
@@ -708,6 +707,7 @@
            /* production //me.requestServer();*/
             promise.done(function(){
                 // get users
+
                 me.getStore('UserStoreXml').load({
                     action: 'read',
                     scope: me
@@ -761,6 +761,10 @@
                         var myPanel = Ext.widget('mypanel');
                         var mainView = Ext.ComponentManager.get('mainView');
                         mainView.insert(0,myPanel);
+                        window.addEventListener("resize",function(){
+                            myPanel.resizer.resizeTo(window.innerWidth,window.innerHeight);
+                            console.log('resized window');
+                        } ,false);
                     }
                 });
                 var SelectionVariantStoreXml = me.getStore('SelectionVariantStoreXml').load({
@@ -928,6 +932,8 @@
                     number: "Notes",
                     leaf: false
                 });
+
+
             });
 
 
@@ -1392,7 +1398,12 @@
                     '</head>' +
                         '<body class="' + Ext.baseCSSPrefix + 'webkit sch-export {bodyClasses}" style="background-color:white !important">' +
                             '{header}' +
-                            '<div style="width:100%" align="center"><div class="{componentClasses}" align="left" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
+                            '<div style="width:100%" align="center">' +
+                                     '<tpl if="totalWidth = 100">'+
+                    '<div class="{componentClasses}" align="left" style="height:{bodyHeight}px; width:{totalWidth}%; position: relative !important">' +
+                                     '<tpl else>'+
+                    '<div class="{componentClasses}" align="left" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
+                                     '</tpl>'+
                                 '{HTML}' +
                             '</div></div>' +
                             '{footer}' +

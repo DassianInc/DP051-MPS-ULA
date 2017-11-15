@@ -32,7 +32,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
      * @cfg {Number} pageHeaderHeight
      * Header height. Amount of space for {@link #headerTpl the page header}.
      */
-    pageHeaderHeight        : 41,
+    pageHeaderHeight        : 0,//41
 
     /**
      * @cfg {Number} pageFooterHeight
@@ -40,7 +40,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
      */
     pageFooterHeight        : 0,
 
-    bufferedHeightMargin    : 25,
+    bufferedHeightMargin    : 0,//25
 
     /**
      * @property {Boolean} isExporter
@@ -305,15 +305,22 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
      */
     setPaperSize : function (pageSize, orientation) {
         var me          = this;
-
+        /** Page size already set getExportConfig**/
         //size of paper we will be printing on. take orientation into account
-        if (orientation === 'landscape') {
-            me.paperWidth   = pageSize.height;
-            me.paperHeight  = pageSize.width;
-        } else {
-            me.paperWidth   = pageSize.width;
-            me.paperHeight  = pageSize.height;
+      if (orientation === 'landscape') {
+       //     me.paperWidth   = pageSize.width > pageSize.height ? pageSize.width : pageSize.height;
+       //     me.paperHeight  = pageSize.height > pageSize.width ? pageSize.height : pageSize.width;
+          me.bufferedHeightMargin    = 25;
+          me.pageHeaderHeight        = 41;
+       } else {
+       //     me.paperWidth   = pageSize.width;
+       //     me.paperHeight  = pageSize.height;
+          me.bufferedHeightMargin    = 0;
+          me.pageHeaderHeight        = 0;
         }
+
+        me.paperWidth   = pageSize.width;
+        me.paperHeight  = pageSize.height;
     },
 
     /**
@@ -598,7 +605,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         me.restoreInfiniteScroll(component);
 
         //We need to update TimeAxisModel for layout fix #1334
-        // component.getSchedulingView().timeAxisViewModel.update();
+        component.getSchedulingView().timeAxisViewModel.update();
 
         // call template method
         me.exportConfig.afterExport && me.exportConfig.afterExport(component);
@@ -1303,7 +1310,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
      * @return {Number} Full width of both grids.
      */
     getTotalWidth : function () {
-        return this.getLockedGridWidth() + this.normalGrid.body.down(this.tableSelector).getWidth();
+        return (this.getLockedGridWidth() + this.normalGrid.body.down(this.tableSelector).getWidth());
     },
 
 
@@ -2390,19 +2397,19 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
             preferedLockedWidth = visibleColumnCount * me.minAverageColumnWidth;
 
         //preferred locked width can never take more than half of the page
-        preferedLockedWidth = preferedLockedWidth > me.paperWidth / 2 ? Math.floor(me.paperWidth / 2) : preferedLockedWidth;
+        preferedLockedWidth = preferedLockedWidth > me.paperWidth / 1.5 ? Math.floor(me.paperWidth / 1.5) : preferedLockedWidth;
         //if preferred width is wider than current locked width, then use preferred width
         lockedWidth = preferedLockedWidth > lockedWidth ? preferedLockedWidth : lockedWidth;
 
-        var normalWidth = me.paperWidth - lockedWidth;
-
+        var normalWidth =(me.paperWidth - lockedWidth) + 100;// me.exportConfig.orientation === 'landscape' ? '' : me.paperWidth - lockedWidth;
+        //normalWidth = me.restoreSettings.width > me.paperWidth  ? me.restoreSettings.width - lockedWidth : normalWidth
         var tickWidth   = normalWidth / ticks.length,
             rowHeight   = (tickWidth / timeColumnWidth) * me.getRowHeight();
 
         me.view.setRowHeight( rowHeight < me.minRowHeight ? me.minRowHeight : rowHeight );
 
-        component.setWidth(me.paperWidth);
-        normalGrid.setWidth(normalWidth);
+        //component.setWidth(me.paperWidth);
+        normalGrid.setWidth(normalWidth);//normalWidth
         lockedGrid.setWidth(lockedWidth);
         //spread lockedcolums over the available width
         me.fitLockedColumnWidth(lockedWidth);
@@ -2759,7 +2766,7 @@ Ext.define('DSch.plugin.Export', {
     /**
      * @cfg {Boolean} expandAllBeforeExport Only applicable for tree views, set to true to do a full expand prior to the export. Defaults to false.
      */
-    expandAllBeforeExport   : true,
+    expandAllBeforeExport   : false,
 
     /**
      * @cfg {Boolean} translateURLsToAbsolute `True` to replace all linked CSS files URLs to absolute before passing HTML to the server.
@@ -3068,10 +3075,6 @@ Ext.define('DSch.plugin.Export', {
 
         // create export dialog window
         me.setActiveExportDialog(Ext.create(me.exportDialogClassName, Ext.apply({
-            // on submit button press we launch export
-            doExportFn         : me.doExport,
-            doExportFnScope    : me,
-
             // form related configs
             startDate          : me.scheduler.getStart(),
             endDate            : me.scheduler.getEnd(),
@@ -3087,7 +3090,10 @@ Ext.define('DSch.plugin.Export', {
             pageFormats        : me.getPageFormats(),
             columnPickerConfig : {
                 columns : me.scheduler.lockedGrid.query('gridcolumn')
-            }
+            },
+            // on submit button press we launch export
+            doExportFn         : me.doExport,
+            doExportFnScope    : me,
         }, me.exportDialogConfig)));
 
         activeDialog = me.getActiveExportDialog();
@@ -3169,6 +3175,12 @@ Ext.define('DSch.plugin.Export', {
         result.DPI              = result.DPI || me.DPI;
         // get page size for provided paper format
         result.pageSize         = Ext.apply({}, me.pageSizes[result.format]);
+        if (result.orientation === 'landscape') {
+            var height = result.pageSize.height;
+            var width = result.pageSize.width;
+            result.pageSize.width   = height;
+            result.pageSize.height  = width;
+        }
         // covert page size to pixels
         result.pageSize.width   *= result.DPI;
         result.pageSize.height  *= result.DPI;
@@ -3213,21 +3225,10 @@ Ext.define('DSch.plugin.Export', {
 
         var exporter    = me.exporter = me.getExporter(config.exporterId);
 
-        var establishConn = $.ajax({
-            url:me.printPDFServer,
-            type:'GET'
-        }).success(function(res){
-            console.log('server connected');
-        }).fail(function(res){
-            console.log('server failed');
-        });
-        //Ext.toast('Establish Connection', 'Connection', 't');
-        console.log('------starting connection------');
-        establishConn.then(function(){
-            console.log('--------server responsed-------');
-            //Ext.toast('Established Connection Complete', 'Connection', 't');
-        });
+
+
         if (exporter && me.fireEvent('beforeexport', component, exporter, config) !== false) {
+
 
             var activeDialog = me.getActiveExportDialog(),
                 progressBar  = activeDialog && activeDialog.progressBar;
@@ -3236,8 +3237,22 @@ Ext.define('DSch.plugin.Export', {
             if (progressBar) {
                 progressBar.show();
             }
-
             me.mask();
+
+            var establishConn = $.ajax({
+                url:me.printPDFServer,
+                type:'GET'
+            }).success(function(res){
+                console.log('server connected');
+            }).fail(function(res){
+                console.log('server failed');
+            });
+            //Ext.toast('Establish Connection', 'Connection', 't');
+            console.log('------starting connection------');
+            establishConn.then(function(){
+                console.log('--------server responsed-------');
+                //Ext.toast('Established Connection Complete', 'Connection', 't');
+            });
 
             me.exporter.extractPages(component, config, function (pages) {
                 if(window.appState.killExport){

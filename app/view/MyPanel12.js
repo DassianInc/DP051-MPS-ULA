@@ -49,9 +49,9 @@ Ext.define('MyApp.view.MyPanel12', {
             cls: 'x-tree-noicon',
             id: 'ganttPanel',
             itemId: 'ganttPanel',
-            resizable: true,
+            resizable: false,
             header: false,
-            icon: 'images/ula-logo.png',
+            icon: 'images/ula-logo-op.jpg',
             iconCls: 'ula-header-icon',
             title: 'MASTER PRODUCTION SCHEDULE (MPS)',
             titleAlign: 'center',
@@ -59,10 +59,11 @@ Ext.define('MyApp.view.MyPanel12', {
                 {
                     xtype: 'treepanel',
                     hidden: true,
-                    width: 150,
+                    width: window.innerWidth / 2,
                     collapseDirection: 'left',
                     collapsed: false,
                     collapsible: true,
+                    resizable: false,
                     title: 'Selected Objects',
                     store: 'SelectedObjectStoreXml',
                     displayField: 'number',
@@ -338,15 +339,25 @@ Ext.define('MyApp.view.MyPanel12', {
         me.eventTrigger.fireEvent('ganttConfig', me, config);
         return me.returnValue;
     },
+
     refreshGantt:function( btn, e, opts ) {
         var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+        var mainController = MyApp.app.getMainController();
         var store = ganttPanel.getStore();
+        ganttPanel.setLoading(true);
+        mainController.collapseAll(ganttPanel);
         store.sorters.clear();
         Ext.each(store.data.originalMap,function(key){
             store.add(store.getById(key));
         });
         ganttPanel.getView().refresh();
+        setTimeout(function(){
+            ganttPanel.setLoading(false);
+        },1000);
+
+
     },
+
     openSettings1: function(button, e, eOpts) {
         var me = this;
         var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');

@@ -21460,7 +21460,7 @@ Ext.define('Sch.widget.ExportDialogForm', {
     /**
      * @cfg {Boolean} showDPIField Indicates if the "DPI (dots per inch)" field should to be shown in the export dialog.
      */
-    showDPIField           : true,
+    showDPIField           : false,
     /**
      * @cfg {Boolean} showShowHeaderField Indicates if the "Add page number" checkbox should be displayed in the export dialog.
      */
