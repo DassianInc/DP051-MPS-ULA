@@ -2044,7 +2044,7 @@ Ext.define('MyApp.view.MyPanel12', {
             }
         });
         var globalUser = Ext.getStore('GanttConfigStoreXml').findExact('name','saveGlobal');
-        if (globalUser !== -1) {
+        if (globalUser > -1) {
             globalUser = Ext.getStore('GanttConfigStoreXml').getAt(globalUser).get('value');
             if (globalUser === 'X'){
                 globalUser = true;
@@ -2400,7 +2400,7 @@ Ext.define('MyApp.view.MyPanel12', {
         var versionStore = Ext.getStore('VersionStoreXml');
         var versionInit = versionStore.findExact('selected','true');
         var passedConfigStore = Ext.getStore('PassedConfigStoreXml');
-        if (versionInit !== -1) {
+        if (versionInit > -1) {
             var versionIndex = versionInit;
             versionInit = versionStore.getAt(versionInit).get('description');
             var versionName = versionStore.getAt(versionIndex).get('version');
@@ -2431,7 +2431,7 @@ Ext.define('MyApp.view.MyPanel12', {
         var check = passedObjectsStore.findExact('type','columnVariant');
         var noPrompt = ganttConfigStore.findExact('name','noPrompt');
 
-        if (checkObjectsStore != -1) {
+        if (checkObjectsStore > -1) {
             var remove = passedObjectsStore.findExact('type','columnVariant');
             passedObjectsStore.removeAt(remove);
             passedObjectsStore.add({
@@ -2444,7 +2444,7 @@ Ext.define('MyApp.view.MyPanel12', {
                 number: columnVariantName
             });
         }
-        if (checkConfigStore != -1) {
+        if (checkConfigStore > -1) {
             var remove = passedConfigStore.findExact('type','columnVariant');
             passedConfigStore.removeAt(remove);
             passedConfigStore.add({
@@ -2465,7 +2465,7 @@ Ext.define('MyApp.view.MyPanel12', {
         ganttConfigStore.load({
             batch: batch,
             callback: function() {
-                if (noPrompt != -1) {
+                if (noPrompt > -1) {
                     ganttConfigStore.add({
                         name: 'noPrompt',
                         value :''
@@ -2479,13 +2479,6 @@ Ext.define('MyApp.view.MyPanel12', {
                 ganttPanel.setLoading(false);
             }
         });
-
-
-
-
-
-
-
     },
 
     onColumn_variantAfterRender: function(component, eOpts) {
