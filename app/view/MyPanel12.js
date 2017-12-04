@@ -2380,7 +2380,7 @@ Ext.define('MyApp.view.MyPanel12', {
         var versionRecord = versionStore.getAt(versionIndex);
         var versionName = versionRecord.get('version');
         var check = passedConfigStore.findExact('type','version');
-        if (check != '-1') {
+        if (check > -1) {
             var remove = passedConfigStore.findExact('type','version');
             passedConfigStore.removeAt(remove);
             passedConfigStore.add({
@@ -2750,7 +2750,7 @@ Ext.define('MyApp.view.MyPanel12', {
         var main = MyApp.app.getController('Main');
         var store = Ext.getStore('InternalStore');
         var check = store.findExact('name','ganttViewChanged');
-        if (check == -1) {
+        if (check === -1) {
             store.add({
                 name: 'ganttViewChanged'
             });
