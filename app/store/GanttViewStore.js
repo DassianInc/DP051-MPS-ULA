@@ -27,6 +27,10 @@ Ext.define('MyApp.store.GanttViewStore', {
             storeId: 'GanttViewStore',
             data: [
                 {
+                    id: '0',
+                    name: 'Year'
+                },
+                {
                     id: '1',
                     name: 'Month & Year'
                 },
