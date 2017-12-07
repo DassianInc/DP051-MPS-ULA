@@ -308,15 +308,29 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         /** Page size already set getExportConfig**/
         //size of paper we will be printing on. take orientation into account
       if (orientation === 'landscape') {
-       //     me.paperWidth   = pageSize.width > pageSize.height ? pageSize.width : pageSize.height;
-       //     me.paperHeight  = pageSize.height > pageSize.width ? pageSize.height : pageSize.width;
           me.bufferedHeightMargin    = 25;
           me.pageHeaderHeight        = 41;
+          switch(me.exportConfig.format){
+              case 'Letter':
+                  pageSize.width += 150;
+                  break;
+              case 'Legal':
+                  pageSize.width += 100;
+                  break;
+              case 'A4':
+                  pageSize.width += 110;
+                  break;
+              case 'A3':
+                  pageSize.width += 210;
+                  break;
+          }
        } else {
-       //     me.paperWidth   = pageSize.width;
-       //     me.paperHeight  = pageSize.height;
           me.bufferedHeightMargin    = 0;
           me.pageHeaderHeight        = 0;
+          pageSize.width += 50;
+          if(me.exportConfig.format === 'A3'){
+              pageSize.width += 70;
+          }
         }
 
         me.paperWidth   = pageSize.width;
@@ -532,6 +546,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         });
 
         component.getSchedulingView().timeAxisViewModel.suppressFit = true;
+        component.getSchedulingView().timeAxisViewModel.forceFit    = true;
         component.timeAxis.autoAdjust                               = false;
         //expand grids in case they're collapsed
         if(!config.onlyVisibleRows){
@@ -562,7 +577,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         me.fitComponentIntoPage();
 
         //bug fix #2264 - MultiPage export does not sync timeaxis on first run
-        me.view.timeAxisViewModel.setTickWidth(me.view.timeAxisViewModel.getTickWidth());
+       // me.view.timeAxisViewModel.setTickWidth(me.view.timeAxisViewModel.getTickWidth());
 
         //IE8 bug
         if (me.isBuffered() && Ext.isIE8) {
@@ -763,9 +778,9 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
 
         // fetch all component rows into temporary arrays
         // and call 'onRowsCollected' to collect them into pages and call 'onPagesExtracted' on completion
-        setTimeout(function () {
-            me.collectRows(me.onRowsCollected, me, config);
-        }, 1);
+         setTimeout(function () {
+             me.collectRows(me.onRowsCollected, me, config);
+         }, 1);
     },
 
     /**
@@ -2386,10 +2401,11 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
             view            = component.getSchedulingView(),
             normalGrid      = component.normalGrid,
             lockedGrid      = component.lockedGrid,
+            scrollMargin    = (Ext.getScrollbarSize().width + 1),
             totalWidth      = me.getTotalWidth(),
             ticks           = me.ticks,
             timeColumnWidth = me.timeColumnWidth || view.timeAxisViewModel.getTickWidth();
-
+        //paperWidth in pixels (int)
         var lockedWidth     = Math.floor((me.visibleColumnsWidth / totalWidth) * me.paperWidth);
 
         //correct lockedcolumn width if it is too small
@@ -2401,20 +2417,31 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
         //if preferred width is wider than current locked width, then use preferred width
         lockedWidth = preferedLockedWidth > lockedWidth ? preferedLockedWidth : lockedWidth;
 
-        var normalWidth =(me.paperWidth - lockedWidth) + 100;// me.exportConfig.orientation === 'landscape' ? '' : me.paperWidth - lockedWidth;
+        var normalWidth = me.paperWidth - lockedWidth// me.exportConfig.orientation === 'landscape' ? '' : me.paperWidth - lockedWidth;
+        if(normalWidth < 390){
+            normalWidth = 390;
+            lockedWidth = me.paperWidth - normalWidth;
+        }
+        /** See gntPlugin ln: 13253 **/
+        //normalWidth  += (component.schedulePinchThreshold + (Ext.getScrollbarSize().width + 1) );
+        // me.exportConfig.orientation === 'landscape' ? (component.schedulePinchThreshold * 2) * 2 : (component.schedulePinchThreshold * 2) + (component.schedulePinchThreshold / 2);
         //normalWidth = me.restoreSettings.width > me.paperWidth  ? me.restoreSettings.width - lockedWidth : normalWidth
-        var tickWidth   = normalWidth / ticks.length,
-            rowHeight   = (tickWidth / timeColumnWidth) * me.getRowHeight();
-
-        me.view.setRowHeight( rowHeight < me.minRowHeight ? me.minRowHeight : rowHeight );
 
         //component.setWidth(me.paperWidth);
-        normalGrid.setWidth(normalWidth);//normalWidth
-        lockedGrid.setWidth(lockedWidth);
+        //lockedWidth += (Ext.getScrollbarSize().width + 1)
+        normalWidth += scrollMargin;
+
+        var tickWidth   = normalWidth / (ticks.length),
+            rowHeight   = (tickWidth / timeColumnWidth) * me.getRowHeight();
+        me.view.setRowHeight( rowHeight < me.minRowHeight ? me.minRowHeight : rowHeight );
+
         //spread lockedcolums over the available width
         me.fitLockedColumnWidth(lockedWidth);
-
         component.setTimeColumnWidth(tickWidth);
+
+        lockedGrid.setWidth(lockedWidth);
+        normalGrid.setWidth(normalWidth);
+
     },
 
 
@@ -2643,10 +2670,11 @@ Ext.define('DSch.plugin.Export', {
      * Definition of all available paper sizes.
      */
     pageSizes               : {
+        /** To small
         A5      : {
             width   : 5.8,
             height  : 8.3
-        },
+        },*/
         A4      : {
             width   : 8.3,
             height  : 11.7
@@ -2753,7 +2781,7 @@ Ext.define('DSch.plugin.Export', {
      * Default export configuration.
      */
     exportConfig           : {
-        format      : 'Letter',
+        format      : 'Legal',//Letter
         orientation : 'landscape',
         range       : 'complete',
         rowsRange   : 'all',
@@ -3404,7 +3432,7 @@ Ext.define('DSch.plugin.Export', {
                 Ext.MessageBox.show({
                          title:'Download.',
                          msg: '<a target="_blank" href="'+result.url+'">Click here to download</a>',
-                         buttons: Ext.Msg.CANCEL,
+                         buttons: Ext.Msg.OK,
                          icon: Ext.Msg.INFO
                     });
             }, 0);
@@ -3658,8 +3686,8 @@ Ext.define('DSch.plugin.Export', {
      * Mask the body, hiding panel to allow changing it's parameters in the background.
      */
     mask : function () {
-        var mask = Ext.getBody().mask();
-        mask.addCls('sch-export-mask');
+        //var mask = Ext.getBody().mask();
+        //mask.addCls('sch-export-mask');
     },
 
     //Private.
@@ -3707,34 +3735,3 @@ Ext.define('DSch.plugin.Export', {
     }
 });
 
-
-
-/*
- var htmlLength = html.length;
- //var htmlEnd = htmlLength-3;
- //var html2 = html.substring(0, htmlLength-3);
- var htmlObject = html;
- var ajaxConfig = {};
- var main = MyApp.app.getController('Main');
- var url = window.server+'topdf/create_htmlPage.php';
- var now = main.getTime();
- var toPdf = window.server+'topdf/toPdf.php?now='+now;
- ajaxConfig = {
- method: 'POST',
- url: url,
- async: false,
- params: {
- html : htmlObject,
- page : page,
- now: now
- },
- callback: function () {
- console.log('Page: '+page);
- },
- success: function (res) {
- },
- failure: function (res) {
- }
- };
- Ext.Ajax.request(ajaxConfig);
-* */

@@ -165,12 +165,7 @@ Ext.define('MyApp.view.MyPanel12', {
                     id:'refresh',
                     tooltip: 'Refresh to clear sort',
                     scale: 'small',
-                    text:"<span style='padding-top:10px;'><i class='fa fa-refresh fa-2x'></i></span>",
-                    listeners:{
-                        click:{
-                            fn:me.refreshGantt
-                        }
-                    }
+                    text:"<span style='padding-top:10px;'><i class='fa fa-refresh fa-2x'></i></span>"
                 },
                 {
                     xtype: 'button',
@@ -340,26 +335,9 @@ Ext.define('MyApp.view.MyPanel12', {
         return me.returnValue;
     },
 
-    refreshGantt:function( btn, e, opts ) {
-        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-        var mainController = MyApp.app.getMainController();
-        var store = ganttPanel.getStore();
-        ganttPanel.setLoading(true);
-        mainController.collapseAll(ganttPanel);
-        store.sorters.clear();
-        Ext.each(store.data.originalMap,function(key){
-            store.add(store.getById(key));
-        });
-        ganttPanel.getView().refresh();
-        setTimeout(function(){
-            ganttPanel.setLoading(false);
-        },1000);
-
-
-    },
-
     openSettings1: function(button, e, eOpts) {
         var me = this;
+        var main = MyApp.app.getMainController();
         var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
         var promptShow = ganttConfigStore.findExact('name','noPrompt');
         var prompt = Ext.create('Ext.window.MessageBox', {
@@ -374,9 +352,9 @@ Ext.define('MyApp.view.MyPanel12', {
                 msg: 'No selection data input. Would you like to view the full schedule?',
                 buttons: Ext.Msg.YESNO,
                 fn: function(btn) {
-                    if (btn == 'no') {
-                    }
-                    if (btn == 'yes') {
+                    /*if (btn === 'no') {
+                    }*/
+                    if (btn === 'yes') {
                         var myPanel = Ext.ComponentManager.get('myPanel');
                         var ganttPanel = Ext.ComponentManager.get('ganttPanel');
                         var mainView = Ext.ComponentManager.get('mainView');
@@ -386,32 +364,26 @@ Ext.define('MyApp.view.MyPanel12', {
                         var passedConfigStore = Ext.getStore('PassedConfigStoreXml');
 
                         var columnVariantIndex = passedConfigStore.findExact('type','columnVariant');
-                        if (columnVariantIndex != '-1'){
+                        if (columnVariantIndex >-1){
                             var columnVariantRecord = passedConfigStore.getAt(columnVariantIndex);
                             var columnVariant = columnVariantRecord.get('value');
                             var columnVariantMsg = '';
-                        } else {
-
                         }
                         var selectionVariantIndex = passedConfigStore.findExact('type','selectionVariant');
-                        if (selectionVariantIndex != '-1'){
+                        if (selectionVariantIndex > -1){
                             var selectionVariantRecord = passedConfigStore.getAt(selectionVariantIndex);
                             var selectionVariant = selectionVariantRecord.get('value');
                             var selectionVariantMsg = '';
-                        } else {
-
                         }
                         var versionIndex = passedConfigStore.findExact('type','version');
-                        if (versionIndex != '-1') {
+                        if (versionIndex > -1) {
                             var versionRecord = passedConfigStore.getAt(versionIndex);
                             var version = versionRecord.get('value');
                             var versionMsg = '';
-                        } else {
-
                         }
                         //mission Options
                         var missionOptionsIndex = passedObjectsStore.findExact('type','missionOptions');
-                        if (missionOptionsIndex == -1) {
+                        if (missionOptionsIndex === -1) {
                             var missionOptionsInit = '';
                             var missionOptionsType = 'missionOptions';
                             passedObjectsStore.add(
@@ -420,7 +392,7 @@ Ext.define('MyApp.view.MyPanel12', {
                         }
                         //produciton end items
                         var productionEndItemsOptionsIndex = passedObjectsStore.findExact('type','productionEndItemsOptions');
-                        if (productionEndItemsOptionsIndex == -1) {
+                        if (productionEndItemsOptionsIndex === -1) {
                             var productionEndItemsOptionsInit = '';
                             var productionEndItemsOptionsType = 'productionEndItemsOptions';
                             passedObjectsStore.add(
@@ -429,7 +401,7 @@ Ext.define('MyApp.view.MyPanel12', {
                         }
                         //major shipped end items
                         var majorShippedEndItemsOptionsIndex = passedObjectsStore.findExact('type','majorShippedEndItemsOptions');
-                        if (majorShippedEndItemsOptionsIndex == -1) {
+                        if (majorShippedEndItemsOptionsIndex === -1) {
                             var majorShippedEndItemsOptionsInit = '';
                             var majorShippedEndItemsOptionsType = 'majorShippedEndItemsOptions';
                             passedObjectsStore.add(
@@ -438,7 +410,7 @@ Ext.define('MyApp.view.MyPanel12', {
                         }
                         // sort by
                         var sortByIndex = passedObjectsStore.findExact('type','sortBy');
-                        if (sortByIndex == -1) {
+                        if (sortByIndex === -1) {
                             var sortByInit = '';
                             var sortByType = 'sortBy';
                             passedObjectsStore.add(
@@ -447,7 +419,7 @@ Ext.define('MyApp.view.MyPanel12', {
                         }
                         //show details
                         var showDetailsIndex = passedObjectsStore.findExact('type','showDetails');
-                        if (showDetailsIndex == -1) {
+                        if (showDetailsIndex === -1) {
                             var showDetailsInit = 'F';
                             var showDetailsType = 'showDetails';
                             passedObjectsStore.add(
@@ -456,7 +428,7 @@ Ext.define('MyApp.view.MyPanel12', {
                         }
                         //baseline options
                         var baselineOptionsIndex = passedObjectsStore.findExact('type','baselineOptions');
-                        if (baselineOptionsIndex == -1) {
+                        if (baselineOptionsIndex === -1) {
                             var baselineOptionsInit = '';
                             var baselineOptionsType = 'baselineOptions';
                             passedObjectsStore.add(
@@ -494,7 +466,7 @@ Ext.define('MyApp.view.MyPanel12', {
                                             taskStore.data.originalMap.push(key);
                                         });
                                         recordCountButton.setText('Record Count: '+recordCount);
-                                        me.refreshGantt();
+                                        main.onRefreshAndClearSort();
                                         ganttPanel.setLoading(false);
                                     }
                                 });
@@ -623,7 +595,7 @@ Ext.define('MyApp.view.MyPanel12', {
                                 taskStore.data.originalMap.push(key);
                             });
                             recordCountButton.setText('Record Count: '+recordCount);
-                            me.refreshGantt();
+                            main.onRefreshAndClearSort();
                             ganttPanel.setLoading(false);
                         }
                     });
@@ -2520,7 +2492,7 @@ Ext.define('MyApp.view.MyPanel12', {
             name: 'noPrompt',
             value: ''
         });
-        if (check != '-1') {
+        if (check > -1) {
             var remove = passedConfigStore.findExact('type','selectionVariant');
             passedConfigStore.removeAt(remove);
             passedConfigStore.add({

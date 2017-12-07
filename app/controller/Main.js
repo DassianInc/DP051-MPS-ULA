@@ -109,13 +109,13 @@
             //finishDate
             var finishRecordIndex = ganttConfigStore.findExact('name','finish');
             var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-            var finishValue = finishRecord.get('value');
+            var finishValue = finishRecord.get('value').length < 10 ? new Date().toString() : finishRecord.get('value');
             finishValue = new Date(finishValue.replace(/\D/ig,'-'));
             finishValue = finishValue.setMonth(finishValue.getMonth()+6);
             //startDate
             var startRecordIndex = ganttConfigStore.findExact('name','start');
             var startRecord = ganttConfigStore.getAt(startRecordIndex);
-            var startValue = startRecord.get('value');
+            var startValue = startRecord.get('value').length < 10 ? new Date().toString() : startRecord.get('value');
             startValue = new Date(startValue.replace(/\D/ig,'-'));
             startValue = startValue.setMonth(startValue.getMonth()-6);
             //columnVariant
@@ -216,7 +216,6 @@
                        Ext.create("DSch.plugin.Export", {
                            pluginId: 'exportServer',
                            name:'Export',
-                           //tpl : me.getTpl(),
                            printServer     : window.server,
                            printPDFServer  : window.server,
                            tpl : tpl,
@@ -629,6 +628,45 @@
 
         },
 
+        onRefreshAndClearSort:function( btn, e, opts ) {
+            var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+            var mainController = MyApp.app.getMainController();
+            var store = ganttPanel.getStore();
+            ganttPanel.setLoading(true);
+            store.sorters.clear();
+            mainController.collapseAll(ganttPanel);
+            Ext.each(store.data.originalMap,function(key){
+                var record = store.getById(key);
+                record.childNodes = recurseRestoreChildrenOrder(record.childNodes);
+                store.add(record);
+            });
+            ganttPanel.getView().refresh();
+            setTimeout(function(){
+                ganttPanel.setLoading(false);
+            },1000);
+
+            function recurseRestoreChildrenOrder(childNodes){
+                var children = []
+                if(childNodes.length > 1){
+                    children = childNodes.sort(function(item1,item2){
+                        if (item1.internalId < item2.internalId) {
+                            return -1;
+                        }
+                        if (item1.internalId > item2.internalId) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+                }
+                for(var i=0;i<childNodes.length;i++){
+                    childNodes[i].childNodes = recurseRestoreChildrenOrder(childNodes[i].childNodes)
+                }
+                return children.length > 0 ? children : childNodes;
+            }
+
+        },
+
         onExpandClick: function(button, e, eOpts) {
             var me = this;
             var treePanel = Ext.ComponentManager.get('ganttPanel');
@@ -686,14 +724,15 @@
                 }
             });
         },
+
         setServer:function(server){
             return new Promise(function(resolve,reject){
                 window.server = server;
                 if(window.server.substr(window.server.length-1) !== '/'){
                     window.server += '/';
                 }
-                //dev: window.printServer = 'http://localhost:8999/'//
-               window.printServer = window.server;
+              window.printServer = 'http://localhost:8999/'//
+                //dev:  window.printServer = window.server;
                 window.namespace = 'htmlToPdf/';
                 window.serverResources = window.printServer+'resources/';
                 //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
@@ -1038,6 +1077,9 @@
                 },
                 "#printToPdf": {
                     click: this.onPrintToPdfClick
+                },
+                "#refresh": {
+                    click: this.onRefreshAndClearSort
                 }
             });
         },
@@ -1140,119 +1182,131 @@
             var me = this;
             var ganttPanel = Ext.ComponentManager.get('ganttPanel');
             var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
+
+            var startRecordIndex = -1,
+                finishRecordIndex = -1,
+                startRecord = {},
+                finishRecord = {},
+                startDatePad = '',
+                startDate = new Date(),
+                finishDate = new Date(),
+                finishDatePad = '',
+                startValue = startDate,
+                finishValue = finishDate;
+
             switch (type){
                 case 'Year':
                     //finishDate
-                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                    if (finishRecordIndex != -1) {
-                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
+                     finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex > -1) {
+                        finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
-                        var finishDatePad = new Date(finishDate);
+                        finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+20);
-                        var finishValue = new Date(finishDatePad);
+                        finishValue = new Date(finishDatePad);
                     }
                     //startDate
                     startRecordIndex = ganttConfigStore.findExact('name','start');
-                    if (startRecordIndex != -1) {
-                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
+                    if (startRecordIndex > -1) {
+                        startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        startDate = startRecord.get('value').length < 10 ? finishValue.toString() : new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
-                        var startDatePad = new Date(startDate);
+                        startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-20);
-                        var startValue = new Date(startDatePad);
+                        startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('manyYears',new Date(startValue), new Date(finishValue));
                     break;
                 case 'Year & Quarter':
                     //finishDate
-                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                    if (finishRecordIndex != -1) {
-                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
+                    finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex  > -1) {
+                        finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
-                        var finishDatePad = new Date(finishDate);
+                        finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+20);
-                        var finishValue = new Date(finishDatePad);
+                        finishValue = new Date(finishDatePad);
                     }
                     //startDate
                     startRecordIndex = ganttConfigStore.findExact('name','start');
-                    if (startRecordIndex != -1) {
-                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
+                    if (startRecordIndex  > -1) {
+                        startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        startDate = startRecord.get('value').length < 10 ? finishValue.toString() : new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
-                        var startDatePad = new Date(startDate);
+                        startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-20);
-                        var startValue = new Date(startDatePad);
+                        startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('year',new Date(startValue), new Date(finishValue));
                     break;
                 case 'Month & Year':
                     //finishDate
-                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                    if (finishRecordIndex != -1) {
-                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
+                    finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex  > -1) {
+                        finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :  new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
-                        var finishDatePad = new Date(finishDate);
+                        finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+12);
-                        var finishValue = new Date(finishDatePad);
+                        finishValue = new Date(finishDatePad);
                     }
                     //startDate
                     startRecordIndex = ganttConfigStore.findExact('name','start');
-                    if (startRecordIndex != -1) {
-                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
+                    if (startRecordIndex  > -1) {
+                        startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        startDate = startRecord.get('value').length < 10 ? finishValue.toString() : new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
-                        var startDatePad = new Date(startDate);
+                        startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-12);
-                        var startValue = new Date(startDatePad);
+                        startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('monthAndYear',new Date(startValue), new Date(finishValue));
                     break;
                 case 'Week & Month':
                     //finishDate
-                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                    if (finishRecordIndex != -1) {
-                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
+                    finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex  > -1) {
+                        finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
-                        var finishDatePad = new Date(finishDate);
+                        finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+6);
-                        var finishValue = new Date(finishDatePad);
+                        finishValue = new Date(finishDatePad);
                     }
                     //startDate
                     startRecordIndex = ganttConfigStore.findExact('name','start');
-                    if (startRecordIndex != -1) {
-                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
+                    if (startRecordIndex  > -1) {
+                        startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        startDate = startRecord.get('value').length < 10 ? finishValue.toString() : new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
-                        var startDatePad = new Date(startDate);
+                        startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-6);
-                        var startValue = new Date(startDatePad);
+                        startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('weekAndMonth',new Date(startValue), new Date(finishValue));
                     break;
                 case 'Week & Day':
                     //finishDate
-                    var finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                    if (finishRecordIndex != -1) {
-                        var finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        var finishDate = new Date(finishRecord.get('value').replace(/\D/ig,'-'));
+                    finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex  > -1) {
+                        finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :new Date(finishRecord.get('value').replace(/\D/ig,'-'));
                         //pad by a month to have extra space in view
-                        var finishDatePad = new Date(finishDate);
+                        finishDatePad = new Date(finishDate);
                         finishDatePad.setMonth(finishDatePad.getMonth()+4);
-                        var finishValue = new Date(finishDatePad);
+                        finishValue = new Date(finishDatePad);
                     }
                     //startDate
                     startRecordIndex = ganttConfigStore.findExact('name','start');
-                    if (startRecordIndex != -1) {
-                        var startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        var startDate = new Date(startRecord.get('value').replace(/\D/ig,'-'));
+                    if (startRecordIndex  > -1) {
+                        startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        startDate = startRecord.get('value').length < 10 ? finishValue.toString() : new Date(startRecord.get('value').replace(/\D/ig,'-'));
                         //pad by 30 days to have extra space in view
-                        var startDatePad = new Date(startDate);
+                        startDatePad = new Date(startDate);
                         startDatePad.setMonth(startDatePad.getMonth()-4);
-                        var startValue = new Date(startDatePad);
+                        startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('weekAndDay',new Date(startValue), new Date(finishValue));
                     break;
@@ -1400,7 +1454,7 @@
                             '{header}' +
                             '<div style="width:100%" align="center">' +
                                      '<tpl if="totalWidth = 100">'+
-                    '<div class="{componentClasses}" align="left" style="height:{bodyHeight}px; width:{totalWidth}%; position: relative !important">' +
+                    '<div class="{componentClasses}" id="body" align="left" style="height:{bodyHeight}px; width:{totalWidth}%; position: relative !important">' +
                                      '<tpl else>'+
                     '<div class="{componentClasses}" align="left" style="height:{bodyHeight}px; width:{totalWidth}px; position: relative !important">' +
                                      '</tpl>'+
