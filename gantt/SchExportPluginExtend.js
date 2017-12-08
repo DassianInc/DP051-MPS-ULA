@@ -315,7 +315,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
                   pageSize.width += 150;
                   break;
               case 'Legal':
-                  pageSize.width += 100;
+                  pageSize.width += 160;
                   break;
               case 'A4':
                   pageSize.width += 110;
@@ -1413,7 +1413,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         }
         else {
             var el = get(normalGrid.headerCt.id);
-            if (el) el.style.width  = '';
+            if (el) el.style.width  = '100%';
         }
 
         Ext.Array.forEach([
@@ -2396,30 +2396,30 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
 
 
     fitComponentIntoPage : function () {
-        var me              = this,
-            component       = me.getComponent(),
-            view            = component.getSchedulingView(),
-            normalGrid      = component.normalGrid,
-            lockedGrid      = component.lockedGrid,
-            scrollMargin    = (Ext.getScrollbarSize().width + 1),
-            totalWidth      = me.getTotalWidth(),
-            ticks           = me.ticks,
-            timeColumnWidth = me.timeColumnWidth || view.timeAxisViewModel.getTickWidth();
-        //paperWidth in pixels (int)
-        var lockedWidth     = Math.floor((me.visibleColumnsWidth / totalWidth) * me.paperWidth);
-
-        //correct lockedcolumn width if it is too small
-        var visibleColumnCount = me.visibleColumns.length,
-            preferedLockedWidth = visibleColumnCount * me.minAverageColumnWidth;
+        //me.paperWidth in pixels (int)
+        var me                     = this,
+            component              = me.getComponent(),
+            view                   = component.getSchedulingView(),
+            normalGrid             = component.normalGrid,
+            lockedGrid             = component.lockedGrid,
+            scrollMargin           = (Ext.getScrollbarSize().width + 1),
+            totalWidth             = me.getTotalWidth(),
+            ticks                  = me.ticks,
+            timeColumnWidth        = me.timeColumnWidth || view.timeAxisViewModel.getTickWidth(),
+            lockedWidth            = Math.floor((me.visibleColumnsWidth / totalWidth) * me.paperWidth),
+            visibleColumnCount     = me.visibleColumns.length,
+            alternativeLockedWidth = Math.floor(me.paperWidth / 1.5),
+            //correct lockedcolumn width if it is too small
+            preferedLockedWidth    = visibleColumnCount * me.minAverageColumnWidth;
 
         //preferred locked width can never take more than half of the page
-        preferedLockedWidth = preferedLockedWidth > me.paperWidth / 1.5 ? Math.floor(me.paperWidth / 1.5) : preferedLockedWidth;
+        preferedLockedWidth = preferedLockedWidth < alternativeLockedWidth ? preferedLockedWidth : alternativeLockedWidth;
         //if preferred width is wider than current locked width, then use preferred width
-        lockedWidth = preferedLockedWidth > lockedWidth ? preferedLockedWidth : lockedWidth;
+        lockedWidth = preferedLockedWidth < lockedWidth ? preferedLockedWidth : lockedWidth;
 
         var normalWidth = me.paperWidth - lockedWidth// me.exportConfig.orientation === 'landscape' ? '' : me.paperWidth - lockedWidth;
-        if(normalWidth < 390){
-            normalWidth = 390;
+        if(normalWidth < 400){
+            normalWidth = 400;
             lockedWidth = me.paperWidth - normalWidth;
         }
         /** See gntPlugin ln: 13253 **/
@@ -2435,13 +2435,14 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
             rowHeight   = (tickWidth / timeColumnWidth) * me.getRowHeight();
         me.view.setRowHeight( rowHeight < me.minRowHeight ? me.minRowHeight : rowHeight );
 
-        //spread lockedcolums over the available width
-        me.fitLockedColumnWidth(lockedWidth);
+
         component.setTimeColumnWidth(tickWidth);
 
         lockedGrid.setWidth(lockedWidth);
         normalGrid.setWidth(normalWidth);
 
+        //spread lockedcolums over the available width
+        me.fitLockedColumnWidth(lockedWidth);
     },
 
 
