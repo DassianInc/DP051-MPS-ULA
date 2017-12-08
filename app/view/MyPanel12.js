@@ -672,22 +672,28 @@ Ext.define('MyApp.view.MyPanel12', {
         //define selection window
         //var selectionWindow = Ext.ComponentQuery.query('selectionwindow[fieldname='+me.itemId+']')[0];
 
-        var clickMenu = Ext.menu.Menu({
-            id:'nodeClickMenu',
+        /*var deleteMenu = new Ext.menu.Menu({
+            id:'deleteTreeSelectionRecordsMenu',
             focusOnToFront: true,
             items: [
                 {
-                    id:'delete',
+                    id:'deleteTreeSelectionRecordsButton',
+                    icon: 'cancel',
                     text:'Delete',
                     handler: function () {
-                        record.remove();
-                        passedObjectsStore.remove(record);
+                        Ext.MessageBox.alert({'title':'oh boy'})
                     }
                 }
             ]
 
+        });*/
+        var deleteMenu = new Ext.button.Button ({
+            text: 'Delete',
+            flex:1,
+            handler: function () {
+                Ext.MessageBox.alert('Selection','Please Select a item.')
+            }
         });
-
         // Left Menu selectionTree Panel ------------------------------------------------------------------------------
         var selectionTree = new Ext.tree.Panel ({
             title: 'Selected Objects',
@@ -699,12 +705,25 @@ Ext.define('MyApp.view.MyPanel12', {
             collapsed: false,
             width: 150,
             rootVisible: false,
+            dockedItems: [{
+                xtype: 'toolbar',
+                dock: 'top',
+                height:'30px',
+                items: [deleteMenu]
+            }],
             listeners: {
                 itemclick: function(me,record,item,index,e,eOpts){
-                    if(typeof clickMenu === 'object'){
-                        clickMenu.destroy();
+                    deleteMenu.handler = function () {
+                        var passedObjectsStore = Ext.getStore('PassedObjectsStoreXml');
+                        var selectedRecordIndex = passedObjectsStore.findExact('number',record.get('number'));
+                        var selectedRecord = passedObjectsStore.getAt(selectedRecordIndex);
+                        passedObjectsStore.remove(selectedRecord);
+                        record.remove();
+                        deleteMenu.handler = function(){
+                            Ext.MessageBox.alert('Selection','Please Select a item.')
+                        }
                     }
-                    var clickMenu = new Ext.menu.Menu({
+                   /* var clickMenu = new Ext.menu.Menu({
                         items: [
                             {
                                 id:'deleteSelectedObjects_'+record.internalId+''+index,
@@ -721,7 +740,7 @@ Ext.define('MyApp.view.MyPanel12', {
                     });
                     if (record.get('depth')===2) {
                         clickMenu.showAt(e.xy);
-                    }
+                    }*/
                 }
             },
             scope: me
