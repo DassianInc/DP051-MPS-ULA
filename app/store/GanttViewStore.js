@@ -28,27 +28,33 @@ Ext.define('MyApp.store.GanttViewStore', {
             data: [
                 {
                     id: '0',
-                    name: 'Year'
+                    name: 'Year',
+                    selected:false
                 },
                 {
                     id: '1',
-                    name: 'Month & Year'
+                    name: 'Month & Year',
+                    selected:false
                 },
                 {
                     id: '2',
-                    name: 'Year & Quarter'
+                    name: 'Year & Quarter',
+                    selected:false
                 },
                 {
                     id: '3',
-                    name: 'Week & Month'
+                    name: 'Week & Month',
+                    selected:false
                 },
                 {
                     id: '4',
-                    name: 'Week & Day'
+                    name: 'Week & Day',
+                    selected:false
                 },
                 {
                     id: '5',
-                    name: 'Day & Week'
+                    name: 'Day & Week',
+                    selected:false
                 }
             ],
             fields: [
@@ -57,6 +63,9 @@ Ext.define('MyApp.store.GanttViewStore', {
                 },
                 {
                     name: 'name'
+                },
+                {
+                    name: 'selected'
                 }
             ]
         }, cfg)]);

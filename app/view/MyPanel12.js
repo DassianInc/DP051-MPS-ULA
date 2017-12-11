@@ -467,6 +467,7 @@ Ext.define('MyApp.view.MyPanel12', {
                                         });
                                         recordCountButton.setText('Record Count: '+recordCount);
                                         main.onRefreshAndClearSort();
+                                        main.changeGanttView();
                                         ganttPanel.setLoading(false);
                                     }
                                 });
@@ -597,6 +598,7 @@ Ext.define('MyApp.view.MyPanel12', {
                             recordCountButton.setText('Record Count: '+recordCount);
                             main.onRefreshAndClearSort();
                             ganttPanel.setLoading(false);
+                            main.changeGanttView();
                         }
                     });
                     return me.returnValue;
@@ -2734,6 +2736,14 @@ Ext.define('MyApp.view.MyPanel12', {
         var main = MyApp.app.getController('Main');
         var store = Ext.getStore('InternalStore');
         var check = store.findExact('name','ganttViewChanged');
+        var record = 'length' in records ? records[0] : records;
+        var value = record.get('name');
+        Ext.each(combo.store.data.items,function(record){
+            if(record.selected){
+                record.set('selected',false)
+            }
+        });
+        record.set('selected',true);
         if (check === -1) {
             store.add({
                 name: 'ganttViewChanged'
@@ -2743,8 +2753,8 @@ Ext.define('MyApp.view.MyPanel12', {
                 name: 'ganttViewChanged'
             });
         }
-        var record = 'length' in records ? records[0] : records;
-        main.changeGanttView(record.get('name'));
+
+        main.changeGanttView(value);
 
     }
 

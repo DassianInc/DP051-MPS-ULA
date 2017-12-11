@@ -312,13 +312,11 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
           me.pageHeaderHeight        = 41;
           switch(me.exportConfig.format){
               case 'Letter':
-                  pageSize.width += 150;
+              case 'A4':
+                  pageSize.width += 110;
                   break;
               case 'Legal':
                   pageSize.width += 160;
-                  break;
-              case 'A4':
-                  pageSize.width += 110;
                   break;
               case 'A3':
                   pageSize.width += 210;
@@ -546,7 +544,8 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
         });
 
         component.getSchedulingView().timeAxisViewModel.suppressFit = true;
-        component.getSchedulingView().timeAxisViewModel.forceFit    = true;
+        component.getSchedulingView().timeAxisViewModel.setForceFit(true);//propagates events
+        component.getSchedulingView().timeAxisViewModel.forceFit    = true
         component.timeAxis.autoAdjust                               = false;
         //expand grids in case they're collapsed
         if(!config.onlyVisibleRows){
@@ -2443,6 +2442,11 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
 
         //spread lockedcolums over the available width
         me.fitLockedColumnWidth(lockedWidth);
+        //ganttPanel.timeAxisViewModel.setForceFit(true)
+        //ganttPanel.timeAxisViewModel.suppressFit = true;
+        view.timeAxisViewModel.setAvailableWidth(normalWidth)
+        //ganttPanel.timeAxisViewModel.update()
+        view.timeAxisViewModel.fitToAvailableWidth()
     },
 
 
@@ -3354,7 +3358,7 @@ Ext.define('DSch.plugin.Export', {
             }, this.getParameters()),
             success     : function(res){
                 var d = JSON.parse(res.responseText);
-                if(!d.success){
+                if(!d.success && !window.appState.killExport){
                     Ext.MessageBox.confirm(
                         'Failed:',
                         'Trying page again '+pageNum,
@@ -3374,22 +3378,23 @@ Ext.define('DSch.plugin.Export', {
 
             },
             failure     : function(){
-                Ext.MessageBox.confirm(
-                    'Failed:',
-                    'Trying page again '+pageNum,
-                    function (e) {
-                        ajaxConfig.failure = function(){
-                            Ext.toast('Failed page again '+pageNum, 'Failed', 't');
-                            me.pdfPostTotals.groupsComplete += 1;
-                            promise.reject();
-                        }
-                        e === 'yes' && Ext.Ajax.request(ajaxConfig);
-                        if(e === 'no'){
-                            me.pdfPostTotals.groupsComplete += 1;
-                            promise.reject();
-                        }
-                    });
-
+                if(!window.appState.killExport){
+                    Ext.MessageBox.confirm(
+                        'Failed:',
+                        'Trying page again '+pageNum,
+                        function (e) {
+                            ajaxConfig.failure = function(){
+                                Ext.toast('Failed page again '+pageNum, 'Failed', 't');
+                                me.pdfPostTotals.groupsComplete += 1;
+                                promise.reject();
+                            }
+                            e === 'yes' && Ext.Ajax.request(ajaxConfig);
+                            if(e === 'no'){
+                                me.pdfPostTotals.groupsComplete += 1;
+                                promise.reject();
+                            }
+                        });
+                }
                 console.log(pageNum+' :page failed');
             },
             scope       : me
@@ -3687,8 +3692,8 @@ Ext.define('DSch.plugin.Export', {
      * Mask the body, hiding panel to allow changing it's parameters in the background.
      */
     mask : function () {
-        //var mask = Ext.getBody().mask();
-        //mask.addCls('sch-export-mask');
+        var mask = Ext.getBody().mask();
+        mask.addCls('sch-export-mask');
     },
 
     //Private.

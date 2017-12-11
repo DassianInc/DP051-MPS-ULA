@@ -184,29 +184,29 @@
                    baselineVisible: false,
                    viewPreset: 'year',
                    width: panelWidth,
-                   listeners: {
+                  /* listeners: {
                        itemclick: {
                            fn: function () {
-                               var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                               var lockedGrid = ganttPanel.lockedGrid;
-                               /* Ext.mixin.Observable#addEvents" is deprecated.
-                               lockedGrid.addEvents({
-                                    itemClick: function() {
-                                        console.log('josh');
-                                    }
-                                });
-                                var cols = lockedGrid.columns;
-                                var count = 0;
-                                for (var i=0; i < cols.length; i++) {
-                                    var col = cols[i];
-                                    if (col.hidden === false || col.hidden === undefined) {
-                                        count = count + 1;
-                                    }
-                                }*/
+                              var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                              var lockedGrid = ganttPanel.lockedGrid;
+                              t.mixin.Observable#addEvents" is deprecated.
+                              lockedGrid.addEvents({
+                                   itemClick: function() {
+                                       console.log('josh');
+                                   }
+                               });
+                               var cols = lockedGrid.columns;
+                               var count = 0;
+                               for (var i=0; i < cols.length; i++) {
+                                   var col = cols[i];
+                                   if (col.hidden === false || col.hidden === undefined) {
+                                       count = count + 1;
+                                   }
+                               }
                            },
                            scope: me
                        }
-                   },
+                   },*/
                    plugins: [
                        Ext.create("Sch.plugin.Lines", {
                            showHeaderElements : true,
@@ -674,7 +674,7 @@
             Ext.defer(function(){
                 me.expandAll(treePanel);
                 me.getMyPanel().setLoading(false);
-            }, 300);
+            }, 10);
         },
 
         onMinimizeClick: function(button, e, eOpts) {
@@ -684,7 +684,7 @@
             Ext.defer(function(){
                 me.collapseAll(treePanel);
                 me.getMyPanel().setLoading(false);
-            }, 300);
+            }, 10);
         },
 
         onPrintToPdfClick: function(button, e, eOpts) {
@@ -731,8 +731,8 @@
                 if(window.server.substr(window.server.length-1) !== '/'){
                     window.server += '/';
                 }
-              window.printServer = 'http://localhost:8999/'//
-                //dev:  window.printServer = window.server;
+                //dev:  window.printServer = 'http://localhost:8999/'//
+                window.printServer = window.server;
                 window.namespace = 'htmlToPdf/';
                 window.serverResources = window.printServer+'resources/';
                 //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
@@ -1180,8 +1180,17 @@
 
         changeGanttView: function(type) {
             var me = this;
+            var ganttViewStore = Ext.getStore('GanttViewStore');
             var ganttPanel = Ext.ComponentManager.get('ganttPanel');
             var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
+
+            if(typeof type === 'undefined'){
+                Ext.each(ganttViewStore.data.items,function(record){
+                    if(record.get('selected')){
+                        type = record.get('name');
+                    }
+                });
+            }
 
             var startRecordIndex = -1,
                 finishRecordIndex = -1,
@@ -1196,8 +1205,7 @@
 
             switch (type){
                 case 'Year':
-                    //finishDate
-                     finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    finishRecordIndex = ganttConfigStore.findExact('name','finish');
                     if (finishRecordIndex > -1) {
                         finishRecord = ganttConfigStore.getAt(finishRecordIndex);
                         finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :new Date(finishRecord.get('value').replace(/\D/ig,'-'));
@@ -1217,30 +1225,8 @@
                         startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('manyYears',new Date(startValue), new Date(finishValue));
-                    break;
-                case 'Year & Quarter':
-                    //finishDate
-                    finishRecordIndex = ganttConfigStore.findExact('name','finish');
-                    if (finishRecordIndex  > -1) {
-                        finishRecord = ganttConfigStore.getAt(finishRecordIndex);
-                        finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :new Date(finishRecord.get('value').replace(/\D/ig,'-'));
-                        //pad by a month to have extra space in view
-                        finishDatePad = new Date(finishDate);
-                        finishDatePad.setMonth(finishDatePad.getMonth()+20);
-                        finishValue = new Date(finishDatePad);
-                    }
-                    //startDate
-                    startRecordIndex = ganttConfigStore.findExact('name','start');
-                    if (startRecordIndex  > -1) {
-                        startRecord = ganttConfigStore.getAt(startRecordIndex);
-                        startDate = startRecord.get('value').length < 10 ? finishValue.toString() : new Date(startRecord.get('value').replace(/\D/ig,'-'));
-                        //pad by 30 days to have extra space in view
-                        startDatePad = new Date(startDate);
-                        startDatePad.setMonth(startDatePad.getMonth()-20);
-                        startValue = new Date(startDatePad);
-                    }
-                    ganttPanel.switchViewPreset('year',new Date(startValue), new Date(finishValue));
-                    break;
+                    ganttPanel.timeAxisViewModel.setForceFit(true);
+                break;
                 case 'Month & Year':
                     //finishDate
                     finishRecordIndex = ganttConfigStore.findExact('name','finish');
@@ -1263,6 +1249,7 @@
                         startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('monthAndYear',new Date(startValue), new Date(finishValue));
+                    ganttPanel.timeAxisViewModel.setForceFit(false);
                     break;
                 case 'Week & Month':
                     //finishDate
@@ -1286,6 +1273,7 @@
                         startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('weekAndMonth',new Date(startValue), new Date(finishValue));
+                    ganttPanel.timeAxisViewModel.setForceFit(false);
                     break;
                 case 'Week & Day':
                     //finishDate
@@ -1309,8 +1297,38 @@
                         startValue = new Date(startDatePad);
                     }
                     ganttPanel.switchViewPreset('weekAndDay',new Date(startValue), new Date(finishValue));
+                    ganttPanel.timeAxisViewModel.setForceFit(false);
+                    break;
+                default:
+                case 'Year & Quarter':
+                    //finishDate
+                    finishRecordIndex = ganttConfigStore.findExact('name','finish');
+                    if (finishRecordIndex  > -1) {
+                        finishRecord = ganttConfigStore.getAt(finishRecordIndex);
+                        finishDate = finishRecord.get('value').length < 10 ? new Date().toString() :new Date(finishRecord.get('value').replace(/\D/ig,'-'));
+                        //pad by a month to have extra space in view
+                        finishDatePad = new Date(finishDate);
+                        finishDatePad.setMonth(finishDatePad.getMonth()+20);
+                        finishValue = new Date(finishDatePad);
+                    }
+                    //startDate
+                    startRecordIndex = ganttConfigStore.findExact('name','start');
+                    if (startRecordIndex  > -1) {
+                        startRecord = ganttConfigStore.getAt(startRecordIndex);
+                        startDate = startRecord.get('value').length < 10 ? finishValue.toString() : new Date(startRecord.get('value').replace(/\D/ig,'-'));
+                        //pad by 30 days to have extra space in view
+                        startDatePad = new Date(startDate);
+                        startDatePad.setMonth(startDatePad.getMonth()-20);
+                        startValue = new Date(startDatePad);
+                    }
+                    ganttPanel.switchViewPreset('year',new Date(startValue), new Date(finishValue));
+                    ganttPanel.timeAxisViewModel.setForceFit(false);
                     break;
             }
+            //ganttPanel.timeAxisViewModel.setForceFit(true);
+           // ganttPanel.timeAxisViewModel.setAvailableWidth(ganttPanel.timeAxisViewModel.getAvailableWidth)
+            //ganttPanel.timeAxisViewModel.update()
+           // ganttPanel.timeAxisViewModel.fitToAvailableWidth()
         },
 
         updateStatusDate: function() {
