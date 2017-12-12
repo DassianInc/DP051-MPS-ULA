@@ -2448,7 +2448,7 @@ Ext.define('MyApp.view.MyPanel12', {
                 value: columnVariantName
             });
         }
-         var batch = {};
+        /* var batch = {};
         batch.proxy = ganttConfigStore.getProxy();
         batch.proxy.extraParams = {};
         batch.proxy.setExtraParam('columnVariant',columnVariantName);
@@ -2456,28 +2456,29 @@ Ext.define('MyApp.view.MyPanel12', {
         ganttConfigStore.load({
             batch: batch,
             callback: function() {
-                if (noPrompt === -1) {
-                    ganttConfigStore.add({
-                        name: 'noPrompt',
-                        value :''
-                    });
-                }
-
-             /*   if (!me.eventTrigger){
-                    // lazy instantiation of event trigger object
-                    me.eventTrigger = Ext.create('widget.eventtrigger');
-                }
-                me.eventTrigger.fireEvent('ganttConfig');//doFireEvent
-                me.openSettings1();
 
 
-                var main = MyApp.app.getMainController();
-                var ganttPanelCmp = Ext.getCmp('ganttPanel');
-                    ganttPanelCmp.lockedGrid.reconfigure(null, main.ganttColumns());
-                */
+             //  if (!me.eventTrigger){
+             //       // lazy instantiation of event trigger object
+             //       me.eventTrigger = Ext.create('widget.eventtrigger');
+             //   }
+             //   me.eventTrigger.fireEvent('ganttConfig');//doFireEvent
+             //   me.openSettings1();
+            //
+            //
+             //   var main = MyApp.app.getMainController();
+             //   var ganttPanelCmp = Ext.getCmp('ganttPanel');
+             //       ganttPanelCmp.lockedGrid.reconfigure(null, main.ganttColumns());
+             //
                 ganttPanel.setLoading(false);
             }
-        });
+        });*/
+        if (noPrompt === -1) {
+            ganttConfigStore.add({
+                name: 'noPrompt',
+                value :''
+            });
+        }
     },
 
     onColumn_variantAfterRender: function(component, eOpts) {
