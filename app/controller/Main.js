@@ -746,6 +746,7 @@
 
             });
         },
+
         onLaunch: function() {
             var me = this;
            var promise =  me.requestServer();
