@@ -731,7 +731,14 @@
                 if(window.server.substr(window.server.length-1) !== '/'){
                     window.server += '/';
                 }
-                //dev:  window.printServer = 'http://localhost:8999/'//
+                /**
+                 * ***************************************************************************
+                 * Use your own localhost here for window.printServer to access php api
+                 * dev:  window.printServer = 'http://localhost:8999/'
+                 * Comment out *********  window.printServer = window.server; ****************
+                 * ***************************************************************************
+                 */
+                
                 window.printServer = window.server;
                 window.namespace = 'htmlToPdf/';
                 window.serverResources = window.printServer+'resources/';
