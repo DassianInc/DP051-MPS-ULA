@@ -736,9 +736,10 @@
                  * Use your own localhost here for window.printServer to access php api
                  * dev:  window.printServer = 'http://localhost:8999/'
                  * Comment out *********  window.printServer = window.server; ****************
+                 * See SAP table z051ULA_md08 to reset the AWS server location ***************
                  * ***************************************************************************
                  */
-                
+
                 window.printServer = window.server;
                 window.namespace = 'htmlToPdf/';
                 window.serverResources = window.printServer+'resources/';
