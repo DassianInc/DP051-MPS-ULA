@@ -2469,7 +2469,11 @@ Ext.define('MyApp.view.MyPanel12', {
                     me.eventTrigger = Ext.create('widget.eventtrigger');
                 }
                 me.eventTrigger.fireEvent('ganttConfig');//doFireEvent
+                Ext.getStore('taskStore').load({
+                    action: 'read'
+                });
                 ganttPanel.setLoading(false);
+                me.openSettings1();
             }
         });
     },
@@ -2491,6 +2495,7 @@ Ext.define('MyApp.view.MyPanel12', {
             type: 'columnVariant',
             value: columnInit.toUpperCase()
         });
+
     },
 
     onSelection_variantSelect: function(combo, records, eOpts) {
