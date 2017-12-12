@@ -46,6 +46,7 @@ Temporary Items
 # General ignore files
 
 .idea/
+.idea/workspace.xml
 .sencha/
 ext/
 build/
