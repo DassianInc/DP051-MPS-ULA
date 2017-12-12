@@ -150,7 +150,7 @@
                 var ganttPanelCmp = Ext.getCmp('ganttPanel');
                 ganttPanelCmp.lockedGrid.reconfigure(null, me.ganttColumns());
 
-                var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+                /*var ganttPanel = Ext.ComponentManager.get('ganttPanel');
                 var lockedGrid = ganttPanel.lockedGrid;
                 //lockedGrid.addEvents({
                 //    itemClick: function() {
@@ -165,7 +165,7 @@
                         count++;
                     }
                    // console.log(count);
-                }
+                }*/
 
             } else {
                var tpl = me.getBodyTpl();

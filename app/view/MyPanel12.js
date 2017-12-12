@@ -580,14 +580,15 @@ Ext.define('MyApp.view.MyPanel12', {
                 batch: batch,
                 callback: function() {
                    Ext.suspendLayouts();
+                    ganttPanel.lockedGrid.reconfigure(null, main.ganttColumns());
                     taskStore.loadRecords([]);
                     taskStore.load({
                         callback: function(){
                             Ext.resumeLayouts(true);
-                            ganttConfigStore.add({
+                            /*ganttConfigStore.add({
                                 name: 'noPrompt',
                                 value:''
-                            });
+                            });*/
                             var recordCountButton = Ext.ComponentManager.get('recordCount');
                             var recordCount = taskStore.getCount();
 
@@ -2424,7 +2425,7 @@ Ext.define('MyApp.view.MyPanel12', {
         var check = passedObjectsStore.findExact('type','columnVariant');
         var noPrompt = ganttConfigStore.findExact('name','noPrompt');
 
-        if (checkObjectsStore > -1) {
+      /* if (checkObjectsStore > -1) {
             var remove = passedObjectsStore.findExact('type','columnVariant');
             passedObjectsStore.removeAt(remove);
             passedObjectsStore.add({
@@ -2436,21 +2437,18 @@ Ext.define('MyApp.view.MyPanel12', {
                 type: 'columnVariant',
                 number: columnVariantName
             });
-        }
-        if (checkConfigStore > -1) {
-            var remove = passedConfigStore.findExact('type','columnVariant');
-            passedConfigStore.removeAt(remove);
-            passedConfigStore.add({
-                type: 'columnVariant',
-                value: columnVariantName
-            });
+        }*/
+
+       if (checkConfigStore > -1) {
+           var passedConfigRecord = passedConfigStore.getAt(checkConfigStore);
+           passedConfigRecord.set('value',columnVariantName);
         } else {
-            passedConfigStore.add({
+           passedConfigStore.add({
                 type: 'columnVariant',
                 value: columnVariantName
             });
         }
-        var batch = {};
+         var batch = {};
         batch.proxy = ganttConfigStore.getProxy();
         batch.proxy.extraParams = {};
         batch.proxy.setExtraParam('columnVariant',columnVariantName);
@@ -2458,22 +2456,26 @@ Ext.define('MyApp.view.MyPanel12', {
         ganttConfigStore.load({
             batch: batch,
             callback: function() {
-                if (noPrompt > -1) {
+                if (noPrompt === -1) {
                     ganttConfigStore.add({
                         name: 'noPrompt',
                         value :''
                     });
                 }
-                if (!me.eventTrigger){
+
+             /*   if (!me.eventTrigger){
                     // lazy instantiation of event trigger object
                     me.eventTrigger = Ext.create('widget.eventtrigger');
                 }
                 me.eventTrigger.fireEvent('ganttConfig');//doFireEvent
-                Ext.getStore('taskStore').load({
-                    action: 'read'
-                });
-                ganttPanel.setLoading(false);
                 me.openSettings1();
+
+
+                var main = MyApp.app.getMainController();
+                var ganttPanelCmp = Ext.getCmp('ganttPanel');
+                    ganttPanelCmp.lockedGrid.reconfigure(null, main.ganttColumns());
+                */
+                ganttPanel.setLoading(false);
             }
         });
     },
