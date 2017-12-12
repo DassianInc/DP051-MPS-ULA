@@ -743,8 +743,7 @@
                 window.printServer = window.server;
                 window.namespace = 'htmlToPdf/';
                 window.serverResources = window.printServer+'resources/';
-                //window.server = window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+window.location.pathname;
-                //window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/'
+           
             });
         },
         onLaunch: function() {
