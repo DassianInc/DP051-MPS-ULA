@@ -799,12 +799,6 @@
                     action: 'read',
                     scope: me,
                     callback: function (){
-                        /** DEV
-                        GanttConfigStoreXml.getAt(GanttConfigStoreXml.findExact('name','text04')).set('value','Fab');
-                        GanttConfigStoreXml.getAt(GanttConfigStoreXml.findExact('name','text05')).set('value','S/T');
-                        GanttConfigStoreXml.getAt(GanttConfigStoreXml.findExact('name','text06')).set('value','FA');
-
-                        /** DEV **/
                         var myPanel = Ext.widget('mypanel');
                         var mainView = Ext.ComponentManager.get('mainView');
                         mainView.insert(0,myPanel);
