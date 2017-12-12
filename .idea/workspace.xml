@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9794019c-5fcc-4aa0-96f0-7ce532fd9dc5" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/controller/Main.js" afterPath="$PROJECT_DIR$/app/controller/Main.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/view/MyPanel12.js" afterPath="$PROJECT_DIR$/app/view/MyPanel12.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
     </list>
     <ignored path="MPS-PDN-ULA.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -23,11 +22,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file leaf-file-name="Main.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Main.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/controller/Main.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="342">
-              <caret line="796" column="34" lean-forward="true" selection-start-line="796" selection-start-column="34" selection-end-line="796" selection-end-column="34" />
+            <state relative-caret-position="320">
+              <caret line="796" column="34" lean-forward="false" selection-start-line="796" selection-start-column="34" selection-end-line="796" selection-end-column="34" />
               <folding>
                 <element signature="e#644#1068#0" expanded="false" />
                 <element signature="e#2018#2188#0" expanded="false" />
@@ -169,6 +168,26 @@
                 <marker date="1513089131589" expanded="true" signature="145551:145608" ph="..." />
                 <marker date="1513089131589" expanded="true" signature="145705:145765" ph="..." />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="index.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/index.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="154">
+              <caret line="7" column="24" lean-forward="false" selection-start-line="7" selection-start-column="24" selection-end-line="7" selection-end-column="24" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-660">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -685,8 +704,8 @@
       <find>killExport</find>
       <find>onColumn_variantAfterRender</find>
       <find>onColumn_variantSelect</find>
-      <find>taskStore</find>
       <find>openSettings1</find>
+      <find>taskStore</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -745,12 +764,12 @@
         <option value="$PROJECT_DIR$/gantt/gntPlugin.js" />
         <option value="$PROJECT_DIR$/../htmlToPdf/buildPDF.php" />
         <option value="$PROJECT_DIR$/readme.md" />
-        <option value="$PROJECT_DIR$/index.html" />
         <option value="$PROJECT_DIR$/app/store/GanttViewStore.js" />
         <option value="$PROJECT_DIR$/gantt/SchExportPluginExtend.js" />
         <option value="$PROJECT_DIR$/build/production/MyApp/index.html" />
         <option value="$PROJECT_DIR$/app/controller/Main.js" />
         <option value="$PROJECT_DIR$/app/view/MyPanel12.js" />
+        <option value="$PROJECT_DIR$/index.html" />
       </list>
     </option>
   </component>
@@ -993,12 +1012,12 @@
       <workItem from="1510584496162" duration="31935000" />
       <workItem from="1510761039964" duration="1059000" />
       <workItem from="1510776670831" duration="1019000" />
-      <workItem from="1513017182036" duration="2660000" />
+      <workItem from="1513017182036" duration="3051000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="501948000" />
+    <option name="totallyTimeSpent" value="502339000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1085,7 +1104,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/resources/images/ula-logo-2.jpg" />
     <entry file="file://$PROJECT_DIR$/resources/images/ula-logo.png" />
     <entry file="file://$PROJECT_DIR$/resources/images/ULA_Blue.jpg" />
     <entry file="file://$PROJECT_DIR$/../htmlToPdf/output/html/1508957257024/120.html">
@@ -1237,13 +1255,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3938">
-          <caret line="179" column="10" lean-forward="false" selection-start-line="179" selection-start-column="10" selection-end-line="179" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/bootstrap.css">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="198">
@@ -1303,13 +1314,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="528">
           <caret line="35" column="12" lean-forward="false" selection-start-line="35" selection-start-column="12" selection-end-line="35" selection-end-column="69" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="154">
-          <caret line="7" column="23" lean-forward="false" selection-start-line="7" selection-start-column="23" selection-end-line="7" selection-end-column="23" />
         </state>
       </provider>
     </entry>
@@ -1820,8 +1824,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/controller/Main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="796" column="34" lean-forward="true" selection-start-line="796" selection-start-column="34" selection-end-line="796" selection-end-column="34" />
+        <state relative-caret-position="320">
+          <caret line="796" column="34" lean-forward="false" selection-start-line="796" selection-start-column="34" selection-end-line="796" selection-end-column="34" />
           <folding>
             <element signature="e#644#1068#0" expanded="false" />
             <element signature="e#2018#2188#0" expanded="false" />
@@ -1963,6 +1967,30 @@
             <marker date="1513089131589" expanded="true" signature="145551:145608" ph="..." />
             <marker date="1513089131589" expanded="true" signature="145705:145765" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="790">
+          <caret line="179" column="10" lean-forward="false" selection-start-line="179" selection-start-column="10" selection-end-line="179" selection-end-column="10" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="154">
+          <caret line="7" column="24" lean-forward="false" selection-start-line="7" selection-start-column="24" selection-end-line="7" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-660">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
