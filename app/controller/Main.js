@@ -425,6 +425,7 @@
                                        progressBarStyle: progressBarStyle,
                                        cls: cls
                                    };
+                               case 'euTracker':
                                case 'green':
                                    style = Ext.String.format('background-color: #{0};border-color:#{1}', '80B280', '80B280');
                                    progressBarStyle = Ext.String.format('background-color: #{0};border-color:#{1}', '000000', '000000');
