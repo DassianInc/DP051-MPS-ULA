@@ -285,6 +285,10 @@
                                var mth = rightLabel.getUTCMonth()+1;
                                var day = rightLabel.getUTCDate();
                                var yr = rightLabel.getUTCFullYear();
+                               /**
+                                * date: 2017/12/15 CH
+                                * This is commented as it caused 02-01-2017 to return 01-31-2017
+                                * probably this was used to balence the adding of a day to the endDate in SAP which has been removed
                                if (day-1===0) {
                                    switch (mth) {
                                        case 1:
@@ -336,7 +340,8 @@
                                            day = '30';
                                            break;
                                    }
-                               } /*else {
+                               }
+                               else {
                                     day = day-1;
                                 }*/
                                rightLabel = mth+'/'+day+'/'+yr;
