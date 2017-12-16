@@ -973,7 +973,7 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
             startIndex && me.initFirstExportedRowOffset(startIndex);
 
             setTimeout(function () {
-                me.collectRowsStep(null, startIndex, callback, scope, config);
+                me.collectRowsStep(me.collectRowsStep, startIndex, callback, scope, config);
             }, 1);
         }
     },
@@ -1026,13 +1026,82 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
             index++;
         }
 
-        var totalRows = this.exportConfig.rowsRange != null && this.exportConfig.rowsRange[1] < count ? this.exportConfig.rowsRange[1]+1 : count;
-        startIndex === 0 && me.fireEvent('collectrows', me, startIndex, index, totalRows);
 
-       var promiseIteration = callback.call(me, me.lockedRows, me.normalRows,startIndex);
+        me.fireEvent('collectrows', me, startIndex, index, count);
+
+
+        // if we are in the buffered mode (and not collected all the requested rows yet)
+        // we need to scroll further
+        if (!collected && me.isBuffered()) {
+
+            if (endIndex + 1 < count) {
+                me.callAsync(function () {
+                    me.scrollTo(endIndex + 1, function () {
+                        next(endIndex + 1, callback, scope, config);
+                    });
+                });
+
+            } else {
+                me.callAsync(function () {
+                    me.scrollTo(0, function () {
+                        callback.call(scope || me, me.lockedRows, me.normalRows);
+                    });
+                });
+            }
+
+            // if we already collected all the needed rows - invoke the final step
+        } else {
+            callback.call(scope || me, me.lockedRows, me.normalRows);
+        }
+    },
+
+    ___collectRowsStep : function (next, startIndex, callback, scope, config) {
+        var me              = this,
+            endIndex        = me.normalView.all.endIndex,
+            count           = me.component.store.getCount(),
+            rowsRange       = config.rowsRange,
+            normalRows      = me.normalView.all.slice(startIndex),
+            lockedRows      = me.lockedView.all.slice(startIndex),
+            i               = 0;
+
+        var lastIndex;
+
+        // If we collect only visible rows
+        if (rowsRange) {
+            lastIndex = rowsRange[1];
+        }else{
+            lastIndex = count;//lastRowIdx
+        }
+
+        var collected = false;
+
+        for (var index = startIndex; i < normalRows.length; i++) {
+            if (index > lastIndex) {
+                collected = true;
+                break;
+            }
+
+            lockedRows[i] && me.collectLockedRow(lockedRows[i], index, config);
+            me.collectNormalRow(normalRows[i], index, config);
+
+            index++;
+        }
+
+        var totalRows = this.exportConfig.rowsRange != null && this.exportConfig.rowsRange[1] < count ? this.exportConfig.rowsRange[1]+1 : count;
+        me.fireEvent('collectrows', me, startIndex, index, totalRows);
+
+       var promiseIteration = callback.call(me, me.lockedRows, me.normalRows,startIndex,lastIndex);
 
         promiseIteration.then(function(currentIndex){
-            if (!collected && me.isBuffered()) {
+
+            if (endIndex + 1 < lastIndex && me.isBuffered()) {
+                me.scrollTo(endIndex + 1, function () {
+                    next(currentIndex, callback, scope, config);
+                });
+            } else {
+                callback.call(scope || me, me.lockedRows, me.normalRows,currentIndex,endIndex + 1);
+            }
+            /*if (!collected && me.isBuffered()) {
 
                 if (endIndex + 1 < count) {
                   //  me.callAsync(function () {
@@ -1043,17 +1112,17 @@ Ext.define('DSch.plugin.exporter.AbstractExporter', {
 
                 } else {
                     callback.call(scope || me, me.lockedRows, me.normalRows,endIndex + 1);
-                    /* me.callAsync(function () {
-                         me.scrollTo(0, function () {
-                             callback.call(scope || me, me.lockedRows, me.normalRows);
-                         });
-                     });*/
+                    // me.callAsync(function () {
+                    //     me.scrollTo(0, function () {
+                    //         callback.call(scope || me, me.lockedRows, me.normalRows);
+                    //     });
+                    // });
                 }
 
                 // if we already collected all the needed rows - invoke the final step
             }else {
                 callback.call(scope || me, me.lockedRows, me.normalRows,endIndex + 1);
-           }
+           }*/
         });
         // if we are in the buffered mode (and not collected all the requested rows yet)
         // we need to scroll further
@@ -2189,50 +2258,50 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
      * @param rowIndex
      * @returns {*}
      */
-    onRowsCollected : function (lockedRows, normalRows,rowIndex) {
+    ___onRowsCollected : function (lockedRows, normalRows,rowIndex,lastRowIdx) {
         var me          = this;
         if(window.appState.killExport){
             me.onPagesExtracted();
         }
         me.lastWholePageIndex = typeof me.lastWholePageIndex === 'undefined' ? rowIndex : me.lastWholePageIndex;
         return new Promise(function(resolve,reject){
-           var obj = iteratePage(me.lastWholePageIndex < rowIndex && rowIndex !== normalRows.length ? me.lastWholePageIndex : rowIndex);
+           var obj = iteratePage(me.lastWholePageIndex < rowIndex && rowIndex !== normalRows.length ? me.lastWholePageIndex : rowIndex,lastRowIdx);
             resolve(obj.index);
         });
-        function iteratePage(rIndex){
+        function iteratePage(rIndex,lastRowIdx){
             // me.iterateAsync(function (next, rowIndex) {
-            if (rIndex === normalRows.length) {
-                var checkForRemainder = null;
-                /** Check if any items are awaiting to be copied to page **/
-                Ext.each(normalRows,function(value,index){
-                    if(value !== null && checkForRemainder === null){
-                        checkForRemainder = index;
-                    }
-                });
-                if(checkForRemainder != null){
-                /** Recurse over until all items have been successfully pulled and copied to page **/
-                  var intervalId =  setInterval(function(){
-                        var q =  processPage(checkForRemainder);
-                        if(q.index !== normalRows.length){
-                            rIndex = checkForRemainder = q.index;
-
-                        }else{
-                            clearInterval(intervalId);
-                /** When complete trigger final step to build pdf **/
-                            me.onPagesExtracted();
-                        }
-                    },100);
-
-                }else{
-                    me.onPagesExtracted();
-                }
+            if (rIndex >= lastRowIdx) {
+                //var checkForRemainder = null;
+                //// Check if any items are awaiting to be copied to page
+                //Ext.each(normalRows,function(value,index){
+                //    if(value !== null && checkForRemainder === null){
+                //        checkForRemainder = index;
+                //    }
+                //});
+                //if(checkForRemainder != null){
+                //// Recurse over until all items have been successfully pulled and copied to page
+                //  var intervalId =  setInterval(function(){
+                //        var q =  processPage(checkForRemainder);
+                //        if(q.index !== normalRows.length){
+                //            rIndex = checkForRemainder = q.index;
+                //
+                //        }else{
+                //            clearInterval(intervalId);
+                //// When complete trigger final step to build pdf
+                //            me.onPagesExtracted();
+                //        }
+                //    },100);
+                //
+                //}else{
+                   me.onPagesExtracted();
+                //}
 
                 return {
                     hasRemainder : false,
                     index:rIndex
-                };;
+                };
             }
-            /** Should there not be enough rows to process a full page return out and wait for more **/
+            /** Should there not be enough rows to process a full page return out and wait for more
             if(Ext.isDefined(rIndex) && Ext.isDefined(me.maxRows)){
                 if(!(((lockedRows.length-1) - rIndex) > me.maxRows)) {
                     return {
@@ -2240,14 +2309,14 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
                         index:rIndex
                     };
                 }
-            }
+            }**/
             /** Having enough to process a page, we can begin recursivly extracting all until there is not enough
              *  Then process will return index of last index and release promise on promise "promiseIteration"
              * **/
             var p = processPage(rIndex)
-            if(p.hasRemainder){
+            /*if(p.hasRemainder){
                 p = iteratePage(p.index);
-            }
+            }*/
             return p;
             //next( index );
 
@@ -2257,6 +2326,7 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
         function processPage(rIndex){
             var index       = rIndex,
                 spaceLeft   = me.printHeight,
+                len         = lockedRows.length,
                 rowsHeight  = 0,
                 lockeds     = [],
                 normals     = [],
@@ -2265,44 +2335,49 @@ Ext.define('DSch.plugin.exporter.MultiPageVertical', {
                 locked;
 
             me.startPage();
-            var captureMaxRows = rIndex === 0;
+            //var captureMaxRows = rIndex === 0;
 
-            while (!newPage && index < normalRows.length) {
+            //while (!newPage && index < normalRows.length) {
+            /*for(var i =0;i<normalRows.length;i++){
 
-                normal      = normalRows[index];
-                locked      = lockedRows[index];
+                normal      = normalRows[i];
+                locked      = lockedRows[i];
                 spaceLeft   -= normal.height;
 
                 if (spaceLeft > 0) {
                     rowsHeight  += normal.height;
                     locked && lockeds.push(locked);
                     normals.push(normal);
-                    normalRows[index] = null;//memory management
-                    lockedRows[index] = null;//memory management
+                    //normalRows[index] = null;//memory management
+                   // lockedRows[index] = null;//memory management
                     index++;
                 }
                 else {
                     newPage = true;
+                    break;
                 }
-
+            }*/
+            if(!Ext.isDefined(me.maxRows)){
+                me.maxRows = lockedRows.length;
             }
-            if(captureMaxRows){
-                me.maxRows = index;
-            }
-
-            me.fillGrids(lockeds, normals);
+            index += lockedRows.length -1
+            rowsHeight = spaceLeft;
+            me.fillGrids(lockedRows.slice(0), normalRows.slice(0));
+            //me.fillGrids(lockeds, normals);
             me.commitPage({ rowIndex : index, rowsHeight : rowsHeight });
             me.secondaryCanvasOffset -= rowsHeight;
             me.lastWholePageIndex = index;
+            lockedRows = [];
+            normalRows = [];
             return {
-                hasRemainder : ((lockedRows.length-1) - index) > me.maxRows,
+                hasRemainder : ((len) - index) > me.maxRows,
                 index:index
             };
         }
     },
 
 
-    __onRowsCollected : function (lockedRows, normalRows) {
+    onRowsCollected : function (lockedRows, normalRows) {
         var me          = this;
 
         me.iterateAsync(function (next, rowIndex) {
@@ -3436,9 +3511,11 @@ Ext.define('DSch.plugin.Export', {
             setTimeout(function() {
                 //window.open(result.url, 'ExportedPanel');
                 Ext.MessageBox.show({
-                         title:'Download.',
-                         msg: '<a target="_blank" href="'+result.url+'">Click here to download</a>',
-                         buttons: Ext.Msg.OK,
+                         title:'',
+                         msg: '<a target="_blank" href="'+result.url+'">' +
+                         '<button class="btn btn-primary btn-block btn-sm">Download</button>' +
+                         '</a>',
+                         buttons: Ext.Msg.CANCEL,
                          icon: Ext.Msg.INFO
                     });
             }, 0);
@@ -3510,7 +3587,7 @@ Ext.define('DSch.plugin.Export', {
 
                 Ext.apply(ajaxConfig, this.getAjaxConfig(ajaxConfig));
 
-                if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal){
+                if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal && me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.processGroupsCount){
                     Ext.Ajax.request(ajaxConfig);
                     Ext.toast('Generating PDF', 'Please Wait', 't');
                     delete me.pdfPostTotals;
