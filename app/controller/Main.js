@@ -237,49 +237,17 @@
                        renderer : function (value, record){
                            var color = record.get('color');
                            var depth = record.getDepth();
-                           if (color == 'red' && depth < 3) {
+                           if (color === 'red' && depth < 3) {
                                var rightLabel = record.get('Note');
                                return rightLabel;
-                           } if (color == 'lightBlue') {
-                              /* var durationRecordIndex = ganttConfigStore.findExact('value','Duration');
-                               if(durationRecordIndex != -1){
-                                   var durationRecord = ganttConfigStore.getAt(durationRecordIndex);
-                                   var duration = Ext.isDefined(record.get(durationRecord.get('name'))) ? Number(record.get(durationRecord.get('name'))) : 0;//example: text03 = Duration
-                               }else{
-                                   duration = '';
-                               }
-                               if(duration === ''){
-                                   duration = record.get('smDuration');
-                               }*/
+                           } if (color === 'lightBlue') {
                               var duration = record.get('smDuration');
-                               return isNaN(duration) || Ext.isEmpty(duration) ? 0+' days' : (Number(duration) === 1 ? Number(duration) +' day' : Number(duration)+' days');
-                               /* rightLabel = 0;
-                                if(record.get('StartDate') instanceof Date && record.get('EndDate') instanceof Date){
-                                    var diff =  (+record.get('EndDate')) - (+record.get('StartDate'));
-                                    var day = 86400000;
-                                    var days = day > Math.abs(diff) ? 0 : Math.abs(diff) / day;
-                                    rightLabel = days <= 1 ? 0 : days -1 ;
-                                }else{
-                                    rightLabel = record.get('smDuration');
-                                    rightLabel = Math.round(rightLabel);
-                                }
-                                return Math.floor(rightLabel)+' days';*/
+                               return Ext.isEmpty(duration) || isNaN(duration) ? 0+' days' : (Number(duration) === 1 ? Number(duration) +' day' : Number(duration)+' days');
                            } else {
 
-                               /*var endDateRecordIndex = ganttConfigStore.findExact('value','Finish');
-                               if(endDateRecordIndex != -1){
-                                   var endDateRecord = ganttConfigStore.getAt(endDateRecordIndex);
-                                   var endDate =  record.get(endDateRecord.get('name'));//example: text02 = Finish or endDate
-                               }else{
-                                   endDate = '';
-                               }
-
-                               if(!Ext.isDefined(endDate) || endDate === ''){
-                                   endDate = record.get('EndDate');
-                               }*/
                                var endDate = Ext.isEmpty(record.get('EndDate')) ? new Date(): record.get('EndDate');
-                               rightLabel = endDate instanceof Date ? endDate : Ext.isNull(endDate) ? 'Invalid Date' : new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
-                               if(rightLabel == 'Invalid Date'){
+                               var rightLabel = endDate instanceof Date ? endDate : Ext.isNull(endDate) ? 'Invalid Date' : new Date(endDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('EndDate');
+                               if(rightLabel === 'Invalid Date'){
                                    return endDate;
                                }
                                var mth = rightLabel.getUTCMonth()+1;
@@ -353,16 +321,7 @@
                        renderer : function (value, record){
                            var color = record.get('color');
                            if (color !=='lightBlue'){
-                               /*var startDateRecordIndex = ganttConfigStore.findExact('value','Start');
-                               if(startDateRecordIndex != -1){
-                                   var startDateRecord = ganttConfigStore.getAt(startDateRecordIndex);
-                                   var startDate =  record.get(startDateRecord.get('name'));//example: text02 = Finish or endDate
-                               }else{
-                                   startDate = '';
-                               }
-                               if(!Ext.isDefined(startDate) || startDate === ''){
-                                   startDate = record.get('StartDate');
-                               }*/
+
                                var startDate = Ext.isEmpty(record.get('StartDate')) ? new Date() : record.get('StartDate');
                                var leftLabel =  startDate instanceof Date ? startDate : Ext.isNull(startDate) ? 'Invalid Date' : new Date(startDate.replace(/\D/ig,'-')+'T00:00:00');//record.get('StartDate');
                                if(leftLabel == 'Invalid Date'){
