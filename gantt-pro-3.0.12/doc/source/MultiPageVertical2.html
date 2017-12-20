@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-exporter-MultiPageVertical'>/**
+</span> @class Sch.plugin.exporter.MultiPageVertical
+ @extends Sch.plugin.exporter.AbstractExporter
+
+  This class extracts pages in a vertical order. It fits all locked columns and the timeaxis on a single page and will generate
+  new pages vertically down for the rows.
+
+  The exporterId of this exporter is `multipagevertical`
+
+  To adjust column widths for specific export cases the function {@link #fitLockedColumnWidth} can be overridden.
+
+*/
+
+Ext.define('Sch.plugin.exporter.MultiPageVertical', {
+
+    extend                : 'Sch.plugin.exporter.AbstractExporter',
+
+<span id='Sch-plugin-exporter-MultiPageVertical-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+     - name    : 'Multi pages (vertically)'
+     */
+
+    config                : {
+<span id='Sch-plugin-exporter-MultiPageVertical-cfg-exporterId'>        exporterId : 'multipagevertical'
+</span>    },
+
+
+<span id='Sch-plugin-exporter-MultiPageVertical-property-minRowHeight'>    minRowHeight          : 20,
+</span>
+<span id='Sch-plugin-exporter-MultiPageVertical-property-minAverageColumnWidth'>    minAverageColumnWidth : 100,
+</span>
+<span id='Sch-plugin-exporter-MultiPageVertical-property-visibleColumns'>    visibleColumns        : null,
+</span>
+<span id='Sch-plugin-exporter-MultiPageVertical-property-visibleColumnsWidth'>    visibleColumnsWidth   : 0,
+</span>
+<span id='Sch-plugin-exporter-MultiPageVertical-method-onRowsCollected'>    onRowsCollected : function (lockedRows, normalRows) {
+</span>        var me          = this;
+
+        me.iterateAsync(function (next, rowIndex) {
+
+            if (rowIndex === normalRows.length) {
+                me.onPagesExtracted();
+                return;
+            }
+
+            var index       = rowIndex,
+                spaceLeft   = me.printHeight,
+                rowsHeight  = 0,
+                lockeds     = [],
+                normals     = [],
+                newPage     = false,
+                normal,
+                locked;
+
+            me.startPage();
+
+            while (!newPage &amp;&amp; index &lt; normalRows.length) {
+
+                normal      = normalRows[index];
+                locked      = lockedRows[index];
+                spaceLeft   -= normal.height;
+
+                if (spaceLeft &gt; 0) {
+                    rowsHeight  += normal.height;
+                    locked &amp;&amp; lockeds.push(locked);
+                    normals.push(normal);
+                    index++;
+                }
+                else {
+                    newPage = true;
+                }
+            }
+
+            me.fillGrids(lockeds, normals);
+            me.commitPage({ rowIndex : index, rowsHeight : rowsHeight });
+            me.secondaryCanvasOffset -= rowsHeight;
+
+            next( index );
+
+        }, me, 0);
+    },
+
+
+<span id='Sch-plugin-exporter-MultiPageVertical-method-startPage'>    startPage : function () {
+</span>        var me      = this;
+        me.callParent(arguments);
+
+        var view    = me.getCurrentPage().select('#' + me.lockedView.id).first();
+        view.dom.style.overflow = 'visible';
+    },
+
+
+<span id='Sch-plugin-exporter-MultiPageVertical-method-getExpectedNumberOfPages'>    getExpectedNumberOfPages : function () {
+</span>        return Math.ceil(this.normalRowsHeight / this.printHeight);
+    },
+
+
+<span id='Sch-plugin-exporter-MultiPageVertical-method-prepareColumns'>    prepareColumns : function (columns) {
+</span>
+       this.callParent(arguments);
+
+        var me                  = this,
+            visibleColumns      = me.visibleColumns = [];
+
+        me.visibleColumnsWidth  = 0;
+
+        me.lockedGrid.headerCt.items.each(function (column) {
+            if (!column.hidden) {
+                visibleColumns.push({
+                    column  : column,
+                    width   : column.getWidth()
+                });
+
+                me.visibleColumnsWidth += column.getWidth();
+            }
+        });
+    },
+
+
+<span id='Sch-plugin-exporter-MultiPageVertical-method-fitComponentIntoPage'>    fitComponentIntoPage : function () {
+</span>        var me              = this,
+            component       = me.getComponent(),
+            view            = component.getSchedulingView(),
+            normalGrid      = component.normalGrid,
+            lockedGrid      = component.lockedGrid,
+            totalWidth      = me.getTotalWidth(),
+            ticks           = me.ticks,
+            timeColumnWidth = me.timeColumnWidth || view.timeAxisViewModel.getTickWidth();
+
+        var lockedWidth     = Math.floor((me.visibleColumnsWidth / totalWidth) * me.paperWidth);
+
+        //correct lockedcolumn width if it is too small
+        var visibleColumnCount = me.visibleColumns.length,
+            preferedLockedWidth = visibleColumnCount * me.minAverageColumnWidth;
+
+        //preferred locked width can never take more than half of the page
+        preferedLockedWidth = preferedLockedWidth &gt; me.paperWidth / 2 ? Math.floor(me.paperWidth / 2) : preferedLockedWidth;
+        //if preferred width is wider than current locked width, then use preferred width
+        lockedWidth = preferedLockedWidth &gt; lockedWidth ? preferedLockedWidth : lockedWidth;
+
+        var normalWidth = me.paperWidth - lockedWidth;
+
+        var tickWidth   = normalWidth / ticks.length,
+            rowHeight   = (tickWidth / timeColumnWidth) * me.getRowHeight();
+
+        me.view.setRowHeight( rowHeight &lt; me.minRowHeight ? me.minRowHeight : rowHeight );
+
+        component.setWidth(me.paperWidth);
+        normalGrid.setWidth(normalWidth);
+        lockedGrid.setWidth(lockedWidth);
+        //spread lockedcolums over the available width
+        me.fitLockedColumnWidth(lockedWidth);
+
+        component.setTimeColumnWidth(tickWidth);
+    },
+
+
+<span id='Sch-plugin-exporter-MultiPageVertical-method-fitLockedColumnWidth'>    /**
+</span>     * Function that fits locked columns based on the available width.
+     *
+     * @param {String} totalWidth int indicating the totalWidth available for the locked columns.
+     */
+
+    fitLockedColumnWidth : function (totalWidth) {
+        var me = this,
+            visibleColumns = this.visibleColumns;
+
+        //Keep ratio
+        var ratio = totalWidth / me.visibleColumnsWidth;
+
+        if (visibleColumns.length) {
+
+            for (var i = 0; i &lt; visibleColumns.length; i++) {
+
+                var column = visibleColumns[i],
+                    currentWidth = column.width,
+                    width = Math.floor(currentWidth * ratio);
+
+                column.column.setWidth(width);
+            }
+
+            this._restoreColumnWidth = true;
+        }
+    },
+
+
+<span id='Sch-plugin-exporter-MultiPageVertical-method-restoreComponentState'>    restoreComponentState : function (component) {
+</span>
+        var me      = this;
+
+        component   = component || me.getComponent();
+
+        // restore original columns width (since we fit them while exporting)
+        if (this._restoreColumnWidth) {
+
+            var visibleColumns = this.visibleColumns;
+
+            for (var i = 0; i &lt; visibleColumns.length; i++) {
+                var cWrap = visibleColumns[i];
+                cWrap.column.setWidth(cWrap.width);
+            }
+        }
+
+        this.callParent(arguments);
+
+    }
+
+});</pre>
+</body>
+</html>

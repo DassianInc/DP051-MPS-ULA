@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-SchedulingMode'>/**
+</span>
+A specialized field, allowing a user to also specify task scheduling mode value.
+This class inherits from the standard Ext JS &quot;combo&quot; field, so any usual `Ext.form.field.ComboBox` configs can be used.
+
+The value of this field can be one of the following strings: `Normal`, `FixedDuration`,
+`EffortDriven`, `DynamicAssignment`.
+
+@class Gnt.field.SchedulingMode
+@extends Ext.form.field.ComboBox
+
+*/
+Ext.define('Gnt.field.SchedulingMode', {
+    extend                  : 'Ext.form.field.ComboBox',
+
+    mixins                  : ['Gnt.field.mixin.TaskField', 'Gnt.mixin.Localizable'],
+
+    alias                   : 'widget.schedulingmodefield',
+
+    alternateClassName      : 'Gnt.widget.SchedulingmodeField',
+
+<span id='Gnt-field-SchedulingMode-property-taskField'>    taskField               : 'schedulingModeField',
+</span><span id='Gnt-field-SchedulingMode-property-setTaskValueMethod'>    setTaskValueMethod      : 'setSchedulingMode',
+</span><span id='Gnt-field-SchedulingMode-property-getTaskValueMethod'>    getTaskValueMethod      : 'getSchedulingMode',
+</span>
+<span id='Gnt-field-SchedulingMode-cfg-pickerAlign'>    /**
+</span>     * @cfg {String} pickerAlign The align for combo-box's picker.
+     */
+    pickerAlign             : 'tl-bl?',
+
+<span id='Gnt-field-SchedulingMode-cfg-matchFieldWidth'>    /**
+</span>     * @cfg {Boolean} matchFieldWidth Whether the picker dropdown's width should be explicitly set to match the width of the field. Defaults to true.
+     */
+    matchFieldWidth         : true,
+
+<span id='Gnt-field-SchedulingMode-property-editable'>    editable                : false,
+</span>
+<span id='Gnt-field-SchedulingMode-property-forceSelection'>    forceSelection          : true,
+</span>
+<span id='Gnt-field-SchedulingMode-property-triggerAction'>    triggerAction           : 'all',
+</span>
+<span id='Gnt-field-SchedulingMode-method-constructor'>    constructor : function (config) {
+</span>        config  = config || {};
+
+        if (!config.store) this.initStore(config);
+        this.callParent([ config ]);
+        this.on('change', this.onFieldChange, this);
+    },
+
+<span id='Gnt-field-SchedulingMode-method-initStore'>    initStore : function (config) {
+</span>        var me = this;
+
+        config.store = me.getDefaultSchedulingModes();
+    },
+
+<span id='Gnt-field-SchedulingMode-method-getDefaultSchedulingModes'>    getDefaultSchedulingModes : function () {
+</span>        var me = this;
+
+        return [
+            [ 'Normal',             me.L('Normal') ],
+            [ 'FixedDuration',      me.L('FixedDuration') ],
+            [ 'EffortDriven',       me.L('EffortDriven') ],
+            [ 'DynamicAssignment',  me.L('DynamicAssignment') ]
+        ];
+    },
+
+<span id='Gnt-field-SchedulingMode-method-valueToVisible'>    // will be used in the column's renderer
+</span>    valueToVisible : function (value, task) {
+        var me              = this,
+            displayTplData  = [];
+
+        var record = this.findRecordByValue(value);
+
+        if (record) {
+            displayTplData.push(record.data);
+        } else if (Ext.isDefined(me.valueNotFoundText)) {
+            displayTplData.push(me.valueNotFoundText);
+        }
+
+        return me.displayTpl.apply(displayTplData);
+    },
+
+<span id='Gnt-field-SchedulingMode-method-getValue'>    getValue : function () {
+</span>        return this.value;
+    },
+
+<span id='Gnt-field-SchedulingMode-method-onFieldChange'>    onFieldChange : function (value) {
+</span>        if (this.instantUpdate &amp;&amp; !this.getSuppressTaskUpdate() &amp;&amp; this.task &amp;&amp; this.value) {
+            // apply changes to task
+            this.applyChanges();
+        }
+    }
+
+});
+</pre>
+</body>
+</html>

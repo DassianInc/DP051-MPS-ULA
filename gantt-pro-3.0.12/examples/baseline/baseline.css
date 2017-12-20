@@ -1,0 +1,24 @@
+.sch-gantt-item,
+.sch-gantt-progress-bar
+{
+    -moz-transition-property: height, top;
+    -moz-transition-duration: 0.4s;
+    -webkit-transition-property: height, top;
+    -webkit-transition-duration: 0.4s;
+    -ms-transition-property:  height, top;
+    -ms-transition-duration: 0.4s;
+    transition-property: height, top;
+    transition-duration: 0.4s;
+}
+
+.sch-gantt-milestone-diamond
+{
+    -moz-transition-property: height, border-left-width, width, top;
+    -moz-transition-duration: 0.4s;
+    -webkit-transition-property: height, border-left-width, width, top;
+    -webkit-transition-duration: 0.4s;
+    -ms-transition-property:  height, border-left-width, width, top;
+    -ms-transition-duration: 0.4s;
+    transition-property: height, border-left-width, width, top;
+    transition-duration: 0.4s;
+}

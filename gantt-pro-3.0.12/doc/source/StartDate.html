@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-StartDate'>/**
+</span>
+@class Gnt.field.StartDate
+@extends Gnt.field.Date
+
+A specialized field for editing the task start date value. This class inherits from the `Ext.form.field.Date` field
+so any of its configuration options can be used. You can find this field in {@link Gnt.widget.TaskForm}
+and in {@link Gnt.column.StartDate} but you can use it in your own components as well (see &quot;Using field standalone&quot; below).
+
+This field requires to be bound to {@link Gnt.model.Task task} instance, which is used for date value processing
+(calendars, holidays etc).
+
+#Task interacting
+
+By default field instantly applies all changes to the bound task. This can be turned off with the {@link #instantUpdate} option.
+
+#Using field standalone
+
+To use this field standalone you have to provide {@link Gnt.model.Task task} instance to it. You can make it by two ways:
+
+ - Set the {@link #task} configuration option at field constructing step. Like this:
+
+        var startDateField = Ext.create('Gnt.field.StartDate', {
+            task : someTask
+        });
+
+ - Or by calling {@link #setTask} method after field was created. Like this:
+
+        startDateField.setTask(someTask);
+
+* **Note:** If task does not belong to any {@link Gnt.data.TaskStore} you also **have to** specify {@link #taskStore} config option for this field otherwise it won't work:
+
+        // some task not inserted in the task store yet
+        var someTask    = new Gnt.model.Task({ ... })
+
+        var startDateField = Ext.create('Gnt.field.StartDate', {
+            task        : someTask,
+            // need to provide a task store instance in this case
+            taskStore   : taskStore
+        });
+
+* **Note**, that value displayed in the field can be different from the value in the task model when editing milestones.
+Please refer to {@link #adjustMilestones} for details.
+
+*/
+Ext.define('Gnt.field.StartDate', {
+    extend              : 'Gnt.field.Date',
+
+    alias               : 'widget.startdatefield',
+
+<span id='Gnt-field-StartDate-cfg-keepDuration'>    keepDuration        : true,
+</span>
+<span id='Gnt-field-StartDate-property-taskField'>    taskField           : 'startDateField',
+</span><span id='Gnt-field-StartDate-property-getTaskValueMethod'>    getTaskValueMethod  : 'getStartDate',
+</span><span id='Gnt-field-StartDate-property-setTaskValueMethod'>    setTaskValueMethod  : 'setStartDate',
+</span>
+<span id='Gnt-field-StartDate-property-isBaseline'>    isBaseline          : false,
+</span>
+<span id='Gnt-field-StartDate-method-valueToVisible'>    valueToVisible : function (value, task) {
+</span>        task = task || this.task;
+
+        return task.getDisplayStartDate(this.format, this.adjustMilestones, value, true, this.isBaseline);
+    },
+
+<span id='Gnt-field-StartDate-method-visibleToValue'>    visibleToValue : function (value) {
+</span>        var task = this.task;
+
+        // Special treatment of milestone task dates
+        if (task &amp;&amp; value) {
+            var isMidnight = !this.lastValue || this.lastValue - Ext.Date.clearTime(this.lastValue, true) === 0;
+
+            if (this.adjustMilestones &amp;&amp; task.isMilestone(this.isBaseline) &amp;&amp; value - Ext.Date.clearTime(value, true) === 0 &amp;&amp; isMidnight) {
+
+                // the standard ExtJS date picker will only allow to choose the date, not time
+                // we set the time of the selected date to the earliest availability hour for that date
+                // in case the date has no availbility intervals we use the date itself
+
+                value   = task.getCalendar().getCalendarDay(value).getAvailabilityEndFor(value) || value;
+
+            }
+        }
+
+        return value;
+    }
+
+});
+</pre>
+</body>
+</html>

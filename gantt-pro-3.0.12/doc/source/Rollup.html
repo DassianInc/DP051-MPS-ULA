@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Rollup'>/**
+</span>
+@class Gnt.column.Rollup
+@extends Ext.tree.Column
+
+A Column which displays if the task should rollup to the parent task.
+*/
+
+Ext.define(&quot;Gnt.column.Rollup&quot;, {
+    extend              : 'Ext.grid.Column',
+    alias               : [
+        'widget.rollupcolumn',
+        'widget.ganttcolumn.rollup'
+    ],
+
+    mixins              : ['Gnt.column.mixin.TaskFieldColumn'],
+
+<span id='Gnt-column-Rollup-property-fieldProperty'>    fieldProperty       : 'rollupField',
+</span>
+<span id='Gnt-column-Rollup-property-editor'>    editor              : 'combobox',
+</span>
+<span id='Gnt-column-Rollup-property-defaultEditor'>    defaultEditor       : 'combobox',
+</span>
+<span id='Gnt-column-Rollup-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn({
+            store : [
+                [ false, this.L('no') ],
+                [ true, this.L('yes') ]
+            ]
+        });
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-Rollup-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        return this.L(value ? 'yes' : 'no');
+    }
+
+});
+
+</pre>
+</body>
+</html>

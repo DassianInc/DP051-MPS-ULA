@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-data-ResourceTreeStore'>/**
+</span> * @class Sch.data.ResourceTreeStore
+ * @mixin Sch.data.mixin.FilterableTreeStore
+ *
+ * This is a class holding all the resources to be rendered into a {@link Sch.panel.SchedulerTree}. It is a subclass of &quot;Ext.data.TreeStore&quot; - a store containing hierarchical data.
+ *
+ * Filtering capabilities are provided by {@link Sch.data.mixin.FilterableTreeStore}, please refer to its documentation for additional information.
+ */
+if (!Ext.ClassManager.get(&quot;Sch.data.ResourceTreeStore&quot;)) Ext.define(&quot;Sch.data.ResourceTreeStore&quot;, {
+    extend      : 'Ext.data.TreeStore',
+
+    requires    : [
+        'Sch.patches.TreeStore',
+        'Sch.patches.TreeStoreInternalIdMap'
+    ],
+
+    mixins      : [
+        'Sch.patches.NodeStore',
+        'Sch.data.mixin.UniversalModelGetter',
+        'Sch.data.mixin.CacheHintHelper',
+        'Sch.data.mixin.ResourceStore',
+        'Sch.data.mixin.FilterableTreeStore'
+    ],
+
+    alias       : 'store.resourcetreestore',
+    model       : 'Sch.model.Resource',
+    storeId     : 'resources',
+    proxy       : 'memory',
+
+    constructor : function () {
+        this.callParent(arguments);
+
+        this.initTreeFiltering();
+
+        if (this.getModel() !== Sch.model.Resource &amp;&amp; !(this.getModel().prototype instanceof Sch.model.Resource)) {
+            throw 'The model for the ResourceTreeStore must subclass Sch.model.Resource';
+        }
+    },
+
+    setRootNode : function () {
+        // this flag will prevent the &quot;autoTimeSpan&quot; feature from reacting on individual &quot;append&quot; events, which happens a lot
+        // before the &quot;rootchange&quot; event
+        this.isSettingRoot      = true;
+
+        var res                 = this.callParent(arguments);
+
+        this.isSettingRoot      = false;
+
+        return res;
+    }
+});
+</pre>
+</body>
+</html>

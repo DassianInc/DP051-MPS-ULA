@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-plugin-ProjectLines'>/**
+</span>@class Gnt.plugin.ProjectLines
+@extends Sch.plugin.Lines
+
+A simple subclass of the {@link Sch.plugin.Lines} which sets project lines on the gantt chart.
+Generally, there's no need to instantiate it manually, it can be activated with the {@link Gnt.panel.Gantt#showProjectLines} configuration option.
+
+It uses the task store to populate own store with {@link Gnt.model.ProjectLine} instances.
+
+ */
+Ext.define(&quot;Gnt.plugin.ProjectLines&quot;, {
+    extend              : 'Sch.plugin.Lines',
+    alias               : 'plugin.gantt_projectlines',
+
+    requires            : [
+        'Gnt.model.ProjectLine',
+        'Ext.data.Store'
+    ],
+
+<span id='Gnt-plugin-ProjectLines-cfg-innerTpl'>    innerTpl            : '&lt;span class=&quot;sch-gantt-project-line-text&quot;&gt;{Text}&lt;/span&gt;',
+</span>
+<span id='Gnt-plugin-ProjectLines-cfg-showHeaderElements'>    showHeaderElements  : true,
+</span>
+<span id='Gnt-plugin-ProjectLines-cfg-taskStore'>    /**
+</span>     * @cfg {Gnt.data.taskStore} taskStore The task store to extract projects from
+     */
+    taskStore           : null,
+
+<span id='Gnt-plugin-ProjectLines-cfg-linesFor'>    /**
+</span>     * @cfg {String} linesFor
+     * Specifies what project dates should be used to build lines. Might be:
+     *
+     * - `start` - to build lines for project start dates
+     * - `end` - to build lines for project end dates
+     * - `both` - to build lines for both project start and end dates
+     */
+    linesFor            : 'both',
+
+<span id='Gnt-plugin-ProjectLines-property-allRemoved'>    allRemoved          : false,
+</span>
+<span id='Gnt-plugin-ProjectLines-method-init'>    init : function (ganttPanel) {
+</span>        this.taskStore  = this.taskStore || ganttPanel.getTaskStore();
+
+        this.bindTaskStore(this.taskStore);
+
+        if (!this.store) {
+            this.store  = new Ext.data.Store({
+                model   : 'Gnt.model.ProjectLine'
+            });
+        }
+
+        this.callParent(arguments);
+
+        ganttPanel.on('viewchange', this.onViewChange, this);
+
+        // timeAxis should be already fully initialized at this point
+        this.onViewChange();
+    },
+
+<span id='Gnt-plugin-ProjectLines-method-bindTaskStore'>    bindTaskStore : function (taskStore) {
+</span>        var listeners       = {
+            datachanged     : this.onDataChanged,
+            update          : this.onUpdate,
+            scope           : this,
+            delay           : 1
+        };
+
+        if (this.taskStore) {
+            this.taskStore.un(listeners);
+        }
+
+        if (taskStore) {
+            taskStore.on(listeners);
+        }
+
+        this.taskStore = taskStore;
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-onDataChanged'>    onDataChanged : function (store) {
+</span>        this.refresh();
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-onUpdate'>    onUpdate : function (store, record, operation) {
+</span>        if (record &amp;&amp; record.isProject &amp;&amp; operation == Ext.data.Model.EDIT) {
+
+            var projectId = record.modified &amp;&amp; record.modified.Id || record.getId();
+
+            // re-create the project related lines
+            this.store.remove(this.getProjectLines(projectId));
+            this.store.add(this.retrieveProjectLines(record));
+        }
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-onViewChange'>    onViewChange : function () {
+</span>        this.refresh();
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-loadStore'>    loadStore : function () {
+</span>        this.store.removeAll(true);
+
+        this.store.add(this.retrieveProjectLines());
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-refresh'>    refresh : function() {
+</span>        this.loadStore();
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-getProjectLines'>    getProjectLines : function (projectId) {
+</span>        var result = [];
+
+        this.store.each(function (line) {
+            if (line.get('ProjectId') == projectId) result.push(line);
+        });
+
+        return result;
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-prepareProjectStartLine'>    /**
+</span>     * @protected
+     * @method prepareProjectStartLine Prepares a record that corresponds to a project start date.
+     * @param  {Gnt.model.Project} project Project
+     * @return {Object} Object representing the record to be added to the store
+     */
+    prepareProjectStartLine : function (project) {
+        return {
+            Date        : project.getStartDate(),
+            Text        : 'Start of: ' + project.getName(),
+            Cls         : 'sch-gantt-project-line-start sch-gantt-project-line-' + project.getId(),
+            ProjectId   : project.getId()
+        };
+    },
+
+<span id='Gnt-plugin-ProjectLines-method-prepareProjectEndLine'>    /**
+</span>     * @protected
+     * @method prepareProjectEndLine Prepares a record that corresponds to a project end date.
+     * @param  {Gnt.model.Project} project Project
+     * @return {Object} Object representing the record to be added to the store
+     */
+    prepareProjectEndLine : function (project) {
+        return {
+            Date        : project.getEndDate(),
+            Text        : 'End of: ' + project.getName(),
+            Cls         : 'sch-gantt-project-line-end sch-gantt-project-line-' + project.getId(),
+            ProjectId   : project.getId()
+        };
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-retrieveProjectLines'>    retrieveProjectLines : function (project) {
+</span>        var me              = this,
+            projects        = Ext.isArray(project) ? project : project &amp;&amp; [project] || this.taskStore.getProjects(),
+            projectLines    = [],
+            linesFor    = me.linesFor;
+
+        for (var i = 0; i &lt; projects.length; i++) {
+            linesFor != 'end' &amp;&amp; projectLines.push( me.prepareProjectStartLine(projects[i]) );
+            linesFor != 'start' &amp;&amp; projectLines.push( me.prepareProjectEndLine(projects[i]) );
+        }
+
+        return projectLines;
+    },
+
+
+<span id='Gnt-plugin-ProjectLines-method-destroy'>    destroy : function() {
+</span>        this.bindTaskStore(null);
+        this.callParent(arguments);
+    }
+});</pre>
+</body>
+</html>

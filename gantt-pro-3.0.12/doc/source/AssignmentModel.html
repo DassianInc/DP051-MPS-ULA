@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-selection-AssignmentModel'>/**
+</span> * @class Sch.selection.AssignmentModel
+ * @extends Ext.selection.Model
+ *
+ * This class provides assignment selection model for multiple assignments mode, i.e. when the event store is configured
+ * with assignment store and uses it for storing event to resource and resource to event assignment information.
+ * In multiple assignment mode there're might be several event bars rendered for each event in the event store, thus
+ * an inconsistency appears, to solve the inconsistency we use assignment record as entities being selected since
+ * there's direct correspondence between event bar and assignment the bar is rendered for.
+ */
+Ext.define('Sch.selection.AssignmentModel', {
+    extend : 'Sch.selection.EventModel',
+    alias  : 'selection.assignmentmodel',
+
+<span id='Sch-selection-AssignmentModel-event-beforedeselect'>    /**
+</span>     * @event beforedeselect
+     * Fired before a record is deselected. If any listener returns false, the
+     * deselection is cancelled.
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Assignment} record The selected assignment
+     */
+
+<span id='Sch-selection-AssignmentModel-event-beforeselect'>    /**
+</span>     * @event beforeselect
+     * Fired before a record is selected. If any listener returns false, the
+     * selection is cancelled.
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Assignment} record The selected assignment
+     */
+
+<span id='Sch-selection-AssignmentModel-event-deselect'>    /**
+</span>     * @event deselect
+     * Fired after a record is deselected
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Assignment} record The selected assignment
+     */
+
+<span id='Sch-selection-AssignmentModel-event-select'>    /**
+</span>     * @event select
+     * Fired after a record is selected
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Assignment} record The selected assignment
+     */
+
+    assignmentStoreDetacher : null,
+
+<span id='Sch-selection-AssignmentModel-method-destroy'>    destroy : function() {
+</span>        var me = this;
+
+        Ext.destroyMembers(
+            me,
+            'assignmentStoreDetacher'
+        );
+
+        me.callParent();
+    },
+
+<span id='Sch-selection-AssignmentModel-method-bindToView'>    bindToView : function(view) {
+</span>        var me = this,
+            eventStore,
+            assignmentStore;
+
+        me.callParent([view]);
+
+        eventStore = me.view.eventStore;
+        assignmentStore = eventStore.getAssignmentStore();
+
+        if (assignmentStore) {
+            me.assignmentStoreDetacher = assignmentStore.on({
+                'remove'    : me.onAssignmentStoreRemove,
+                'clear'     : me.onAssignmentStoreClear,
+                'refresh'   : me.onAssignmentStoreRefresh,
+                scope       : me,
+                destroyable : true
+            });
+        }
+    },
+
+<span id='Sch-selection-AssignmentModel-method-selectWithEvent'>    selectWithEvent : function(eventRecord, e) {
+</span>        var me = this,
+            view = me.view,
+            resourceRecord = view.resolveResource(e.getTarget()),
+            assignmentStore,
+            assignmentRecord;
+
+        if (resourceRecord) {
+            assignmentStore  = view.eventStore.getAssignmentStore();
+            assignmentRecord = assignmentStore.getAssignmentForEventAndResource(eventRecord, resourceRecord);
+            if (assignmentRecord) {
+                me.callParent([assignmentRecord, e]);
+            }
+        }
+    },
+
+
+<span id='Sch-selection-AssignmentModel-method-getFirstSelectedEventForResource'>    getFirstSelectedEventForResource : function(resource) {
+</span>        var selections = this.getSelection(),
+            event = null,
+            i, len, r;
+
+        for (i = 0, len = selections.length; !event &amp;&amp; i &lt; len; ++i) {
+            r = selections[i];
+            if (r.getEvent().isAssignedTo(resource)) {
+                event = r;
+            }
+        }
+
+        return event;
+    },
+
+<span id='Sch-selection-AssignmentModel-method-getDraggableSelections'>    getDraggableSelections : function() {
+</span>        return Ext.Array.filter(
+            this.getSelection(),
+            function(record) {
+                return record.getEvent().isDraggable();
+            }
+        );
+    },
+
+<span id='Sch-selection-AssignmentModel-method-forEachEventRelatedSelection'>    forEachEventRelatedSelection : function(eventRecord, fn) {
+</span>        Ext.Array.forEach(this.getSelection(), function(selectedRecord) {
+            selectedRecord.getEvent() === eventRecord &amp;&amp; fn(selectedRecord);
+        });
+    },
+
+<span id='Sch-selection-AssignmentModel-method-onAssignmentStoreRemove'>    onAssignmentStoreRemove : function(assignmentStore, removedRecords) {
+</span>        this.deselect(removedRecords, true);
+    },
+
+<span id='Sch-selection-AssignmentModel-method-onAssignmentStoreClear'>    onAssignmentStoreClear : function(assignmentStore) {
+</span>        this.clearSelections();
+    },
+
+<span id='Sch-selection-AssignmentModel-method-onAssignmentStoreRefresh'>    onAssignmentStoreRefresh : function(assignmentStore) {
+</span>        this.clearSelections();
+    }
+});
+</pre>
+</body>
+</html>

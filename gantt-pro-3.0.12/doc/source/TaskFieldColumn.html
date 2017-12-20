@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-mixin-TaskFieldColumn'>/**
+</span>@class Gnt.column.mixin.TaskFieldColumn
+This class implement common logic for fields that have a field mixed with {@link Gnt.field.mixin.TaskField} class as an editor.
+Also it makes the column localizable by mixing it with {@link Gnt.mixin.Localizable} class.
+*/
+Ext.define('Gnt.column.mixin.TaskFieldColumn', {
+
+    extend              : 'Ext.Mixin',
+
+    requires            : [
+        'Gnt.patches.TreeColumn'
+    ],
+
+    mixins              : [
+        'Gnt.mixin.Localizable'
+    ],
+
+<span id='Gnt-column-mixin-TaskFieldColumn-cfg-instantUpdate'>    /**
+</span>     * @cfg {Boolean} instantUpdate Set to `true` to instantly apply any changes in the field to the task.
+     * This option is just translated to the {@link Gnt.field.mixin.TaskField#instantUpdate} config option.
+     */
+    instantUpdate       : false,
+
+<span id='Gnt-column-mixin-TaskFieldColumn-property-Reference'>    /**
+</span>     * @property {Ext.form.field.Field} Reference to the field used by the editor
+     */
+    field               : null,
+
+<span id='Gnt-column-mixin-TaskFieldColumn-property-fieldProperty'>    fieldProperty       : '',
+</span>
+<span id='Gnt-column-mixin-TaskFieldColumn-property-fieldConfigs'>    fieldConfigs        : 'instantUpdate,fieldProperty',
+</span>
+<span id='Gnt-column-mixin-TaskFieldColumn-property-defaultEditor'>    defaultEditor       : 'textfield',
+</span>
+<span id='Gnt-column-mixin-TaskFieldColumn-property-mixinConfig'>    mixinConfig         : {
+</span>
+        after           : {
+            initComponent   : 'afterInitComponent'
+        },
+
+        afterIf        : {
+            applyColumnCls  : 'applyColumnCls'
+        }
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-initTaskFieldColumn'>    initTaskFieldColumn : function (editorCfg) {
+</span>        this.text       = this.config.text || this.L('text');
+
+        this.initColumnEditor(editorCfg);
+
+        this.scope     = this.scope    || this;
+        this.renderer  = this.renderer || this.taskFieldRenderer;
+
+        this.mon(this, 'render', this.onColumnRender, this);
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-applyColumnCls'>    applyColumnCls : function (value, meta, task) {
+</span>        if (!task.isEditable(this.dataIndex)) {
+            meta.tdCls      = (meta.tdCls || '') + ' sch-column-readonly';
+        }
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-afterInitComponent'>    afterInitComponent : function () {
+</span>        // Make sure Ext 'understands' this column has its own renderer which makes sure this column is always updated
+        // if any task field is changed
+        this.hasCustomRenderer  = true;
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-initColumnEditor'>    initColumnEditor : function (editorCfg) {
+</span>        var editor = this.editor;
+
+        // if editor provided
+        if (editor) {
+            // xtype provided
+            if ('string' == typeof editor) {
+                editor  = { xtype : editor };
+            }
+
+            // if it's not a made instance yet
+            if (!editor.isInstance) {
+
+                if (!editor.xtype &amp;&amp; !editor.xclass) {
+                    editor.xtype = this.defaultEditor;
+                }
+
+                // relay configs listed in &quot;fieldConfigs&quot; to the editor
+                var cfg     = Ext.copyTo(Ext.apply({}, editorCfg), this, this.fieldConfigs, true);
+
+                this.editor = Ext.ComponentManager.create(Ext.apply(cfg, editor));
+            }
+
+            this.field    = this.editor;
+        }
+
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-onColumnRender'>    onColumnRender : function() {
+</span>        var tree        = this.up('treepanel');
+        var taskStore   = tree.store;
+
+        if (!this.dataIndex) {
+            this.dataIndex = taskStore.model.prototype[ this.fieldProperty ];
+        }
+
+        // if the column wants to track the gantt readonly state
+        if (this.onReadOnlySet) {
+            var gantt   = this.up('ganttpanel');
+            gantt.mon(gantt, 'setreadonly', this.onReadOnlySet, this);
+        }
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        var field   = this.field;
+
+        return field &amp;&amp; field.valueToVisible &amp;&amp; field.valueToVisible(value, task) || value;
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-taskFieldRenderer'>    taskFieldRenderer : function (value, meta, task) {
+</span>        var result  = Ext.util.Format.htmlEncode( this.getValueToRender.apply(this, arguments) );
+
+        this.applyColumnCls(value, meta, task);
+
+        return result;
+    },
+
+
+<span id='Gnt-column-mixin-TaskFieldColumn-method-afterClassMixedIn'>    afterClassMixedIn : function (cls) {
+</span>        var mixin       = this.prototype,
+            mixinConfig = mixin.mixinConfig,
+            befores     = mixinConfig &amp;&amp; mixinConfig.beforeIf,
+            afters      = mixinConfig &amp;&amp; mixinConfig.afterIf;
+
+        befores &amp;&amp; Ext.Object.each(befores, function (key, value) {
+            if (key in cls.prototype) {
+
+                cls.addMember(key, function () {
+                    if (mixin[value].apply(this, arguments) !== false) {
+                        return this.callParent(arguments);
+                    }
+                });
+
+            } else {
+
+                cls.addMember(key, function () {
+                    mixin[value].apply(this, arguments);
+                });
+
+            }
+        });
+
+        afters &amp;&amp; Ext.Object.each(afters, function (key, value) {
+            if (key in cls.prototype) {
+
+                cls.addMember(key, function () {
+                    this.callParent(arguments);
+                    mixin[value].apply(this, arguments);
+                });
+
+            } else {
+
+                cls.addMember(key, function () {
+                    mixin[value].apply(this, arguments);
+                });
+
+            }
+        });
+    }
+});
+</pre>
+</body>
+</html>

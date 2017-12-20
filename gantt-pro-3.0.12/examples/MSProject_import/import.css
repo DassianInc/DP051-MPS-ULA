@@ -1,0 +1,27 @@
+.resources-assigned .sch-gantt-label-right
+{
+    background:url(images/user.png) no-repeat left center !important;
+    padding-left:20px;
+    display:block;
+}
+
+.sch-assignment-cell
+{
+    color:#666;
+}
+
+.upload-icon
+{
+    background:url(images/attach.png) no-repeat left center !important;
+}
+
+.mpp
+{
+    background:url(images/mpp.png) no-repeat left center !important;
+    padding-left:40px;
+    height:32px;
+    display: inline-block;
+    line-height: 32px;
+    padding-left: 40px;
+    margin-left: 10px;
+}

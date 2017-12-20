@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-PercentDone'>/**
+</span>@class Gnt.column.PercentDone
+@extends Ext.grid.column.Number
+
+A Column representing the `PercentDone` field of the task. The column is editable when adding a
+`Sch.plugin.TreeCellEditing` plugin to your Gantt panel. The overall setup will look like this:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        columns         : [
+            ...
+            {
+                xtype       : 'percentdonecolumn',
+                width       : 80
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+
+*/
+Ext.define(&quot;Gnt.column.PercentDone&quot;, {
+    extend             : &quot;Ext.grid.column.Number&quot;,
+
+    requires           : ['Gnt.field.Percent'],
+
+    alias              : [
+        &quot;widget.percentdonecolumn&quot;,
+        &quot;widget.ganttcolumn.percentdone&quot;
+    ],
+
+    mixins             : ['Gnt.column.mixin.TaskFieldColumn'],
+
+<span id='Gnt-column-PercentDone-property-width'>    width              : 50,
+</span><span id='Gnt-column-PercentDone-property-format'>    format             : '0',
+</span><span id='Gnt-column-PercentDone-property-align'>    align              : 'center',
+</span>
+<span id='Gnt-column-PercentDone-property-editor'>    editor             : 'percentfield',
+</span>
+<span id='Gnt-column-PercentDone-property-defaultEditor'>    defaultEditor      : 'percentfield',
+</span>
+<span id='Gnt-column-PercentDone-property-fieldProperty'>    fieldProperty      : 'percentDoneField',
+</span>
+<span id='Gnt-column-PercentDone-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn({
+            decimalPrecision : 0
+        });
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-PercentDone-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        return this.defaultRenderer(value, meta, task);
+    }
+
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-data-EventStore'>/**
+</span>@class Sch.data.EventStore
+@mixins Sch.data.mixin.EventStore
+
+This is a class holding all the {@link Sch.model.Event events} to be rendered into a {@link Sch.SchedulerPanel scheduler panel}.
+
+*/
+if (!Ext.ClassManager.get(&quot;Sch.data.EventStore&quot;)) Ext.define(&quot;Sch.data.EventStore&quot;, {
+    extend      : 'Ext.data.Store',
+    alias       : 'store.eventstore',
+
+    mixins      : [
+        'Sch.data.mixin.UniversalModelGetter',
+        'Sch.data.mixin.CacheHintHelper',
+        'Sch.data.mixin.EventStore'
+    ],
+
+    storeId     : 'events',
+    model       : 'Sch.model.Event',
+    config      : { model : 'Sch.model.Event' },
+    proxy       : 'memory',
+
+    constructor : function(config) {
+        var me = this;
+
+        me.callParent([config]);
+
+        me.resourceStore   &amp;&amp; me.setResourceStore(me.resourceStore);
+        me.assignmentStore &amp;&amp; me.setAssignmentStore(me.assignmentStore);
+
+        if (me.getModel() !== Sch.model.Event &amp;&amp; !(me.getModel().prototype instanceof Sch.model.Event)) {
+            throw 'The model for the EventStore must subclass Sch.model.Event';
+        }
+    },
+
+<span id='Sch-data-EventStore-method-append'>    /**
+</span>     * Appends a new record to the store
+     * @param {Sch.model.Event} record The record to append to the store
+     */
+    append : function(record) {
+        this.add(record);
+    }
+});
+</pre>
+</body>
+</html>

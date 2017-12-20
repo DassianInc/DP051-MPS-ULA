@@ -1,0 +1,115 @@
+<Tasks>
+    <Task>
+        <Id>Sencha</Id>
+        <leaf>0</leaf>
+        <Name>Sencha Releases</Name>
+        <StartDate>2010-01-18T00:00:00</StartDate>
+        <Duration>9</Duration>
+        <expanded>1</expanded>
+        <PercentDone>50</PercentDone>
+        <cls>Sencha</cls>
+        <Tasks>
+            <Task>
+                <expanded>1</expanded>
+                <StartDate>2010-01-18T00:00:00</StartDate>
+                <Duration>9</Duration>
+                <PercentDone>50</PercentDone>
+                <Id>2</Id>
+                <leaf>0</leaf>
+                <Name>Ext 4.x branch</Name>
+                <Tasks>
+                    <Task>
+                        <Duration>3</Duration>
+                        <PercentDone>50</PercentDone>
+                        <StartDate>2010-01-18T00:00:00</StartDate>
+                        <Id>3</Id>
+                        <leaf>1</leaf>
+                        <Name>Ext JS 4.0.1</Name>
+                    </Task>
+                    <Task>
+                        <Duration>4</Duration>
+                        <PercentDone>50</PercentDone>
+                        <StartDate>2010-01-25T00:00:00</StartDate>
+                        <Id>4</Id>
+                        <leaf>1</leaf>
+                        <Name>Ext JS 4.0.2</Name>
+                    </Task>
+                    <Task>
+                        <Duration>0</Duration>
+                        <PercentDone>50</PercentDone>
+                        <StartDate>2010-01-28T00:00:00</StartDate>
+                        <Id>5</Id>
+                        <leaf>1</leaf>
+                        <Name>Ext JS 4.0.3</Name>
+                    </Task>
+                </Tasks>
+            </Task>
+        </Tasks>
+    </Task>
+    <Task>
+        <expanded>1</expanded>
+        <StartDate>2010-01-28T00:00:00</StartDate>
+        <Duration>11</Duration>
+        <PercentDone>28.181818181818183</PercentDone>
+        <Id>Bryntum</Id>
+        <cls>Bryntum</cls>
+        <leaf>0</leaf>
+        <Name>Bryntum Releases</Name>
+        <Tasks>
+            <Task>
+                <Duration>3</Duration>
+                <PercentDone>50</PercentDone>
+                <StartDate>2010-01-28T00:00:00</StartDate>
+                <Id>13</Id>
+                <leaf>1</leaf>
+                <Name>Product X</Name>
+            </Task>
+            <Task>
+                <Duration>4</Duration>
+                <PercentDone>30</PercentDone>
+                <StartDate>2010-02-03T00:00:00</StartDate>
+                <Id>14</Id>
+                <leaf>1</leaf>
+                <Name>Ext Gantt 2.0</Name>
+            </Task>
+            <Task>
+                <Duration>4</Duration>
+                <PercentDone>10</PercentDone>
+                <StartDate>2010-02-08T00:00:00</StartDate>
+                <Id>15</Id>
+                <leaf>1</leaf>
+                <Name>Ext Scheduler 2.0</Name>
+            </Task>
+        </Tasks>
+    </Task>
+    <Task>
+        <Id>33</Id>
+        <leaf>1</leaf>
+        <Name>Unplanned task 1</Name>
+    </Task>
+    <Task>
+        <Id>34</Id>
+        <leaf>1</leaf>
+        <Name>Unplanned task 11</Name>
+    </Task>
+    <Task>
+        <Id>35</Id>
+        <leaf>1</leaf>
+        <Name>Unplanned task 2.0</Name>
+    </Task>
+    <Task>
+        <Id>43</Id>
+        <leaf>1</leaf>
+        <Name>Unplanned task 14</Name>
+    </Task>
+    <Task>
+        <Id>44</Id>
+        <leaf>1</leaf>
+        <Name>Unplanned task 3</Name>
+    </Task>
+    <Task>
+        <Id>45</Id>
+        <leaf>1</leaf>
+        <Name>Unplanned task 4</Name>
+    </Task>
+</Tasks>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">/*
+@class Sch.column.Resource
+@extends Ext.grid.Column
+@private
+
+A Column representing a resource, used only in vertical orientation. By default this column will use the resource
+name as the header text. To get complete control over the rendering, you can use your own custom Column class by
+using the {@link Sch.mixin.SchedulerPanel#resourceColumnClass resourceColumnClass} config on your SchedulerPanel.
+
+*/
+Ext.define(&quot;Sch.column.Resource&quot;, {
+    extend          : &quot;Ext.grid.Column&quot;,
+    
+    alias           : &quot;widget.resourcecolumn&quot;,
+
+    /*
+     * Default resource column properties
+     */
+    align           : 'center',
+    menuDisabled    : true,
+    hideable        : false,
+    sortable        : false,
+    locked          : false,
+    lockable        : false,
+    draggable       : false,
+    enableLocking   : false,
+
+    /*
+     * @property {Sch.model.Resource} model The resource model associated with this column
+     * Default resource column properties
+     */
+    model           : null,
+
+    initComponent     : function() {
+        this.tdCls = (this.tdCls || '') + ' sch-timetd';
+        this.cls = (this.cls || '') + ' sch-resourcecolumn-header';
+
+        this.callParent(arguments);
+    }
+});</pre>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-exporter-SinglePage'>/**
+</span> @class Sch.plugin.exporter.SinglePage
+ @extends Sch.plugin.exporter.AbstractExporter
+
+ This class extracts all scheduler data to fit in a single page.
+
+ The exporterId of this exporter is `singlepage`
+ */
+
+
+Ext.define('Sch.plugin.exporter.SinglePage', {
+
+    extend  : 'Sch.plugin.exporter.AbstractExporter',
+
+<span id='Sch-plugin-exporter-SinglePage-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+     - name    : 'Single page'
+     */
+
+    config  : {
+<span id='Sch-plugin-exporter-SinglePage-cfg-exporterId'>        exporterId : 'singlepage',
+</span>
+<span id='Sch-plugin-exporter-SinglePage-cfg-headerTpl'>        headerTpl   : '&lt;div class=&quot;sch-export-header&quot; style=&quot;height:{height}px; width:{width}px&quot;&gt;&lt;/div&gt;'
+</span>    },
+
+<span id='Sch-plugin-exporter-SinglePage-method-getExpectedNumberOfPages'>    getExpectedNumberOfPages : function () {
+</span>        return 1;
+    },
+
+<span id='Sch-plugin-exporter-SinglePage-method-getPaperFormat'>    getPaperFormat : function () {
+</span>        var me          = this,
+            realSize    = me.getTotalSize(),
+            dpi         = me.exportConfig.DPI,
+            width       = Ext.Number.toFixed(realSize.width / dpi, 1),
+            height      = Ext.Number.toFixed(realSize.height / dpi, 1);
+
+        return width+'in*'+height+'in';
+    },
+
+
+<span id='Sch-plugin-exporter-SinglePage-method-onRowsCollected'>    onRowsCollected : function () {
+</span>        var me = this;
+
+        me.startPage();
+        me.fillGrids();
+        me.commitPage();
+
+        me.onPagesExtracted();
+    },
+
+
+<span id='Sch-plugin-exporter-SinglePage-method-getPageTplData'>    getPageTplData : function () {
+</span>        var me          = this,
+            realSize    = me.getTotalSize();
+
+        return Ext.apply(me.callParent(arguments), {
+            bodyHeight  : realSize.height,
+            showHeader  : false,
+            totalWidth  : realSize.width
+        });
+    },
+
+<span id='Sch-plugin-exporter-SinglePage-method-getHeaderTplData'>    getHeaderTplData : function (pageInfo) {
+</span>        var me  = this;
+
+        return {
+            width       : me.getTotalWidth(),
+            height      : me.pageHeaderHeight
+        };
+    },
+
+
+<span id='Sch-plugin-exporter-SinglePage-method-fitComponentIntoPage'>    fitComponentIntoPage : function () {
+</span>        var me          = this,
+            lockedGrid  = me.lockedGrid;
+
+        lockedGrid.setWidth(lockedGrid.headerCt.getEl().first().getWidth());
+    },
+
+<span id='Sch-plugin-exporter-SinglePage-method-preparePageToCommit'>    preparePageToCommit : function () {
+</span>        var me          = this,
+            frag        = me.callParent(arguments),
+            secondaryCanvas = frag.select('.sch-secondary-canvas').first(),
+            zones = secondaryCanvas.select('.sch-zone'),
+            lines = secondaryCanvas.select('.sch-column-line');
+
+        var height = me.getTotalHeight();
+
+        secondaryCanvas.setTop(0);
+        zones.setHeight(height);
+        lines.setHeight(height);
+
+        return frag;
+    }
+
+});</pre>
+</body>
+</html>

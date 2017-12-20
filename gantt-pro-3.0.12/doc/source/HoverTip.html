@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-tooltip-HoverTip'>/**
+</span> * @class Sch.tooltip.HoverTip
+ * HoverTip is a class that represents a tooltip with clock and time which updates as the mouse pointer moves over the schedule area.
+ */
+Ext.define('Sch.tooltip.HoverTip', {
+    extend          : 'Ext.tip.ToolTip',
+    
+    alias           : 'widget.scheduler_hovertip',
+    
+    requires        : [
+        'Sch.tooltip.ClockTemplate'
+    ],
+    
+<span id='Sch-tooltip-HoverTip-property-trackMouse'>    trackMouse      : true,
+</span>    
+<span id='Sch-tooltip-HoverTip-property-bodyCls'>    bodyCls         : 'sch-hovertip',
+</span>    
+<span id='Sch-tooltip-HoverTip-property-messageTpl'>    messageTpl      : '&lt;div class=&quot;sch-hovertip-msg&quot;&gt;{message}&lt;/div&gt;',
+</span>    
+<span id='Sch-tooltip-HoverTip-property-autoHide'>    autoHide        : false,
+</span>    
+<span id='Sch-tooltip-HoverTip-property-dismissDelay'>    dismissDelay    : 1000,
+</span>    
+<span id='Sch-tooltip-HoverTip-property-showDelay'>    showDelay       : 300,
+</span>    
+<span id='Sch-tooltip-HoverTip-cfg-schedulerView'>    /**
+</span>     * @cfg {Sch.mixin.SchedulerView} schedulerView (required) View instance to bind this tooltip to
+     */
+    schedulerView   : null,
+
+<span id='Sch-tooltip-HoverTip-property-clockTpl'>    clockTpl        : null,
+</span><span id='Sch-tooltip-HoverTip-property-lastTime'>    lastTime        : null,
+</span><span id='Sch-tooltip-HoverTip-property-lastResource'>    lastResource    : null,
+</span>
+<span id='Sch-tooltip-HoverTip-method-initComponent'>    initComponent   : function () {
+</span>        var me = this;
+        
+        var view = me.schedulerView;
+        
+        me.clockTpl = new Sch.tooltip.ClockTemplate();
+        
+        me.messageTpl = new Ext.XTemplate(me.messageTpl);
+        
+        me.lastTime = null;
+        
+        me.lastResource = null;
+        
+        me.callParent(arguments);
+        
+        me.on('beforeshow', me.tipOnBeforeShow, me);
+        
+        view.mon(view.el, {
+            mouseleave : function () {
+                me.hide();
+            },
+            mousemove  : me.handleMouseMove,
+            scope      : me
+        });
+    },
+    
+<span id='Sch-tooltip-HoverTip-method-handleMouseMove'>    handleMouseMove       : function (e) {
+</span>        var me      = this;
+        
+        var view    = me.schedulerView;
+        
+        if (me.disabled) {
+            return;
+        }
+
+        if (e.getTarget('.' + view.timeCellCls, 5) &amp;&amp; !e.getTarget(view.eventSelector)) {
+            var time = view.getDateFromDomEvent(e, 'floor');
+
+            if (time) {
+                var resourceRecord = view.resolveResource(e.getTarget());
+                
+                if (time - me.lastTime !== 0 || resourceRecord !== me.lastResource) {
+                    me.lastResource = resourceRecord;
+                    
+                    me.updateHoverTip(time, e);
+
+                    if (me.hidden) { // HACK, find better solution
+                        if (Sch.util.Date.compareUnits(this.schedulerView.getTimeResolution().unit, Sch.util.Date.DAY) &gt;= 0) {
+                            me.addCls('sch-day-resolution');
+                            me.removeCls('sch-hour-resolution');
+                        } else {
+                            me.removeCls('sch-day-resolution');
+                            me.addCls('sch-hour-resolution');
+                        }
+                        me.show();
+                    }
+                }
+            } else {
+                me.hide();
+                me.lastTime = null;
+                me.lastResource = null;
+            }
+        } else {
+            me.hide();
+            me.lastTime = null;
+            me.lastResource = null;
+        }
+    },
+    
+<span id='Sch-tooltip-HoverTip-method-getText'>    /**
+</span>     * Override this to render custom text to default hover tip
+     * @param {Date} date
+     * @param {Ext.EventObject} e Browser event
+     * @return {String}
+     */
+    getText : function () {},
+
+<span id='Sch-tooltip-HoverTip-method-updateHoverTip'>    // private
+</span>    updateHoverTip    : function (date, e) {
+        if (date) {
+            var clockHtml = this.clockTpl.apply({ 
+                date : date,
+                text : this.schedulerView.getFormattedDate(date)
+            });
+
+            var messageHtml = this.messageTpl.apply({
+                message : this.getText(date, e)
+            });
+            
+            this.update(clockHtml + messageHtml);
+            
+            this.lastTime = date;
+        }
+    },
+    
+<span id='Sch-tooltip-HoverTip-method-tipOnBeforeShow'>    tipOnBeforeShow : function (tip) {
+</span>        return !this.disabled &amp;&amp; this.lastTime !== null;
+    }
+});
+</pre>
+</body>
+</html>

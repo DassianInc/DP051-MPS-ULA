@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-feature-ColumnLines'>/**
+</span>@class Sch.feature.ColumnLines
+@extends Sch.plugin.Lines
+
+A simple feature adding column lines (to be used when using the SingleTimeAxis column).
+
+*/
+Ext.define(&quot;Sch.feature.ColumnLines&quot;, {
+    extend : 'Sch.plugin.Lines',
+
+    requires : [
+        'Ext.data.JsonStore'
+    ],
+    
+    
+<span id='Sch-feature-ColumnLines-property-cls'>    cls                     : 'sch-column-line',
+</span>    
+<span id='Sch-feature-ColumnLines-cfg-showTip'>    showTip                 : false,
+</span>    
+<span id='Sch-feature-ColumnLines-property-timeAxisViewModel'>    timeAxisViewModel       : null,
+</span>    
+<span id='Sch-feature-ColumnLines-property-renderingDoneEvent'>    renderingDoneEvent      : 'columnlinessynced',
+</span>
+    
+<span id='Sch-feature-ColumnLines-method-init'>    init : function (panel) {
+</span>        this.timeAxis           = panel.getTimeAxis();
+        this.timeAxisViewModel  = panel.timeAxisViewModel;
+        this.panel              = panel;
+
+        this.store = new Ext.data.JsonStore({
+            fields   : [ 'Date' ]
+        });
+
+        this.callParent(arguments);
+
+        panel.on({
+            modechange          : this.populate,
+            destroy             : this.onHostDestroy,
+            scope               : this
+        });
+
+        this.timeAxisViewModel.on('update', this.populate, this);
+        
+        this.populate();
+    },
+
+<span id='Sch-feature-ColumnLines-method-onHostDestroy'>    onHostDestroy : function() {
+</span>        this.timeAxisViewModel.un('update', this.populate, this);
+    },
+
+<span id='Sch-feature-ColumnLines-method-populate'>    populate: function() {
+</span>        this.store.setData(this.getData());
+    },
+    
+<span id='Sch-feature-ColumnLines-method-getElementData'>    getElementData : function() {
+</span>        var sv = this.schedulerView;
+
+        if (sv.isHorizontal() &amp;&amp; sv.store.getCount() &gt; 0) {
+            return this.callParent(arguments);
+        }
+
+        return [];
+    },
+
+<span id='Sch-feature-ColumnLines-method-getData'>    getData : function() {
+</span>        var panel = this.panel,
+            ticks = [];
+
+        if (panel.isHorizontal()) {
+            var timeAxisViewModel   = this.timeAxisViewModel;
+            var linesForLevel       = timeAxisViewModel.columnLinesFor;
+            var hasGenerator        = !!(timeAxisViewModel.headerConfig &amp;&amp; timeAxisViewModel.headerConfig[linesForLevel].cellGenerator);
+
+            if (hasGenerator) {
+                var cells = timeAxisViewModel.getColumnConfig()[linesForLevel];
+
+                for (var i = 1, l = cells.length; i &lt; l; i++) {
+                    ticks.push({ Date : cells[i].start });
+                }
+            } else {
+                // Highlight column lines that match the next higher header row
+                var nextLevelUp,
+                    nextHigherLevelTicks,
+                    colConfig = timeAxisViewModel.getColumnConfig(),
+                    nextLevelCachedDates;
+
+                if (linesForLevel === 'bottom')      nextLevelUp = &quot;middle&quot;;
+                else if (linesForLevel === 'middle') nextLevelUp = &quot;top&quot;;
+
+                nextHigherLevelTicks = colConfig[nextLevelUp];
+
+                if (nextHigherLevelTicks) {
+                    var headerConfig = timeAxisViewModel.headerConfig;
+
+                    if (headerConfig[nextLevelUp].increment !== headerConfig[linesForLevel].increment ||
+                        headerConfig[nextLevelUp].unit !== headerConfig[linesForLevel].unit) {
+                        nextLevelCachedDates = {};
+
+                        Ext.Array.forEach(nextHigherLevelTicks, function(tick) {
+                            nextLevelCachedDates[tick.start.getTime()] = 1;
+                        });
+                    }
+                }
+
+                timeAxisViewModel.forEachInterval(linesForLevel, function(start, end, i) {
+
+                    if (i &gt; 0) {
+                        ticks.push({
+                            Date : start,
+                            Cls  : nextLevelCachedDates &amp;&amp; nextLevelCachedDates[start.getTime()] ? 'sch-column-line-solid' : ''
+                        });
+                    }
+
+                });
+            }
+        }
+
+        return ticks;
+    }
+});</pre>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DE40831D-B7EF-4719-A860-DE382F261198}</ProjectGuid>
+    <ProjectTypeGuids>{E3E379DF-F4C6-4180-9B81-6769533ABE47};{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>GanttCrudDemo</RootNamespace>
+    <AssemblyName>MvcApplication3</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.0.1\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.0.1\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServerCompact, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.SqlServerCompact.6.0.1\lib\net45\EntityFramework.SqlServerCompact.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Mvc.FixedDisplayModes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.FixedDisplayModes.1.0.0\lib\net40\Microsoft.Web.Mvc.FixedDisplayModes.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Net.Http">
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.4.0.30506.0\lib\net40\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest">
+    </Reference>
+    <Reference Include="System.Web.Helpers, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net40\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.4.0.30506.0\lib\net40\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.4.0.30506.0\lib\net40\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.4.0.30506.0\lib\net40\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Razor.2.0.30506.0\lib\net40\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net40\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net40\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net40\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Controllers\GanttCrudController.cs" />
+    <Compile Include="Controllers\MainController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\FilterConfig.cs" />
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="App_Start\WebApiConfig.cs" />
+    <Content Include="Global.asax" />
+    <Content Include="index.html" />
+    <Content Include="js\advanced\DemoGanttPanel.js" />
+    <Content Include="js\advanced\FilterField.js" />
+    <Content Include="js\advanced\SecondaryToolbar.js" />
+    <Content Include="js\advanced\TaskArea.js" />
+    <Content Include="js\advanced\TaskContextMenu.js" />
+    <Content Include="js\advanced\Toolbar.js" />
+    <Content Include="js\App.js" />
+    <Content Include="js\gnt-all-debug.js" />
+    <Content Include="js\Gnt\locale\De.js" />
+    <Content Include="js\Gnt\locale\En.js" />
+    <Content Include="js\Gnt\locale\It.js" />
+    <Content Include="js\Gnt\locale\Nl.js" />
+    <Content Include="js\Gnt\locale\Pl.js" />
+    <Content Include="js\Gnt\locale\RuRU.js" />
+    <Content Include="js\Gnt\locale\SvSE.js" />
+    <Content Include="js\Sch\locale\De.js" />
+    <Content Include="js\Sch\locale\En.js" />
+    <Content Include="js\Sch\locale\It.js" />
+    <Content Include="js\Sch\locale\Nl.js" />
+    <Content Include="js\Sch\locale\Pl.js" />
+    <Content Include="js\Sch\locale\RuRU.js" />
+    <Content Include="js\Sch\locale\SvSE.js" />
+    <Content Include="resources\advanced\resources\css\advanced.css" />
+    <Content Include="resources\advanced\resources\css\gnt.taskarea.css" />
+    <Content Include="resources\advanced\resources\css\theme.css" />
+    <Content Include="resources\advanced\resources\css\toolbar-ie8.css" />
+    <Content Include="resources\advanced\resources\css\toolbar.css" />
+    <Content Include="resources\advanced\resources\images\add.png" />
+    <Content Include="resources\advanced\resources\images\arrow-down.png" />
+    <Content Include="resources\advanced\resources\images\arrow-left.png" />
+    <Content Include="resources\advanced\resources\images\arrow-right.png" />
+    <Content Include="resources\advanced\resources\images\arrow-up.png" />
+    <Content Include="resources\advanced\resources\images\calendar.png" />
+    <Content Include="resources\advanced\resources\images\chart.png" />
+    <Content Include="resources\advanced\resources\images\checkbox.gif" />
+    <Content Include="resources\advanced\resources\images\collapse.png" />
+    <Content Include="resources\advanced\resources\images\delete.png" />
+    <Content Include="resources\advanced\resources\images\down.png" />
+    <Content Include="resources\advanced\resources\images\expand.png" />
+    <Content Include="resources\advanced\resources\images\fullscreen-enter.png" />
+    <Content Include="resources\advanced\resources\images\fullscreen.png" />
+    <Content Include="resources\advanced\resources\images\hot.png" />
+    <Content Include="resources\advanced\resources\images\indent.png" />
+    <Content Include="resources\advanced\resources\images\move.png" />
+    <Content Include="resources\advanced\resources\images\outdent.png" />
+    <Content Include="resources\advanced\resources\images\save.png" />
+    <Content Include="resources\advanced\resources\images\search.png" />
+    <Content Include="resources\advanced\resources\images\setting.png" />
+    <Content Include="resources\advanced\resources\images\theme.png" />
+    <Content Include="resources\advanced\resources\images\up.png" />
+    <Content Include="resources\advanced\resources\images\user-group.png" />
+    <Content Include="resources\advanced\resources\images\zoom-in.png" />
+    <Content Include="resources\advanced\resources\images\zoom-out.png" />
+    <Content Include="resources\css\examples.css" />
+    <Content Include="resources\css\sch-gantt-all.css" />
+    <Content Include="resources\images\1px.png" />
+    <Content Include="resources\images\add.png" />
+    <Content Include="resources\images\altrow.png" />
+    <Content Include="resources\images\arrow_left.png" />
+    <Content Include="resources\images\arrow_right.png" />
+    <Content Include="resources\images\calendar.png" />
+    <Content Include="resources\images\close-icon.png" />
+    <Content Include="resources\images\cog.png" />
+    <Content Include="resources\images\column-header-bg.gif" />
+    <Content Include="resources\images\column-header-over-bg.gif" />
+    <Content Include="resources\images\column-weekend-header-bg.gif" />
+    <Content Include="resources\images\delete.gif" />
+    <Content Include="resources\images\dependencyterminal.png" />
+    <Content Include="resources\images\drop-no.gif" />
+    <Content Include="resources\images\drop-yes.gif" />
+    <Content Include="resources\images\edit.png" />
+    <Content Include="resources\images\invalid_line.gif" />
+    <Content Include="resources\images\overriddenDay.png" />
+    <Content Include="resources\images\overriddenWeekDay.png" />
+    <Content Include="resources\images\page-horizontal-icon.png" />
+    <Content Include="resources\images\page-vertical-icon.png" />
+    <Content Include="resources\images\pattern.png" />
+    <Content Include="resources\images\pdf-icon.png" />
+    <Content Include="resources\images\png-icon.png" />
+    <Content Include="resources\images\progressbar-handle.png" />
+    <Content Include="resources\images\puzzle.png" />
+    <Content Include="resources\images\resize-handle-hor.gif" />
+    <Content Include="resources\images\resize-handle-ver.gif" />
+    <Content Include="resources\images\transp-1px.png" />
+    <Content Include="resources\images\zonebg.png" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BryntumCRUD\BryntumCRUD.csproj">
+      <Project>{c6c096e6-d0fc-4921-9f64-6be53bfa77e9}</Project>
+      <Name>BryntumCRUD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BryntumGantt\BryntumGantt.csproj">
+      <Project>{b4848b5e-6cf8-4f8f-ba9d-32abf6dd914c}</Project>
+      <Name>BryntumGantt</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>50696</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:50696/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+</Project>

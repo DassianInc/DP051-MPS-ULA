@@ -1,0 +1,15 @@
+{
+    "undef"     : true,
+    "browser"   : true,
+    "predef"    : ["Bryntum", "Ext", "Sch", "Gnt", "Siesta", "Joose", "console", "alert", "StartTest", "$", "describe"],
+    "onecase"   : true,
+    "debug"     : false,
+    "asi"       : true,
+    "supernew"  : false,
+    "expr"      : true,         // allow fn && fn()
+    "loopfunc"  : true,
+    "eqnull"    : true,
+    "boss"      : true,
+    "maxerr"    : 5000,
+    "es3"       : true
+}

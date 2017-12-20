@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">Ext.define('Gnt.locale.RuRU', {
+    extend      : 'Sch.locale.Locale',
+    requires    : 'Sch.locale.RuRU',
+    singleton   : true,
+
+    constructor : function () {
+
+        Ext.apply(this, {
+            l10n        : {
+                'Gnt.util.DurationParser' : {
+                    unitsRegex : {
+                        MILLI       : /^мс$|^мил/i,
+                        SECOND      : /^с$|^сек/i,
+                        MINUTE      : /^м$|^мин/i,
+                        HOUR        : /^ч$|^час/i,
+                        DAY         : /^д$|^ден|^дне/i,
+                        WEEK        : /^н$|^нед/i,
+                        MONTH       : /^мес/i,
+                        QUARTER     : /^к$|^квар|^квр/i,
+                        YEAR        : /^г$|^год|^лет/i
+                    }
+                },
+
+                'Gnt.util.DependencyParser' : {
+                    typeText    : {
+                        SS  : 'НН',
+                        SF  : 'НО',
+                        FS  : 'ОН',
+                        FF  : 'ОО'
+                    }
+                },
+
+                'Gnt.field.ConstraintType' : {
+                    none : 'Нет'
+                },
+
+                'Gnt.field.Duration' : {
+                    invalidText : &quot;Неверное значение&quot;
+                },
+
+                'Gnt.field.Effort' : {
+                    invalidText : &quot;Неверное значение&quot;
+                },
+
+                'Gnt.field.Percent' : {
+                    invalidText : &quot;Неверное значение&quot;
+                },
+
+                'Gnt.field.SchedulingMode' : {
+                    Normal              : 'Стандартный',
+                    FixedDuration       : 'Фиксированная длительность',
+                    EffortDriven        : 'Фиксированный объем работ',
+                    DynamicAssignment   : 'Динамические назначения'
+                },
+
+                'Gnt.feature.DependencyDragDrop': {
+                    fromText    : 'От',
+                    toText      : 'К',
+                    startText   : 'Начало',
+                    endText     : 'Конец'
+                },
+
+                'Gnt.Tooltip' : {
+                    startText       : 'Начинается: ',
+                    endText         : 'Заканчивается: ',
+                    durationText    : 'Длительность:'
+                },
+
+                'Gnt.plugin.TaskContextMenu' : {
+                    projectInformation  : 'Информация по проекту',
+                    taskInformation     : 'Информация по задаче',
+                    newTaskText         : 'Новая задача',
+                    deleteTask          : 'Удалить задачу(и)',
+                    editLeftLabel       : 'Редактировать левую метку',
+                    editRightLabel      : 'Редактировать правую метку',
+                    add                 : 'Добавить...',
+                    deleteDependency    : 'Удалить зависимость...',
+                    addTaskAbove        : 'Задачу выше',
+                    addTaskBelow        : 'Задачу ниже',
+                    addMilestone        : 'Веху',
+                    addSubtask          : 'Под-задачу',
+                    addSuccessor        : 'Последующую задачу',
+                    addPredecessor      : 'Предшествующую задачу',
+                    convertToMilestone  : 'Преобразовать в веху',
+                    convertToRegular    : 'Преобразовать в задачу',
+                    splitTask           : 'Прерывание задачи'
+                },
+
+                'Gnt.plugin.DependencyEditor' : {
+                    fromText            : 'От',
+                    toText              : 'К',
+                    typeText            : 'Тип',
+                    lagText             : 'Задержка',
+                    endToStartText      : 'Конец-К-Началу',
+                    startToStartText    : 'Начало-К-Началу',
+                    endToEndText        : 'Конец-К-Концу',
+                    startToEndText      : 'Начало-К-Концу'
+                },
+
+                'Gnt.widget.calendar.Calendar' : {
+                    dayOverrideNameHeaderText : 'Название',
+                    overrideName       : 'Наименование',
+                    startDate          : 'Начало',
+                    endDate            : 'Окончание',
+                    error              : 'Ошибка',
+                    dateText           : 'Дата',
+                    addText            : 'Добавить',
+                    editText           : 'Изменить',
+                    removeText         : 'Удалить',
+                    workingDayText     : 'Рабочий день',
+                    weekendsText       : 'Выходные',
+                    overriddenDayText  : 'Особый день',
+                    overriddenWeekText : 'Особая неделя',
+                    workingTimeText    : 'Рабочее время',
+                    nonworkingTimeText : 'Нерабочее время',
+                    dayOverridesText   : 'Особые дни',
+                    weekOverridesText  : 'Особые недели',
+                    okText             : 'Ok',
+                    cancelText         : 'Отменить',
+                    parentCalendarText : 'Родительский календарь',
+                    noParentText       : 'Нет родителя',
+                    selectParentText   : 'Выбрать родительский календарь',
+                    newDayName         : '[Без имени]',
+                    calendarNameText   : 'Название календаря',
+                    tplTexts           : {
+                        tplWorkingHours     : 'Рабочие часы для',
+                        tplIsNonWorking     : 'нерабочее',
+                        tplOverride         : 'особый',
+                        tplInCalendar       : 'в календаре',
+                        tplDayInCalendar    : 'обычный день в календаре',
+                        tplBasedOn          : 'Основан на'
+                    },
+                    overrideErrorText       : 'Для этого дня уже создано исключение',
+                    overrideDateError       : 'Для {0} уже создано исключение',
+                    startAfterEndError      : 'Дата начала должна быть раньше даты окончания',
+                    weeksIntersectError     : 'Особые недели не должны пересекаться'
+                },
+
+                'Gnt.widget.calendar.CalendarManager' : {
+                    addText         : 'Добавить',
+                    removeText      : 'Удалить',
+                    add_child       : 'Добавить дочерний календарь',
+                    add_node        : 'Добавить календарь',
+                    add_sibling     : 'Добавить календарь на этом уровне',
+                    remove          : 'Удалить',
+                    calendarName    : 'Календарь',
+                    confirm_action  : 'Подтвердите действие',
+                    confirm_message : 'Сохранить изменения?'
+                },
+
+                'Gnt.widget.calendar.CalendarManagerWindow' : {
+                    ok              : 'Применить',
+                    cancel          : 'Закрыть',
+                    title           : 'Управление календарями',
+                    confirm_action  : 'Подтвердите действие',
+                    confirm_message : 'Календарь был изменен. Сохранить изменения?'
+                },
+
+                'Gnt.widget.calendar.AvailabilityGrid' : {
+                    startText           : 'Начало',
+                    endText             : 'Конец',
+                    addText             : 'Добавить',
+                    removeText          : 'Удалить',
+                    error               : 'Ошибка'
+                },
+
+                'Gnt.widget.calendar.DayEditor' : {
+                    workingTimeText     : 'Рабочее время',
+                    nonworkingTimeText  : 'Нерабочее время'
+                },
+
+                'Gnt.widget.calendar.WeekEditor' : {
+                    defaultTimeText     : 'Стандартное время',
+                    workingTimeText     : 'Рабочее время',
+                    nonworkingTimeText  : 'Нерабочее время',
+                    error               : 'Ошибка',
+                    noOverrideError     : 'Особая неделя содержит только стандартные дни - нет данных для сохранения'
+                },
+
+                'Gnt.widget.calendar.ResourceCalendarGrid' : {
+                    name        : 'Ресурс',
+                    calendar    : 'Календарь'
+                },
+
+                'Gnt.widget.calendar.CalendarWindow' : {
+                    ok      : 'Принять',
+                    cancel  : 'Отменить'
+                },
+
+                'Gnt.field.Assignment' : {
+                    cancelText : 'Отменить',
+                    closeText  : 'Сохранить и закрыть'
+                },
+
+                'Gnt.column.AssignmentUnits' : {
+                    text : 'Единицы'
+                },
+
+                'Gnt.column.Duration' : {
+                    text : 'Длительность'
+                },
+
+                'Gnt.column.Effort' : {
+                    text : 'Трудозатраты'
+                },
+
+                'Gnt.column.EndDate' : {
+                    text : 'Конец'
+                },
+
+                'Gnt.column.PercentDone' : {
+                    text : '% завершения'
+                },
+
+                'Gnt.column.ResourceAssignment' : {
+                    text : 'Назначенные ресурсы'
+                },
+
+                'Gnt.column.ResourceName' : {
+                    text : 'Имя ресурса'
+                },
+
+                'Gnt.column.Rollup' : {
+                    text : 'Сведение',
+                    yes  : 'Да',
+                    no   : 'Нет'
+                },
+
+                'Gnt.field.ManuallyScheduled' : {
+                    yes : 'Да',
+                    no  : 'Нет'
+                },
+
+                'Gnt.field.ReadOnly' : {
+                    yes : 'Да',
+                    no  : 'Нет'
+                },
+
+                'Gnt.column.ManuallyScheduled' : {
+                    text : 'Планирование вручную'
+                },
+
+                'Gnt.column.SchedulingMode' : {
+                    text : 'Режим'
+                },
+
+                'Gnt.column.Predecessor' : {
+                    text : 'Предшествующие'
+                },
+
+                'Gnt.column.Successor' : {
+                    text : 'Последующие'
+                },
+
+                'Gnt.column.StartDate' : {
+                    text : 'Начало'
+                },
+
+                'Gnt.column.WBS' : {
+                    text : 'СДР'
+                },
+
+                'Gnt.column.Sequence' : {
+                    text : '#'
+                },
+
+                'Gnt.column.Calendar' : {
+                    text : 'Календарь'
+                },
+
+                'Gnt.column.ReadOnly' : {
+                    text : 'ReadOnly'
+                },
+
+                'Gnt.widget.taskeditor.ProjectForm' : {
+                    projectText             : 'Проект',
+                    nameText                : 'Наименование',
+                    datesText               : 'Даты',
+                    startText               : 'Начало',
+                    finishText              : 'Конец',
+                    calendarText            : 'Календарь',
+                    readOnlyText            : 'Только для чтения',
+                    allowDependenciesText   : 'Разрешить зависимости с другими проектами'
+                },
+
+                'Gnt.widget.taskeditor.TaskForm' : {
+                    taskNameText            : 'Наименование',
+                    durationText            : 'Длительность',
+                    datesText               : 'Даты',
+                    baselineText            : 'Исходный план',
+                    startText               : 'Начало',
+                    finishText              : 'Конец',
+                    percentDoneText         : '% завершения',
+                    baselineStartText       : 'Начало',
+                    baselineFinishText      : 'Конец',
+                    baselinePercentDoneText : '% завершения',
+                    effortText              : 'Трудозатраты',
+                    invalidEffortText       : 'Неверное значение трудозатрат',
+                    calendarText            : 'Календарь',
+                    manuallyScheduledText   : 'Планирование вручную',
+                    schedulingModeText      : 'Режим',
+                    rollupText              : 'Сведение',
+                    wbsCodeText             : 'СДР код',
+                    &quot;Constraint Type&quot;       : 'Тип ограничения',
+                    &quot;Constraint Date&quot;       : 'Дата ограничения',
+                    readOnlyText            : 'Только для чтения'
+                },
+
+                'Gnt.widget.DependencyGrid' : {
+                    idText                    : 'ID',
+                    snText                    : 'SN',
+                    taskText                  : 'Задача',
+                    blankTaskText             : 'Пожалуйста выберите задачу',
+                    invalidDependencyText     : 'Неверная зависимость',
+                    parentChildDependencyText : 'Обнаружена зависимость между родительской и вложенной задачами',
+                    duplicatingDependencyText : 'Повторная зависимость',
+                    transitiveDependencyText  : 'Транзитивная зависимость',
+                    cyclicDependencyText      : 'Цикличная зависимость',
+                    typeText                  : 'Тип',
+                    lagText                   : 'Задержка',
+                    clsText                   : 'CSS класс',
+                    endToStartText            : 'Конец-К-Началу',
+                    startToStartText          : 'Начало-К-Началу',
+                    endToEndText              : 'Конец-К-Концу',
+                    startToEndText            : 'Начало-К-Концу',
+                    predecessorsText          : 'Предшественники',
+                    successorsText            : 'Последователи'
+                },
+
+                'Gnt.widget.AssignmentEditGrid' : {
+                    confirmAddResourceTitle : 'Подтверждение',
+                    confirmAddResourceText  : 'Ресурс с именем &amp;quot;{0}&amp;quot; не найден. Добавить его в список ресурсов?',
+                    noValueText             : 'Пожалуйста выберите ресурс',
+                    noResourceText          : 'Ресурс с именем &amp;quot;{0}&amp;quot; не найден'
+                },
+
+                'Gnt.widget.taskeditor.ProjectEditor' : {
+                    generalText        : 'Основные',
+                    descriptionText    : 'Описание'
+                },
+
+                'Gnt.widget.taskeditor.TaskEditor' : {
+                    generalText             : 'Основные',
+                    resourcesText           : 'Ресурсы',
+                    addDependencyText       : 'Добавить',
+                    dropDependencyText      : 'Удалить',
+                    notesText               : 'Примечание',
+                    advancedText            : 'Дополнительно',
+                    addAssignmentText       : 'Добавить',
+                    dropAssignmentText      : 'Удалить'
+                },
+
+                'Gnt.plugin.taskeditor.BaseEditor' : {
+                    title           : 'Информация по задаче',
+                    alertCaption    : 'Информация',
+                    alertText       : 'Пожалуйста исправьте отмеченные ошибки перед сохранением',
+                    okText          : 'Принять',
+                    cancelText      : 'Отмена'
+                },
+
+                'Gnt.plugin.taskeditor.ProjectEditor' : {
+                    title        : 'Информация по проекту'
+                },
+
+                'Gnt.field.EndDate' : {
+                    endBeforeStartText : 'Дата окончания раньше даты начала'
+                },
+
+                'Gnt.column.Note'   : {
+                    text            : 'Примечание'
+                },
+
+                'Gnt.column.AddNew' : {
+                    text            : 'Добавить столбец...'
+                },
+
+                'Gnt.column.EarlyStartDate' : {
+                    text            : 'Раннее начало'
+                },
+
+                'Gnt.column.EarlyEndDate' : {
+                    text            : 'Раннее окончание'
+                },
+
+                'Gnt.column.LateStartDate' : {
+                    text            : 'Позднее начало'
+                },
+
+                'Gnt.column.LateEndDate' : {
+                    text            : 'Позднее окончание'
+                },
+
+                'Gnt.field.Calendar' : {
+                    calendarNotApplicable : 'Календарь задачи не пересекается с календарями назначенных ресурсов'
+                },
+
+                'Gnt.column.Slack' : {
+                    text            : 'Резерв времени'
+                },
+
+                'Gnt.column.Name'   : {
+                    text            : 'Наименование задачи'
+                },
+
+                'Gnt.column.BaselineStartDate'   : {
+                    text            : 'Плановое начало'
+                },
+
+                'Gnt.column.BaselineEndDate'   : {
+                    text            : 'Плановый конец'
+                },
+
+                'Gnt.column.Milestone'   : {
+                    text            : 'Веха'
+                },
+
+                'Gnt.field.Milestone'   : {
+                    yes             : 'Да',
+                    no              : 'Нет'
+                },
+
+                'Gnt.field.Dependency'  : {
+                    invalidFormatText       : 'Неверный формат зависимости',
+                    invalidDependencyText   : 'Неверная зависимость, пожалуйста убедитесь в отсутствии цикличностей или повторных транзитивных связей',
+                    invalidDependencyType   : 'Неверный тип зависимости {0}. Разрешенные типы: {1}.'
+                },
+
+                'Gnt.constraint.Base' : {
+                    name                                : &quot;Ограничение&quot;,
+                    &quot;Remove the constraint&quot;             : &quot;Убрать ограничение&quot;,
+                    &quot;Cancel the change and do nothing&quot;  : &quot;Отменить изменения&quot;
+                },
+
+                'Gnt.constraint.FinishNoEarlierThan' : {
+                    name                                : &quot;Окончание не раньше&quot;,
+                    // {0} constraint date
+                    &quot;Move the task to finish on {0}&quot;    : &quot;Сдвинуть окончание задачи на {0}&quot;
+                },
+
+                &quot;Gnt.constraint.FinishNoLaterThan&quot; : {
+                    name                                : &quot;Окончание не позднее&quot;,
+                    // {0} constraint date
+                    &quot;Move the task to finish on {0}&quot;    : &quot;Сдвинуть окончание задачи на {0}&quot;
+                },
+
+                &quot;Gnt.constraint.MustFinishOn&quot; : {
+                    name                                : &quot;Фиксированное окончание&quot;,
+                    // {0} constraint date
+                    &quot;Move the task to finish on {0}&quot;    : &quot;Сдвинуть окончание задачи на {0}&quot;
+                },
+
+                &quot;Gnt.constraint.MustStartOn&quot; : {
+                    name                                : &quot;Фиксированное начало&quot;,
+                    // {0} constraint date
+                    &quot;Move the task to start at {0}&quot;     : &quot;Сдвинуть начало задачи на {0}&quot;
+                },
+
+                &quot;Gnt.constraint.StartNoEarlierThan&quot; : {
+                    name                                : &quot;Начало не раньше&quot;,
+                    // {0} constraint date
+                    &quot;Move the task to start at {0}&quot;     : &quot;Сдвинуть начало задачи на {0}&quot;
+                },
+
+                &quot;Gnt.constraint.StartNoLaterThan&quot; : {
+                    name                                : &quot;Начало не позднее&quot;,
+                    // {0} constraint date
+                    &quot;Move the task to start at {0}&quot;     : &quot;Сдвинуть начало задачи на {0}&quot;
+                },
+
+                &quot;Gnt.column.ConstraintDate&quot; : {
+                    text    : &quot;Дата ограничения&quot;
+                },
+
+                &quot;Gnt.column.ConstraintType&quot; : {
+                    text    : &quot;Тип ограничения&quot;
+                },
+
+                &quot;Gnt.widget.ConstraintResolutionForm&quot; : {
+                    dateFormat                              : &quot;d.m.Y&quot;,
+                    &quot;OK&quot;                                    : 'Принять',
+                    &quot;Cancel&quot;                                : 'Отменить',
+                    &quot;Resolution options&quot;                    : &quot;Варианты решения&quot;,
+                    &quot;Don't ask again&quot;                       : &quot;Не спрашивать больше&quot;,
+                    // {0} task name, {1} constraint name
+                    &quot;Task {0} violates constraint {1}&quot;      : &quot;Задача \&quot;{0}\&quot; нарушает ограничение {1}&quot;,
+                    // {0} task name, {1} constraint name, {2} constraint date
+                    &quot;Task {0} violates constraint {1} {2}&quot;  : &quot;Задача \&quot;{0}\&quot; нарушает ограничение {1} {2}&quot;
+                },
+
+                &quot;Gnt.widget.ConstraintResolutionWindow&quot;     : {
+                    &quot;Constraint violation&quot;  : &quot;Нарушение ограничения&quot;
+                },
+
+                &quot;Gnt.panel.ResourceHistogram&quot; : {
+                    resourceText : 'Ресурс'
+                }
+            }
+        });
+
+        this.callParent(arguments);
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-template-Milestone'>/**
+</span>@class Gnt.template.Milestone
+@extends Ext.XTemplate
+
+Class used to render a milestone task.
+*/
+Ext.define(&quot;Gnt.template.Milestone&quot;, {
+    extend : 'Gnt.template.Template',
+
+<span id='Gnt-template-Milestone-cfg-innerTpl'>    /**
+</span>     * @cfg {String} innerTpl The template defining the inner visual markup for the milestone task.
+     * Please note that this markup may be different depending on the browser used.
+     */
+    innerTpl :  (Ext.isIE8m ?
+        ('&lt;div style=&quot;border-width:{[Math.floor(values.side*0.7)]}px;{style}&quot; class=&quot;sch-gantt-milestone-diamond-top {cls}&quot; unselectable=&quot;on&quot;&gt;&lt;/div&gt;' +
+         '&lt;div style=&quot;border-width:{[Math.floor(values.side*0.7)]}px;{style}&quot; class=&quot;sch-gantt-milestone-diamond-bottom {cls}&quot; unselectable=&quot;on&quot;&gt;&lt;/div&gt;') :
+
+        ('&lt;img style=&quot;{[values.print ? &quot;height:&quot; + values.side + &quot;px;border-left-width:&quot; + values.side + &quot;px&quot; : &quot;&quot;]};{style}&quot; src=&quot;' + Ext.BLANK_IMAGE_URL + '&quot; class=&quot;sch-gantt-milestone-diamond {cls}&quot; unselectable=&quot;on&quot;/&gt;')),
+
+<span id='Gnt-template-Milestone-method-getInnerTpl'>    getInnerTpl : function (cfg) {
+</span>        return '&lt;div ' + (this.isLegacyIE ? 'style=&quot;width:{[Math.floor(values.side*0.7)]}px&quot;' : '') + ' id=&quot;' + cfg.prefix + '{id}&quot; class=&quot;sch-gantt-item sch-gantt-milestone-diamond-ct&quot;&gt;' +
+            this.innerTpl +
+
+            '&lt;tpl if=&quot;isRollup&quot;&gt;' +
+            '&lt;tpl else&gt;' +
+            // Milestone diamond, 2 elements for old IE
+            // Dependency terminals
+            (cfg.enableDependencyDragDrop ? this.dependencyTerminalMarkup : '') +
+           '&lt;/tpl&gt;' +
+
+        '&lt;/div&gt;';
+    }
+});</pre>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-widget-taskeditor-BaseEditor'>/**
+</span> @class Gnt.widget.taskeditor.BaseEditor
+ @extends Ext.tab.Panel
+
+ This is the baseclass for editors, it keeps the references to the stores and the loaded task instances.
+
+ */
+
+Ext.define('Gnt.widget.taskeditor.BaseEditor', {
+
+    extend                  : 'Ext.tab.Panel',
+
+    requires                : ['Gnt.util.Data'],
+
+    mixins                  : ['Gnt.mixin.Localizable'],
+<span id='Gnt-widget-taskeditor-BaseEditor-property-margin'>    margin                  : '5 0 0 0',
+</span>
+<span id='Gnt-widget-taskeditor-BaseEditor-property-height'>    height                  : 340,
+</span><span id='Gnt-widget-taskeditor-BaseEditor-property-width'>    width                   : 600,
+</span><span id='Gnt-widget-taskeditor-BaseEditor-property-layout'>    layout                  : 'fit',
+</span>
+<span id='Gnt-widget-taskeditor-BaseEditor-property-border'>    border                  : false,
+</span>
+<span id='Gnt-widget-taskeditor-BaseEditor-property-plain'>    plain                   : true,
+</span>
+<span id='Gnt-widget-taskeditor-BaseEditor-property-defaults'>    defaults                : {
+</span>        margin          : 5,
+        border          : false
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-property-eventIndicator'>    eventIndicator          : 'task',
+</span>
+<span id='Gnt-widget-taskeditor-BaseEditor-cfg-task'>    /**
+</span>     * @cfg {Gnt.model.Task} task The task to edit.
+     */
+    task                    : null,
+
+<span id='Gnt-widget-taskeditor-BaseEditor-property-taskBuffer'>    //private a buffer for the task
+</span>    taskBuffer              : null,
+
+<span id='Gnt-widget-taskeditor-BaseEditor-cfg-taskStore'>    /**
+</span>     * @cfg {Gnt.data.TaskStore} taskStore A store with tasks.
+     *
+     * **Note:** This is a required option if the task being edited doesn't belong to any task store.
+     */
+    taskStore               : null,
+
+<span id='Gnt-widget-taskeditor-BaseEditor-cfg-assignmentStore'>    /**
+</span>     * @cfg {Gnt.data.AssignmentStore} assignmentStore A store with assignments.
+     *
+     * **Note:** It has to be provided to show the `Resources` tab (See also {@link #resourceStore}).
+     */
+    assignmentStore         : null,
+
+<span id='Gnt-widget-taskeditor-BaseEditor-cfg-resourceStore'>    /**
+</span>     * @cfg {Gnt.data.ResourceStore} resourceStore A store with resources.
+     *
+     * **Note:** It has to be provided to show the `Resources` tab (See also {@link #assignmentStore}).
+     */
+    resourceStore           : null,
+
+<span id='Gnt-widget-taskeditor-BaseEditor-property-clonedStores'>    clonedStores            : null,
+</span>
+<span id='Gnt-widget-taskeditor-BaseEditor-method-constructor'>    constructor : function (config) {
+</span>        var me  = this;
+
+        config  = config || {};
+
+        Ext.apply(me, config);
+
+        // Prepare empty store clones (data loading occurs in loadTask() method).
+        if (!me.clonedStores) {
+            me.clonedStores = (me.task || me.taskStore) ? me.cloneStores() : {};
+        }
+
+        var items   = me.buildItems(config);
+
+        var its     = me.items;
+
+        // user defined tabs go after our predefined ones
+        if (its) {
+            items.push.apply(items, Ext.isArray(its) ? its : [its]);
+
+            delete config.items;
+        }
+
+        me.items  = items;
+
+        // if we have the only tab let's hide the tabBar
+        if (me.items.length &lt;= 1) {
+            config.tabBar   = config.tabBar || {};
+            Ext.applyIf(config.tabBar, { hidden : true });
+        }
+
+        this.callParent([config]);
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-buildItems'>    buildItems : function (config) {
+</span>        return [];
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneTaskBranch'>    cloneTaskBranch : function (task, taskCopy) {
+</span>        task            = task || this.task;
+
+        var me              = this,
+            taskStore       = me.getTaskStore(),
+            root            = taskStore &amp;&amp; taskStore.getRoot(),
+            clonedStores    = me.clonedStores,
+            taskClone,
+            lastTask;
+
+        // loop over task parents till the root node
+        task.bubble(function (task) {
+            if (task !== root) {
+                var copy    = taskCopy[task.getId()];
+
+                // stop if we met already copied task
+                if (copy) {
+                    // we attach cloned tasks to existing copy
+                    if (lastTask) copy.appendChild(lastTask);
+                    // &quot;result.branch&quot; will be empty in this case
+                    lastTask = null;
+
+                    return false;
+
+                } else {
+                    copy                    = me.cloneTask(task);
+                    taskCopy[task.getId()]  = copy;
+                    copy.taskStore          = clonedStores.taskStore;
+                }
+
+                if (lastTask) {
+                    copy.appendChild(lastTask);
+                } else {
+                    taskClone   = copy;
+                }
+
+                lastTask        = copy;
+            }
+        });
+
+        return {
+            branch  : lastTask,
+            task    : taskClone
+        };
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneRelevantTasks'>    cloneRelevantTasks : function (task) {
+</span>        task            = task || this.task;
+
+        var me          = this,
+            taskCopy    = {};
+
+        // clone task with its parents
+        var cloned      = me.cloneTaskBranch(task, taskCopy),
+            taskBuffer  = cloned.task,
+            tasks       = [ cloned.branch ];
+
+        // clone predecessors
+        Ext.Array.each(task.predecessors, function (d) {
+            var cloned      = me.cloneTaskBranch(d.getSourceTask(), taskCopy);
+            if (cloned.branch) tasks.push(cloned.branch);
+        });
+
+        // clone successors
+        Ext.Array.each(task.successors, function (d) {
+            var cloned      = me.cloneTaskBranch(d.getTargetTask(), taskCopy);
+            if (cloned.branch) tasks.push(cloned.branch);
+        });
+
+        return {
+            task    : taskBuffer,
+            tasks   : tasks
+        };
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-loadTask'>    /**
+</span>     * Loads task data into task editor.
+     * @param {Gnt.model.Task} task Task to load to editor.
+     */
+    loadTask : function (task) {
+        if (!task) return;
+
+        var me = this;
+
+        // clone stores ..if they were not cloned yet
+        this.clonedStores = this.cloneStores({ task : task });
+
+        // fill cloned stores with data
+        this.loadClonedStores(this.clonedStores, task);
+
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneTaskStore'>    // We need fake taskStore to give task copy ability to ask it for the project calendar
+</span>    cloneTaskStore : function (task, config) {
+        var store   = this.getTaskStore();
+
+        if (!store) return null;
+
+        var copy                                = new (Ext.getClass(store))(Ext.apply({
+            isCloned                            : true,
+            // TODO: need to clone calendar manager as well
+            calendarManager                     : null,
+            // Ticket #1815:
+            // Important, not to confuse the StoreManager
+            storeId                             : null,
+            calendar                            : store.getCalendar(),
+            model                               : store.model,
+            weekendsAreWorkdays                 : store.weekendsAreWorkdays,
+            cascadeChanges                      : store.cascadeChanges,
+            batchSync                           : false,
+            recalculateParents                  : false,
+            skipWeekendsDuringDragDrop          : store.skipWeekendsDuringDragDrop,
+            moveParentAsGroup                   : store.moveParentAsGroup,
+            enableDependenciesForParentTasks    : store.enableDependenciesForParentTasks,
+            availabilitySearchLimit             : store.availabilitySearchLimit,
+            dependenciesCalendar                : 'project',
+            proxy                               : {
+                type        : 'memory',
+                reader      : {
+                    type    : 'json'
+                }
+            }
+        }, config));
+
+        // on bind different calendar to the original task store we do the same for the copy
+        this.mon(store, {
+            calendarset : function (store, calendar) {
+                copy.setCalendar(calendar);
+            }
+        });
+
+        return copy;
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneDependencyStore'>    cloneDependencyStore : function (task, config) {
+</span>        var taskStore   = this.getTaskStore();
+        var store       = this.dependencyStore || taskStore &amp;&amp; taskStore.getDependencyStore();
+
+        if (!store) return null;
+
+        return new (Ext.getClass(store))(Ext.apply({
+            isCloned                    : true,
+            model                       : store.model,
+            strictDependencyValidation  : store.strictDependencyValidation,
+            allowedDependencyTypes      : store.allowedDependencyTypes,
+            proxy                       : {
+                type        : 'memory',
+                reader      : {
+                    type    : 'json'
+                }
+            }
+        }, config));
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneAssignmentStore'>    cloneAssignmentStore : function (task, config) {
+</span>        var taskStore   = this.getTaskStore();
+        var store       = this.assignmentStore || taskStore &amp;&amp; taskStore.getAssignmentStore();
+
+        if (!store) return null;
+
+        return new (Ext.getClass(store))(Ext.apply({
+            isCloned        : true,
+            model           : store.model,
+            proxy           : {
+                type        : 'memory',
+                reader      : {
+                    type    : 'json'
+                }
+            }
+        }, config));
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneResourceStore'>    cloneResourceStore : function (task, config) {
+</span>        var taskStore   = this.getTaskStore();
+        var store       = this.resourceStore || taskStore &amp;&amp; taskStore.getResourceStore();
+
+        if (!store) return null;
+
+        return new (Ext.getClass(store))(Ext.apply({
+            isCloned        : true,
+            model           : store.model,
+            proxy           : {
+                type        : 'memory',
+                reader      : {
+                    type    : 'json'
+                }
+            }
+        }, config));
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneStores'>    cloneStores : function (config) {
+</span>        config                  = config || {};
+
+        var task                = config.task || this.task,
+            clonedStores        = this.clonedStores || {},
+            resourceStore       = clonedStores.resourceStore    || this.cloneResourceStore(task, config &amp;&amp; config.resourceStore),
+            assignmentStore     = clonedStores.assignmentStore  || this.cloneAssignmentStore(task, config &amp;&amp; config.assignmentStore),
+            dependencyStore     = clonedStores.dependencyStore  || this.cloneDependencyStore(task, config &amp;&amp; config.dependencyStore);
+
+        var taskStore           = clonedStores.taskStore || this.cloneTaskStore(task, Ext.apply({
+            assignmentStore     : assignmentStore,
+            resourceStore       : resourceStore,
+            dependencyStore     : dependencyStore
+        }, config &amp;&amp; config.taskStore));
+
+        resourceStore.taskStore = taskStore;
+
+        Ext.apply(clonedStores, {
+            resourceStore   : resourceStore,
+            assignmentStore : assignmentStore,
+            dependencyStore : dependencyStore,
+            taskStore       : taskStore
+        });
+
+        return clonedStores;
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-getTaskStore'>    getTaskStore : function (task) {
+</span>        task    = task || this.task;
+
+        return this.taskStore || task &amp;&amp; task.getTaskStore();
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-loadClonedStores'>    loadClonedStores : function (clonedStores, task) {
+</span>        // copy relevant tasks for TaskStore clone
+        var me          = this,
+            data        = me.cloneRelevantTasks(task),
+            tasks       = data.tasks,
+            taskBuffer  = data.task;
+
+        taskBuffer.taskStore.on({
+            update : function (store, record, operation) {
+                if (record === taskBuffer &amp;&amp; operation == Ext.data.Model.EDIT) {
+                    me.onTaskUpdated.call(me, record);
+                    record.fireEvent(me.eventIndicator + 'updated', record);
+                }
+            }
+        });
+
+        // fill task store clone w/ related task copies
+        clonedStores.taskStore.setRootNode({
+            expanded    : true,
+            children    : tasks
+        });
+
+        me.loadClonedDependencyStore(clonedStores, task);
+        me.loadClonedResourceStore(clonedStores, task);
+        me.loadClonedAssignmentStore(clonedStores, task);
+
+        me.taskBuffer = taskBuffer;
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-loadClonedDependencyStore'>    loadClonedDependencyStore : function (clonedStores, task) {
+</span>        clonedStores    = clonedStores || this.clonedStores;
+
+        clonedStores.dependencyStore &amp;&amp; clonedStores.dependencyStore.loadData(
+            Gnt.util.Data.cloneModelSet(
+                task.getAllDependencies(),
+                function (copy, original) { copy.setId(original.getId()); }
+            )
+        );
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-loadClonedResourceStore'>    loadClonedResourceStore : function (clonedStores, task) {
+</span>        clonedStores    = clonedStores || this.clonedStores;
+
+        clonedStores.resourceStore &amp;&amp; clonedStores.resourceStore.loadData(
+            Gnt.util.Data.cloneModelSet(
+                this.resourceStore || this.getTaskStore().getResourceStore(),
+                function (copy, original) { copy.setId(original.getId()); }
+            )
+        );
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-loadClonedAssignmentStore'>    loadClonedAssignmentStore : function (clonedStores, task) {
+</span>        clonedStores    = clonedStores || this.clonedStores;
+
+        clonedStores.assignmentStore &amp;&amp; clonedStores.assignmentStore.loadData(
+            Gnt.util.Data.cloneModelSet(
+                task.getAssignments(),
+                function (copy, original) { copy.setId(original.getId()); }
+            )
+        );
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-cloneTask'>    cloneTask : function (task) {
+</span>        return task.copy(task.getId(), false);
+    },
+
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-getTabByComponent'>    /**
+</span>     * Returns the task editor tab that contains specified component.
+     * @return {Ext.Component} Tab containing specified component or `undefined` if item is not found.
+     */
+    getTabByComponent : function (component) {
+        var result;
+        this.items.each(function (el) {
+            if (component === el || component.isDescendantOf(el)) {
+                result = el;
+                return false;
+            }
+        }, this);
+
+        return result;
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-validate'>    /**
+</span>     * Checks data loaded or entered to task editor for errors.
+     * Calls isValid methods of taskForm, dependencyGrid, advancedForm (if corresponding objects are presented at the task editor).
+     * In case some of calls returns `false` switch active tab so that user can view invalid object.
+     * Validation can be customized by handling {@link #event-validate} event.
+     *
+     * Returns `false` in that case.
+     * @return {Boolean} Returns `true` if all components are valid.
+     */
+    validate : function() {
+        var result,
+            activeTab = this.getActiveTab(),
+            invalidTabs = [],
+            tabToActivate;
+
+        result = this.doValidate(function (tab) {
+            invalidTabs.push(tab);
+        });
+
+        if (!result &amp;&amp; activeTab &amp;&amp; !Ext.Array.contains(invalidTabs, activeTab)) {
+            tabToActivate = invalidTabs[0];
+            this.setActiveTab(tabToActivate);
+        }
+        else if (!result &amp;&amp; activeTab) {
+            tabToActivate = activeTab;
+        }
+        else if (!result) {
+            tabToActivate = invalidTabs[0];
+        }
+
+        // validation result
+        return (this.fireEvent('validate', this, tabToActivate) !== false) &amp;&amp; result;
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-updateTask'>    /**
+</span>     * Persists the values in this task editor into corresponding {@link Gnt.model.Task} object provided to showTask.
+     * @return {Boolean} Returns `true` if task was updated. Returns False if some {@link #beforeupdatetask} listener returns False.
+     */
+    updateTask : function () {
+        var me     = this,
+            result = false;
+
+        if (me.fireEvent('beforeupdate' + me.eventIndicator, me, function() { me.doUpdateTask(); }) !== false) {
+            me.doUpdateTask();
+            me.fireEvent('afterupdate' + me.eventIndicator, me);
+            result = true;
+        }
+
+        return result;
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-onDestroy'>    onDestroy : function() {
+</span>        if (this.clonedStores.taskStore) {
+            this.clonedStores.taskStore.destroy();
+        }
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-doValidate'>    doValidate : function () {
+</span>        return true;
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-isDataValid'>    isDataValid : function () {
+</span>        return this.doValidate();
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-isDataChanged'>    isDataChanged : function () {
+</span>        return false;
+    },
+
+<span id='Gnt-widget-taskeditor-BaseEditor-method-doUpdateTask'>    doUpdateTask : Ext.emptyFn,
+</span>
+<span id='Gnt-widget-taskeditor-BaseEditor-method-onTaskUpdated'>    onTaskUpdated : Ext.emptyFn
+</span>
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-view-Calendar'>/**
+</span>@class Sch.view.Calendar
+
+A mixin, purposed to be consumed along with {@link Sch.mixin.AbstractTimelineView} and providing the implementation of some methods, specific to calendar mode.
+
+*/
+Ext.define(&quot;Sch.view.Calendar&quot;, {
+
+    requires : [
+        'Ext.util.Region'
+    ],
+
+<span id='Sch-view-Calendar-property-view'>    // Provided by creator, in the config object
+</span>    view : null,
+
+<span id='Sch-view-Calendar-method-constructor'>    constructor : function(config) {
+</span>        Ext.apply(this, config);
+    },
+
+<span id='Sch-view-Calendar-method-getColumnBy'>    // return columns that passes condition
+</span>    // if includeIndex is true then column index is also returned
+    getColumnBy : function (conditionFn, includeIndex) {
+        var columns = this.view.panel.headerCt.getGridColumns();
+
+        var result = [];
+
+        for (var i = 0; i &lt; columns.length; i++) {
+            if (conditionFn.call(this, columns[i])) {
+                if (includeIndex !== true) {
+                    result.push(columns[i]);
+                } else {
+                    result.push({
+                        column  : columns[i],
+                        index   : i
+                    });
+                }
+            }
+        }
+
+        return result;
+    },
+
+<span id='Sch-view-Calendar-method-getEventColumns'>    getEventColumns  : function (event, includeIndex) {
+</span>        return this.getColumnBy(function (column) {
+            return !(event.getEndDate() &lt;= column.start || event.getStartDate() &gt;= column.end);
+        }, includeIndex);
+    },
+
+<span id='Sch-view-Calendar-method-getColumnEvents'>    getColumnEvents : function (column) {
+</span>        var result  = [];
+
+        this.view.eventStore.each(function (record) {
+            if (!(record.getEndDate() &lt;= column.start || record.getStartDate() &gt;= column.end )) {
+                result.push(record);
+            }
+        });
+
+        return result;
+    },
+
+<span id='Sch-view-Calendar-method-getColumnByResource'>    getColumnByResource : function (resource, includeIndex) {
+</span>        return this.getColumnBy(function (column) {
+            return column.start == resource.start;
+        }, includeIndex)[0];
+    },
+
+<span id='Sch-view-Calendar-method-translateToScheduleCoordinate'>    translateToScheduleCoordinate: function (coord) {
+</span>        var view = this.view;
+
+        if (Ext.isArray(coord)) {
+            return [
+                coord[0] - view.getEl().getX() + view.getScroll().left,
+                coord[1] - view.getEl().getY() + view.getScroll().top
+            ];
+        } else {
+            return coord - view.getEl().getY() + view.getScroll().top;
+        }
+    },
+
+<span id='Sch-view-Calendar-method-translateToPageCoordinate'>    // private
+</span>    translateToPageCoordinate: function (coord) {
+        var view = this.view;
+        var el = view.getEl(),
+            scroll = el.getScroll();
+
+        if (Ext.isArray(coord)) {
+            return [
+                coord[0] + el.getX() - scroll.left,
+                coord[1] + el.getY() - scroll.top
+            ];
+        } else {
+            return coord + el.getY() - scroll.top;
+        }
+    },
+
+<span id='Sch-view-Calendar-method-getDateFromXY'>    getDateFromXY   : function (xy, roundingMethod, local) {
+</span>        var coord   = xy;
+
+        if (!local) {
+            coord = this.translateToScheduleCoordinate(coord);
+        }
+        return this.view.timeAxisViewModel.getDateFromPosition(coord, roundingMethod);
+    },
+
+<span id='Sch-view-Calendar-method-getEventRenderData'>    getEventRenderData : function(event, resource, resourceIndex) {
+</span>        var eventStart  = event.getStartDate(),
+            eventEnd    = event.getEndDate(),
+            view        = this.view,
+            columns     = view.panel.headerCt.getGridColumns(),
+            viewStart   = columns[resourceIndex].start,
+            viewEnd     = columns[resourceIndex].end,
+            M           = Math;
+
+        var startY      = Math.floor(view.getCoordinateFromDate(Sch.util.Date.max(eventStart, viewStart)));
+        var endY        = Math.floor(view.timeAxisViewModel.getPositionFromDate(Sch.util.Date.min(eventEnd, viewEnd), true));
+        var colWidth    = this.getCalendarColumnWidth();
+        var data;
+
+        // in calendar view we duplicate time for end of column and start of next column
+        // if we got 0 that means end is in fact column bottom
+        if (endY === 0) {
+            endY    = view.getStore().getCount() * view.getRowHeight();
+        }
+
+        data = {
+            top     : M.max(0, M.min(startY, endY) - view.eventBorderWidth),
+            height  : M.max(1, M.abs(startY - endY))
+        };
+
+        if (view.managedEventSizing) {
+            data.left = view.barMargin;
+            data.width = colWidth - (2*view.barMargin) - view.eventBorderWidth;
+        }
+
+        data.start = eventStart;
+        data.end = eventEnd;
+        data.startsOutsideView = eventStart &lt; viewStart;
+        data.endsOutsideView = eventEnd &gt; viewEnd;
+
+        return data;
+    },
+
+<span id='Sch-view-Calendar-method-getScheduleRegion'>    // we consider resourceRecord to be date
+</span>    getScheduleRegion: function (resourceRecord, eventRecord) {
+        var view        = this.view,
+            region      = resourceRecord ? this.getColumnByResource(resourceRecord).getRegion() : view.getTableRegion(),
+
+            startY      = this.translateToPageCoordinate(0),
+            endY        = this.translateToPageCoordinate(view.getStore().getCount() * view.getRowHeight()),
+
+            left        = region.left + view.barMargin,
+            right       = region.right - view.barMargin;
+
+        return new Ext.util.Region(Math.min(startY, endY), right, Math.max(startY, endY), left);
+    },
+
+<span id='Sch-view-Calendar-method-getCalendarColumnWidth'>    getCalendarColumnWidth : function(resource) {
+</span>        return this.view.timeAxisViewModel.calendarColumnWidth;
+    },
+
+<span id='Sch-view-Calendar-method-getResourceRegion'>    /**
+</span>    * Gets the Ext.util.Region representing the passed resource and optionally just for a certain date interval.
+    * @param {Sch.model.Resource} resourceRecord The resource record
+    * @param {Date} startDate A start date constraining the region
+    * @param {Date} endDate An end date constraining the region
+    * @return {Ext.util.Region} The region of the resource
+    */
+    getResourceRegion: function (resourceRecord, startDate, endDate) {
+        var view            = this.view,
+            cellLeft        = view.resourceStore.indexOf(resourceRecord) * this.getCalendarColumnWidth(),
+            taStart         = view.timeAxis.getStart(),
+            taEnd           = view.timeAxis.getEnd(),
+            start           = startDate ? Sch.util.Date.max(taStart, startDate) : taStart,
+            end             = endDate ? Sch.util.Date.min(taEnd, endDate) : taEnd,
+            startY          = Math.max(0, view.getCoordinateFromDate(start) - view.cellTopBorderWidth),
+            endY            = view.getCoordinateFromDate(end) - view.cellTopBorderWidth,
+            left            = cellLeft + view.cellBorderWidth,
+            right           = cellLeft + this.getCalendarColumnWidth() - view.cellBorderWidth;
+
+        return new Ext.util.Region(Math.min(startY, endY), right, Math.max(startY, endY), left);
+    },
+
+<span id='Sch-view-Calendar-method-columnRenderer'>    columnRenderer: function (val, meta, resourceRecord, rowIndex, colIndex) {
+</span>        var view = this.view;
+        var retVal = '';
+
+        if (rowIndex === 0) {
+            var columnEvents,
+                resourceEvents,
+                i, l;
+
+            columnEvents = [];
+            resourceEvents = this.getColumnEvents(meta.column);
+
+            // Iterate events (belonging to current resource)
+            for (i = 0, l = resourceEvents.length; i &lt; l; i++) {
+                var event   = resourceEvents[i];
+                // resourceRecord is a timeAxis tick, we should try to get real resource
+                columnEvents.push(view.generateTplData(event, event.getResources()[0] || resourceRecord, colIndex));
+            }
+
+            if (meta.column.rendered &amp;&amp; this.getCalendarColumnWidth() !== meta.column.getWidth()) {
+                this.setColumnWidth(meta.column.getWidth(), true);
+            }
+
+            view.eventLayout.vertical.applyLayout(columnEvents, this.getCalendarColumnWidth());
+            retVal = '&amp;#160;' + view.eventTpl.apply(columnEvents);
+        }
+
+        if (colIndex % 2 === 1) {
+            meta.tdCls = (meta.tdCls || '') + ' ' + view.altColCls;
+            meta.cellCls = (meta.cellCls || '') + ' ' + view.altColCls;
+        }
+
+        return retVal;
+    },
+
+<span id='Sch-view-Calendar-method-resolveResource'>    // private
+</span>    resolveResource: function (el) {
+        var view = this.view;
+        el = Ext.fly(el).is(view.timeCellSelector) ? el : Ext.fly(el).up(view.timeCellSelector);
+
+        if (el) {
+            var node = el.dom ? el.dom : el;
+            var index = 0;
+
+            if (Ext.isIE8m) {
+                node = node.previousSibling;
+
+                while (node) {
+                    if( node.nodeType === 1 ) {
+                        index++;
+                    }
+
+                    node = node.previousSibling;
+                }
+            } else {
+                index = Ext.Array.indexOf(Array.prototype.slice.call(node.parentNode.children), node);
+            }
+
+            if (index &gt;= 0) {
+                // TODO: unsafe
+                var column = view.panel.headerCt.getGridColumns()[index];
+                return {
+                    start   : column.start,
+                    end     : column.end
+                };
+            }
+        }
+    },
+
+<span id='Sch-view-Calendar-method-onEventUpdate'>    // private
+</span>    onEventUpdate: function (store, model) {
+        this.renderSingle(model);
+
+        // restore visual event selection
+        var view = this.view;
+        var sm = view.getEventSelectionModel();
+
+        sm.forEachEventRelatedSelection(model, function(selectedRecord) {
+            view.onEventBarSelect(selectedRecord);
+        });
+    },
+
+<span id='Sch-view-Calendar-method-onEventAdd'>    // private
+</span>    onEventAdd: function (s, recs) {
+        var view = this.view;
+
+        if (recs.length === 1) {
+            this.renderSingle(recs[0]);
+        } else {
+            view.repaintAllEvents();
+        }
+    },
+
+<span id='Sch-view-Calendar-method-onEventRemove'>    // private
+</span>    onEventRemove: function (s, recs) {
+        var view = this.view;
+
+        if (recs.length === 1) {
+            // remove nodes from view
+            Ext.each(view.getElementsFromEventRecord(recs[0]), function (el) {
+                Ext.fly(el).destroy();
+            });
+
+            this.relayoutRenderedEvents(recs[0]);
+        } else {
+            view.repaintAllEvents();
+        }
+    },
+
+<span id='Sch-view-Calendar-method-relayoutRenderedEvents'>    relayoutRenderedEvents : function(targetEvent) {
+</span>        var me      = this,
+            columns = me.getEventColumns(targetEvent, true);
+
+        // When event is rendered into multiple columns each part should behave like separate event.
+        // For example, event is rendered into two columns. User created new event and dropped it so
+        // new one is overlapping with old one in second column. Desired behavior is following:
+        // part in the first column is untouched and part of old event in second column takes only half width.
+        Ext.each(columns, function (column) {
+            me.repaintEventsForColumn(column.column, column.index);
+        });
+    },
+
+<span id='Sch-view-Calendar-method-renderSingle'>    renderSingle : function (event) {
+</span>        var view        = this.view;
+
+        // remove rendered event nodes
+        Ext.each(view.getElementsFromEventRecord(event), function (el) {
+            Ext.fly(el).destroy();
+        });
+
+        // TODO: If event doesn't have resource assigned - use default one (currently first from store)
+        var resource    = event.getResources()[0] || view.resourceStore.first();
+        var previous    = event.previous || {};
+
+        var UD          = Sch.util.Date;
+
+        // relayout all affected columns
+        var timeSpan    = new Sch.model.Event({
+            StartDate   : UD.min(previous.StartDate || event.getStartDate(), event.getStartDate()),
+            EndDate     : UD.max(previous.EndDate || event.getEndDate(), event.getEndDate())
+        });
+
+        var columns     = this.getEventColumns(timeSpan);
+
+        Ext.each(columns, function (column) {
+            var columnIndex = column.getIndex();
+
+            // gather rendered events data to apply layout and calculate new correct size
+            var events  = this.getColumnEvents(column);
+            var data    = Ext.Array.map(events, function (record) {
+                if (record === event) {
+                    // append new render data for new event
+                    return view.generateTplData(event, resource, columnIndex);
+                } else {
+                    return {
+                        start: record.getStartDate() &lt; column.start ? column.start : record.getStartDate(),
+                        end: record.getEndDate() &gt; column.end ? column.end : record.getEndDate(),
+                        event: record
+                    };
+                }
+            });
+
+            view.eventLayout.vertical.applyLayout(data, column.getWidth());
+
+            // refresh rendered events
+            Ext.Array.forEach(data, function (renderData) {
+                if (renderData.event === event) {
+                    // render new event
+                    var containerCell   = Ext.get(view.getScheduleCell(0, columnIndex));
+
+                    // if grid content is not yet rendered, then just do nothing
+                    if (containerCell) {
+                        if (!Ext.versions.touch) {
+                            containerCell = containerCell.first();
+                        }
+
+                        view.eventTpl.append(containerCell, [renderData]);
+                    }
+                } else {
+                    var eventNode = view.getElementsFromEventRecord(renderData.event, renderData.event.getResource(), columnIndex)[0];
+                    eventNode.setStyle({
+                        left: renderData.left + 'px',
+                        width: Math.max(renderData.width, 0) + 'px'
+                    });
+                }
+            });
+        }, this);
+    },
+
+<span id='Sch-view-Calendar-method-repaintEventsForColumn'>    repaintEventsForColumn  : function (column, index) {
+</span>        var me      = this;
+        var events  = me.getColumnEvents(column);
+        var view    = me.view;
+        var data    = [],
+            i, l, event, node, start, end;
+
+        for (i = 0, l = events.length; i &lt; l; i++) {
+            event   = events[i];
+            node    = view.getElementsFromEventRecord(event)[0];
+
+            // nothing is rendered yet
+            if (!node) {
+                return;
+            }
+
+            // each event node if calendar view has column index in it
+            // we need a common id without column index, so we perform split/pop/join
+            var commonId    = node.id.split('-');
+            commonId.pop();
+
+            start   = event.getStartDate();
+            end     = event.getEndDate();
+
+            // simulate one-column events for vertical layout
+            data.push({
+                start   : start &lt; column.start ? column.start : start,
+                end     : end &gt; column.end ? column.end : end,
+                event   : event,
+                id      : commonId.join('-')
+            });
+        }
+
+        view.eventLayout.vertical.applyLayout(data, column.getWidth());
+
+        // We render events into first row in the table so we need this element to make lookups.
+        var trEl    = Ext.get(Ext.DomQuery.selectNode('tr:nth-child(1)', view.el.dom));
+
+        for (i = 0; i &lt; data.length; i++) {
+            event = data[i];
+            // We should only touch events (events' parts) that are rendered into changed column.
+            // Since parts of one event share element id we have to look up in certain cell.
+            // In Ext5 Ext.dom.Query is not a default selector, so pseudo classes are failing in IE8
+            var fly = Ext.get(Ext.DomQuery.selectNode('td:nth-child(' + (index + 1) + ') [id^=' + event.id + '-]', trEl.dom));
+            // for the case when we relayout short event
+            fly &amp;&amp; fly.setStyle({
+                left    : event.left + 'px',
+                width   : Math.max(event.width, 0) + 'px'
+            });
+        }
+    },
+
+<span id='Sch-view-Calendar-method-getTimeSpanRegion'>    /**
+</span>    *  Returns the region for a &quot;global&quot; time span in the view. Coordinates are relative to element containing the time columns
+    *  @param {Date} startDate The start date of the span
+    *  @param {Date} endDate The end date of the span
+    *  @return {Ext.util.Region} The region for the time span
+    */
+    getTimeSpanRegion: function (startDate, endDate) {
+        var view        = this.view,
+            startY      = view.getCoordinateFromDate(startDate),
+            endY        = endDate ? view.getCoordinateFromDate(endDate, true, true) : startY;
+
+        var startColumn = this.getColumnBy(function (column) {
+            return column.start &lt;= startDate &amp;&amp; column.end &gt; startDate;
+        })[0];
+
+        var endColumn   = this.getColumnBy(function (column) {
+            return column.start &lt; endDate &amp;&amp; column.end &gt;= endDate;
+        })[0];
+
+        var pair1 = this.translateToScheduleCoordinate([startColumn.getX(), 0]);
+        var pair2 = this.translateToScheduleCoordinate([endColumn ? endColumn.getRegion().right : startColumn.getWidth() + pair1[0], 0]);
+
+        return new Ext.util.Region(Math.min(startY, endY), pair2[0],  Math.max(startY, endY), pair1[0]);
+    },
+
+<span id='Sch-view-Calendar-method-getStartEndDatesFromRegion'>    /**
+</span>    * Gets the start and end dates for an element Region
+    * @param {Ext.util.Region} region The region to map to start and end dates
+    * @param {String} roundingMethod The rounding method to use
+    * @returns {Object} an object containing start/end properties
+    */
+    getStartEndDatesFromRegion: function (region, roundingMethod, allowPartial) {
+        var topDate = this.view.getDateFromCoordinate([region.left, region.top], roundingMethod),
+            bottomDate = this.view.getDateFromCoordinate([region.left, region.bottom], roundingMethod);
+
+        if (topDate &amp;&amp; bottomDate) {
+            return {
+                start : Sch.util.Date.min(topDate, bottomDate),
+                end : Sch.util.Date.max(topDate, bottomDate)
+            };
+        } else {
+            return null;
+        }
+    },
+
+<span id='Sch-view-Calendar-method-setColumnWidth'>    setColumnWidth : function (width, preventRefresh) {
+</span>        var view = this.view;
+
+        view.calendarColumnWidth = width;
+        view.getTimeAxisViewModel().setViewColumnWidth(width, preventRefresh);
+    },
+
+<span id='Sch-view-Calendar-method-getVisibleDateRange'>    /**
+</span>    * Method to get the currently visible date range in a scheduling view. Please note that it only works when the schedule is rendered.
+    * @return {Object} object with `startDate` and `endDate` properties.
+    */
+    getVisibleDateRange: function () {
+        var view = this.view;
+
+        if (!view.rendered) {
+            return null;
+        }
+
+        var scroll      = view.getScroll(),
+            height      = view.getHeight(),
+            tableRegion = view.getTableRegion(),
+            viewEndDate = view.timeAxis.getEnd();
+
+        if (tableRegion.bottom - tableRegion.top &lt; height) {
+            var startDate   = view.timeAxis.getStart();
+
+            return { startDate: startDate, endDate: viewEndDate };
+        }
+
+        return {
+            startDate   : view.getDateFromCoordinate(scroll.top, null, true),
+            endDate     : view.getDateFromCoordinate(scroll.top + height, null, true) || viewEndDate
+        };
+    }
+});
+</pre>
+</body>
+</html>

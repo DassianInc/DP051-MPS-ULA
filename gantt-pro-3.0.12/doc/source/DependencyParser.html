@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-util-DependencyParser'>/**
+</span> * @class Gnt.util.DependencyParser
+ * @private
+ * Internal class handling the dependency string parsing related functionality. Used by {@link Gnt.field.Dependency} field.
+ */
+Ext.define(&quot;Gnt.util.DependencyParser&quot;, {
+    requires                : ['Gnt.util.DurationParser'],
+
+    mixins                  : ['Gnt.mixin.Localizable'],
+
+<span id='Gnt-util-DependencyParser-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+     - typeText :
+         - SS : 'SS'
+         - SF : 'SF'
+         - FS : 'FS'
+         - FF : 'FF'
+     */
+
+    separator               : /\s*;\s*/,
+<span id='Gnt-util-DependencyParser-property-parseNumberFn'>    parseNumberFn           : null,
+</span><span id='Gnt-util-DependencyParser-property-dependencyRegex'>    dependencyRegex         : null,
+</span><span id='Gnt-util-DependencyParser-property-types'>    types                   : null,
+</span>
+<span id='Gnt-util-DependencyParser-method-constructor'>    constructor : function(config) {
+</span>
+        Ext.apply(this, config);
+
+        // fill types array with values
+        this.initTypes();
+
+        var typeText    = this.L('typeText');
+
+        for(var i = 0; i &lt; this.types.length; i++) {
+            this.types[i]   = (typeText[this.types[i]] || this.types[i]);
+        }
+
+        var re = &quot;(-?\\d+)(&quot; + this.types.join('|') + &quot;)?([\\+\\-].*)?&quot;;
+
+        this.dependencyRegex = this.dependencyRegex || new RegExp(re, &quot;i&quot;);
+
+        this.durationParser = new Gnt.util.DurationParser({ parseNumberFn : this.parseNumberFn });
+    },
+
+
+<span id='Gnt-util-DependencyParser-method-initTypes'>    initTypes : function () {
+</span>        this.types  = this.types || [
+            'SS',   // Start-To-Start
+            'SF',   // Start-To-Finish
+            'FS',   // Finish-To-Start
+            'FF'    // Finish-To-Finish
+        ];
+    },
+
+
+<span id='Gnt-util-DependencyParser-method-parse'>    /*
+</span>     * Returns an object with the following properties (or null if the parsing fails):
+            {
+                taskId  : 3,    // Int, always present
+                type    : &quot;FS&quot;, // String, always present
+                lag     : 3,    // Int, optional
+                lagUnit : 'd'   // String, optional
+            }
+    **/
+    parse : function (value) {
+        if (!value) {
+            return [];
+        }
+
+        var parts   = value.split(this.separator);
+        var result  = [];
+        var depRe   = this.dependencyRegex;
+
+        for (var i = 0; i &lt; parts.length; i++) {
+            var part        = parts[ i ];
+
+            // allow &quot;;&quot; at the end of the string - will lead to empty element
+            if (!part &amp;&amp; i == parts.length - 1) continue;
+
+            var match       = depRe.exec(part);
+            var data        = {};
+
+            if (!match) {
+                // Tolerate no sloppy input
+                return null;
+            }
+
+            data.taskId     = parseInt(match[ 1 ], 10);
+
+            data.type       = Ext.Array.indexOf(this.types, (match[2] || this.types[2]).toUpperCase());
+            var lagValue    = match[ 3 ];
+
+            if (lagValue) {
+                var lag = this.durationParser.parse(lagValue);
+
+                if (!lag) {
+                    // Tolerate no sloppy input
+                    return null;
+                }
+
+                data.lag        = lag.value;
+                data.lagUnit    = lag.unit || 'd';
+            }
+
+            result.push(data);
+        }
+
+        return result;
+    }
+});
+</pre>
+</body>
+</html>

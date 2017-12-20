@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-LateStartDate'>/**
+</span>
+@class Gnt.column.LateStartDate
+@extends Ext.grid.column.Date
+
+A Column displaying the latest possible start date of a task.
+This value is calculated as the latest start date of the dependent tasks for this task.
+If a task has no successors then the column value is calculated as the project end date minus the task duration
+(_project end date_ is the latest end date of all the tasks in the task store).
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        columns         : [
+            ...
+            {
+                xtype       : 'latestartdatecolumn',
+                width       : 80
+            }
+            ...
+        ],
+        ...
+    })
+
+Note, that this class inherit from [Ext.grid.column.Date](http://docs.sencha.com/ext-js/4-2/#!/api/Ext.grid.column.Date) and supports its configuration options, notably the &quot;format&quot;.
+*/
+Ext.define('Gnt.column.LateStartDate', {
+    extend              : 'Ext.grid.column.Date',
+
+    mixins              : ['Gnt.mixin.Localizable'],
+
+    alias               : [
+        'widget.latestartdatecolumn',
+        'widget.ganttcolumn.latestartdate'
+    ],
+
+<span id='Gnt-column-LateStartDate-cfg-width'>    /**
+</span>     * @cfg {Number} width The width of the column.
+     */
+    width               : 100,
+
+<span id='Gnt-column-LateStartDate-cfg-align'>    /**
+</span>     * @cfg {String} align The alignment of the text in the column.
+     */
+    align               : 'left',
+
+<span id='Gnt-column-LateStartDate-cfg-adjustMilestones'>    /**
+</span>     * @cfg {Boolean} adjustMilestones When set to `true`, the start/end dates of the milestones will be adjusted -1 day *during rendering and editing*. The task model will still hold unmodified date.
+     */
+    adjustMilestones    : true,
+
+<span id='Gnt-column-LateStartDate-method-constructor'>    constructor : function (config) {
+</span>        config          = config || {};
+
+        
+
+        this.text   = config.text || this.L('text');
+
+        this.callParent(arguments);
+
+        this.renderer   = config.renderer || this.rendererFunc;
+        this.scope      = config.scope || this;
+
+        this.hasCustomRenderer = true;
+    },
+
+<span id='Gnt-column-LateStartDate-method-afterRender'>    afterRender : function() {
+</span>        var panel = this.up('ganttpanel');
+
+        // Make top Gantt panel aware of the need for refreshing locked grid after changes in the dependency store
+        panel.registerLockedDependencyListeners();
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-LateStartDate-method-rendererFunc'>    rendererFunc : function (value, meta, task) {
+</span>        meta.tdCls = (meta.tdCls || '') + ' sch-column-readonly';
+
+        return task.getDisplayStartDate(this.format, this.adjustMilestones, task.getLateStartDate());
+    }
+});
+</pre>
+</body>
+</html>

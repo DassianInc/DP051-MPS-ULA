@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-ResourceAssignment'>/**
+</span>
+@class Gnt.column.ResourceAssignment
+@extends Ext.grid.column.Column
+
+{@img gantt/images/resource-assignment.png}
+
+A Column showing the resource assignments of a task. To make the column editable,
+add the {@link Sch.plugin.TreeCellEditing} plugin to your gantt panel:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        columns         : [
+            ...
+            {
+                xtype       : 'resourceassignmentcolumn',
+                width       : 80
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+*/
+Ext.define(&quot;Gnt.column.ResourceAssignment&quot;, {
+    extend      : &quot;Ext.grid.column.Column&quot;,
+    alias       : [
+        &quot;widget.resourceassignmentcolumn&quot;,
+        &quot;widget.ganttcolumn.resourceassignment&quot;
+    ],
+    requires    : ['Gnt.field.Assignment'],
+    mixins      : ['Gnt.mixin.Localizable'],
+
+<span id='Gnt-column-ResourceAssignment-property-tdCls'>    tdCls       : 'sch-assignment-cell',
+</span>
+<span id='Gnt-column-ResourceAssignment-cfg-showUnits'>    /**
+</span>     * @cfg {Boolean} showUnits Set to `true` to show the assignment units (in percent). Default value is `true`.
+     */
+    showUnits   : true,
+
+<span id='Gnt-column-ResourceAssignment-property-field'>    // Reference to the field used by the Editor
+</span>    field       : null,
+
+<span id='Gnt-column-ResourceAssignment-property-dirtyCls'>    // Copied from the panel view if cells for this columns should be marked dirty
+</span>    dirtyCls    : null,
+
+<span id='Gnt-column-ResourceAssignment-method-constructor'>    constructor : function(config) {
+</span>        config      = config || {};
+
+
+
+        this.text   = config.text || this.L('text');
+
+        var field   = config.editor;
+        var showUnits = config.showUnits || this.showUnits;
+
+        delete config.editor;
+
+        config.editor   = field || {};
+
+        if (!(config.editor instanceof Ext.form.Field)) {
+            config.editor   = Ext.ComponentManager.create(Ext.applyIf(config.editor, {
+                expandPickerOnFocus : true,
+                formatString        : '{0}' + (showUnits ? ' [{1}%]' : '')
+            }), 'assignmentfield');
+        }
+
+        config.field = config.editor;
+
+        this.callParent([ config ]);
+
+        this.scope          = this;
+
+        if (this.field){
+            // HACK, complete editing when the field is collapsed
+            this.field.on('collapse', function() {
+                this.up('ganttpanel').ganttEditingPlugin.completeEdit();
+            }, this);
+        }
+    },
+
+<span id='Gnt-column-ResourceAssignment-method-afterRender'>    afterRender: function() {
+</span>        var view       = this.up('treepanel').getView();
+
+        // Check if the current view is configured to highlight dirty cells
+        if (view.markDirty) {
+            this.dirtyCls = view.dirtyCls;
+        }
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-ResourceAssignment-method-renderer'>    renderer : function(value, meta, task) {
+</span>        if (this.dirtyCls &amp;&amp; this.field.isDirty(task)) {
+            meta.tdCls   = this.dirtyCls;
+        }
+
+        return this.field.getFieldDisplayValue(task);
+    }
+});
+</pre>
+</body>
+</html>

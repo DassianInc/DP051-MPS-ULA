@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-column-Summary'>/**
+</span>@class Sch.column.Summary
+@extends Ext.grid.column.Column
+
+A Column showing the currently allocated time for the resources in the grid. It will simply summarize the durations **of the events that are in the current view**.
+The information can be displayed as either a time unit or a percentage of the available time.
+
+To add this column to the scheduler:
+
+        var summaryCol = Ext.create(&quot;Sch.column.Summary&quot;, {
+            header      : 'Time allocated',
+            width       : 80,
+            showPercent : false 
+        });
+
+        var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+            resourceStore   : resourceStore,
+            eventStore      : eventStore,
+            
+            columns         : [
+                ...
+                summaryCol,
+                ...
+            ]
+        });
+
+*/
+Ext.define('Sch.column.Summary', {
+    extend          : &quot;Ext.grid.column.Column&quot;,
+    alias           : [
+        &quot;widget.summarycolumn&quot;,
+        &quot;plugin.scheduler_summarycolumn&quot; /*TODO REMOVE for 3.0 */
+    ],
+
+    // TODO REMOVE THESE FOR 3.0 (BREAKING)
+    mixins          : ['Ext.AbstractPlugin'],
+    alternateClassName : 'Sch.plugin.SummaryColumn',
+<span id='Sch-column-Summary-method-init'>    init            : Ext.emptyFn,
+</span><span id='Sch-column-Summary-property-lockableScope'>    // -------- EOF TODO
+</span>
+    lockableScope   : 'top',
+
+<span id='Sch-column-Summary-cfg-showPercent'>    /**
+</span>     * @cfg {Boolean} showPercent True to show percentage values, false to show summarized time. Default value is `false`.
+     */
+    showPercent     : false,
+
+<span id='Sch-column-Summary-cfg-nbrDecimals'>    /**
+</span>     * @cfg {Number} nbrDecimals The number of decimals to show, only applicable when `showPercent` is set to false
+     */
+    nbrDecimals     : 1,
+
+<span id='Sch-column-Summary-property-sortable'>    sortable        : false,
+</span><span id='Sch-column-Summary-property-fixed'>    fixed           : true,
+</span><span id='Sch-column-Summary-property-menuDisabled'>    menuDisabled    : true,
+</span>
+<span id='Sch-column-Summary-property-width'>    width           : 80,
+</span><span id='Sch-column-Summary-property-dataIndex'>    dataIndex       : '_sch_not_used',
+</span>
+<span id='Sch-column-Summary-property-timeAxis'>    timeAxis        : null,
+</span><span id='Sch-column-Summary-property-eventStore'>    eventStore      : null,
+</span>
+<span id='Sch-column-Summary-method-constructor'>    constructor     : function(config){
+</span>        this.scope = this;
+
+        this.callParent(arguments);
+
+        this.on('beforerender', this.onMyBeforeRender, this);
+    },
+
+<span id='Sch-column-Summary-method-onMyBeforeRender'>    onMyBeforeRender    : function() {
+</span>
+        var pnl = this.up('tablepanel[lockable=true]');
+
+        this.timeAxis = pnl.getTimeAxis();
+        this.eventStore = pnl.getEventStore();
+    },
+
+
+<span id='Sch-column-Summary-method-renderer'>    renderer : function(v, p, record){
+</span>        var timeAxis        = this.timeAxis,
+            eventStore      = this.eventStore,
+            viewStart       = timeAxis.getStart(),
+            viewEnd         = timeAxis.getEnd(),
+            retVal          = 0,
+            totalAllocatedMinutesInView = this.calculate(eventStore.getEventsForResource(record), viewStart, viewEnd);
+
+        if (totalAllocatedMinutesInView &lt;= 0) {
+            return '';
+        }
+
+        if (this.showPercent) {
+            var timeInView = Sch.util.Date.getDurationInMinutes(viewStart, viewEnd);
+
+            return (Math.round((totalAllocatedMinutesInView * 100)/ timeInView)) + ' %';
+        } else {
+            if (totalAllocatedMinutesInView &gt; 1440) {
+                return (totalAllocatedMinutesInView / 1440).toFixed(this.nbrDecimals) + ' ' + Sch.util.Date.getShortNameOfUnit(&quot;DAY&quot;);
+            }
+            if (totalAllocatedMinutesInView &gt;= 30) {
+                return (totalAllocatedMinutesInView / 60).toFixed(this.nbrDecimals) + ' ' + Sch.util.Date.getShortNameOfUnit(&quot;HOUR&quot;);
+            }
+            return totalAllocatedMinutesInView + ' ' + Sch.util.Date.getShortNameOfUnit(&quot;MINUTE&quot;);
+        }
+    },
+
+<span id='Sch-column-Summary-method-calculate'>    calculate : function(eventRecords, viewStart, viewEnd){
+</span>        var totalTime = 0,
+            eventStart,
+            eventEnd,
+            D = Sch.util.Date;
+
+        Ext.each(eventRecords, function(eRec) {
+            eventStart = eRec.getStartDate();
+            eventEnd = eRec.getEndDate();
+
+            if (D.intersectSpans(viewStart, viewEnd, eventStart, eventEnd)) {
+               totalTime += D.getDurationInMinutes(D.max(eventStart, viewStart), D.min(eventEnd, viewEnd));
+            }
+        });
+
+        return totalTime;
+    }
+});</pre>
+</body>
+</html>

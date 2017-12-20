@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-Lines'>/**
+</span>@class Sch.plugin.Lines
+@extends Sch.feature.AbstractTimeSpan
+
+Plugin (ptype = 'scheduler_lines') for showing &quot;global&quot; time lines in the scheduler grid. It uses a store to populate itself, records in this store should have the following fields:
+
+- `Date` The date of the line. This date is formatted based on what's configured in the {@link Sch.preset.ViewPreset#displayDateFormat} option of the current &quot;viewPreset&quot;.
+- `Text` The Text to show when hovering over the line (optional)
+- `Cls`  A CSS class to add to the line (optional)
+
+To add this plugin to scheduler:
+
+        var dayStore    = new Ext.data.Store({
+            fields  : [ 'Date', 'Text', 'Cls' ],
+
+            data    : [
+                {
+                    Date        : new Date(2011, 06, 19),
+                    Text        : 'Some important day'
+                }
+            ]
+        });
+
+
+        var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+            ...
+
+            resourceStore   : resourceStore,
+            eventStore      : eventStore,
+
+            plugins         : [
+                Ext.create('Sch.plugin.Lines', { store : dayStore })
+            ]
+        });
+
+
+*/
+Ext.define(&quot;Sch.plugin.Lines&quot;, {
+    extend              : &quot;Sch.feature.AbstractTimeSpan&quot;,
+    alias               : 'plugin.scheduler_lines',
+
+<span id='Sch-plugin-Lines-property-cls'>    cls                 : 'sch-timeline',
+</span>
+<span id='Sch-plugin-Lines-cfg-showTip'>    /**
+</span>     * @cfg {Boolean} showTip 'true' to include a native browser tooltip when hovering over the line.
+     */
+    showTip             : true,
+
+<span id='Sch-plugin-Lines-cfg-innerTpl'>    /**
+</span>     * @cfg {String/Ext.XTemplate} innerTpl A template providing additional markup to render into each timespan element
+     */
+    innerTpl            : null,
+    
+
+<span id='Sch-plugin-Lines-property-prepareTemplateData'>    prepareTemplateData : null,
+</span><span id='Sch-plugin-Lines-property-side'>    side                : null,
+</span>
+<span id='Sch-plugin-Lines-method-init'>    init : function(scheduler) {
+</span>        if (Ext.isString(this.innerTpl)) {
+            this.innerTpl = new Ext.XTemplate(this.innerTpl);
+        }
+
+        this.side = scheduler.rtl ? 'right' : 'left';
+
+        var innerTpl = this.innerTpl;
+
+        if (!this.template) {
+            this.template = new Ext.XTemplate(
+                '&lt;tpl for=&quot;.&quot;&gt;',
+                    '&lt;div id=&quot;{id}&quot; ' + (this.showTip ? 'title=&quot;{[this.getTipText(values)]}&quot; ' : '') + 'class=&quot;{$cls}&quot; style=&quot;' + this.side + ':{left}px;top:{top}px;height:{height}px;width:{width}px&quot;&gt;' +
+                    (innerTpl ? '{[this.renderInner(values)]}' : '') +
+                    '&lt;/div&gt;',
+                '&lt;/tpl&gt;',
+                {
+                    getTipText : function (values) {
+                        return scheduler.getSchedulingView().getFormattedDate(values.Date) + ' ' + (values.Text || &quot;&quot;);
+                    },
+
+                    renderInner : function(values) {
+                        return innerTpl.apply(values);
+                    }
+                }
+            );
+        }
+        
+        this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-Lines-method-generateMarkup'>    generateMarkup : function(isPrint, records) {
+</span>        return this.schedulerView.getMode() === 'calendar' ? '' : this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-Lines-method-generateHeaderMarkup'>    generateHeaderMarkup : function (isPrint, records) {
+</span>        return this.schedulerView.getMode() === 'calendar' ? '' : this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-Lines-method-getElementData'>    getElementData : function(viewStart, viewEnd, records) {
+</span>        var s = this.store,
+            scheduler = this.schedulerView,
+            isHorizontal = scheduler.isHorizontal(),
+            rs = records || s.getRange(),
+            data = [],
+            height,
+            width,
+            region = scheduler.getTimeSpanRegion(viewStart, null, this.expandToFitView),
+            record, date, templateData;
+
+        if (Ext.versions.touch){
+            height = '100%';
+        } else {
+            height = isHorizontal ? region.bottom - region.top : 1;
+        }
+
+        width = isHorizontal ? 1 : region.right - region.left;
+
+        for (var i = 0, l = rs.length; i &lt; l; i++) {
+            record = rs[i];
+            date = record.get('Date');
+
+            if (date &amp;&amp; Sch.util.Date.betweenLesser(date, viewStart, viewEnd)) {
+                var pos = scheduler.getCoordinateFromDate(date);
+
+                templateData = Ext.apply({}, this.getTemplateData(record));
+                templateData.id = this.getElementId(record);
+                // using $cls to avoid possible conflict with &quot;Cls&quot; field in the record
+                // `getElementCls` will append the &quot;Cls&quot; field value to the class
+                templateData.$cls = this.getElementCls(record, templateData);
+
+                templateData.width = width;
+                templateData.height = height;
+
+                if (isHorizontal) {
+                    templateData.left = pos;
+                } else{
+                    templateData.top = pos;
+                }
+                data.push(templateData);
+            }
+        }
+        
+        return data;
+    },
+    
+    
+<span id='Sch-plugin-Lines-method-getHeaderElementData'>    getHeaderElementData : function(records) {
+</span>        var startDate = this.timeAxis.getStart(),
+            endDate = this.timeAxis.getEnd(),
+            isHorizontal = this.schedulerView.isHorizontal(),
+            data = [],
+            record, date, position, templateData;
+
+        records = records || this.store.getRange();
+
+        for (var i = 0, l = records.length; i &lt; l; i++) {
+            record = records[i];
+            date = record.get('Date');
+            
+            if (date &amp;&amp; Sch.util.Date.betweenLesser(date, startDate, endDate)) {
+                position = this.getHeaderElementPosition(date);
+                templateData = this.getTemplateData(record);
+                
+                templateData = Ext.apply({
+                    side     : isHorizontal ? this.side : 'top',
+                    cls      : this.getHeaderElementCls(record, templateData),
+                    position : position
+                }, templateData);
+                
+                // Overwrite id manually as it might exist in the record raw data
+                templateData.id = this.getHeaderElementId(record);
+
+                data.push(templateData);
+            }
+        }
+        
+        return data;
+    }
+    
+});
+</pre>
+</body>
+</html>

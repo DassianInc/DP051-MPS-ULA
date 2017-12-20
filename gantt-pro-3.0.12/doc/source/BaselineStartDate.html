@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-BaselineStartDate'>/**
+</span>
+@class Gnt.field.BaselineStartDate
+@extends Gnt.field.StartDate
+
+A specialized field for editing the task baseline start date value. This class inherits from the `Ext.form.field.Date` field
+so any of its configuration options can be used. You can find this field in {@link Gnt.widget.TaskForm}
+and in {@link Gnt.column.BaselineStartDate} but you can use it in your own components as well.
+
+*/
+Ext.define('Gnt.field.BaselineStartDate', {
+    extend              : 'Gnt.field.StartDate',
+
+    alias               : 'widget.baselinestartdatefield',
+
+<span id='Gnt-field-BaselineStartDate-property-taskField'>    taskField           : 'baselineStartDateField',
+</span><span id='Gnt-field-BaselineStartDate-property-getTaskValueMethod'>    getTaskValueMethod  : 'getBaselineStartDate',
+</span><span id='Gnt-field-BaselineStartDate-property-setTaskValueMethod'>    setTaskValueMethod  : 'setBaselineStartDate',
+</span>
+<span id='Gnt-field-BaselineStartDate-property-isBaseline'>    isBaseline          : true,
+</span>
+<span id='Gnt-field-BaselineStartDate-cfg-keepDuration'>    /**
+</span>     * @hide
+     * @cfg keepDuration
+     */
+
+    applyChanges : function (toTask, silent) {
+        toTask  = toTask || this.task;
+
+        this.setTaskValue(toTask, this.value);
+
+        // since we have an &quot;applyChanges&quot; method different from the one provided by &quot;TaskField&quot; mixin
+        // we need to fire &quot;taskupdated&quot; ourself
+        if (!silent) toTask.fireEvent('taskupdated', toTask, this);
+    }
+
+});
+</pre>
+</body>
+</html>

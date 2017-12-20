@@ -1,0 +1,10 @@
+.gnt-showintimeline-cell .x-grid-cell-inner {
+    padding-top    : 0 !important;
+    padding-bottom : 0 !important;
+}
+
+.gnt-showintimeline-cell .x-grid-checkcolumn {
+    line-height : 0 !important;
+    position : relative;
+    top      : 6px;
+}

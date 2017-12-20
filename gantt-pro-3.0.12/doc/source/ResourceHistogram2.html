@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-view-ResourceHistogram'>/**
+</span>
+ @class Gnt.view.ResourceHistogram
+ @extends Sch.view.TimelineGridView
+
+ A view of the resource histogram panel. Use the {@link Gnt.panel.ResourceHistogram#getSchedulingView} method to get its instance from gantt panel.
+
+ */
+Ext.define('Gnt.view.ResourceHistogram', {
+    extend                  : 'Sch.view.TimelineGridView',
+
+    alias                   : 'widget.resourcehistogramview',
+
+    requires    : [
+        'Ext.XTemplate',
+        'Ext.util.Format',
+        'Sch.util.Date'
+    ],
+
+<span id='Gnt-view-ResourceHistogram-property-_cmpCls'>    _cmpCls                 : 'gnt-resourcehistogramview',
+</span>
+<span id='Gnt-view-ResourceHistogram-property-scheduledEventName'>    scheduledEventName      : 'bar',
+</span>
+<span id='Gnt-view-ResourceHistogram-property-eventSelector'>    // private
+</span>    eventSelector           : '.gnt-resourcehistogram-bar',
+
+<span id='Gnt-view-ResourceHistogram-property-barTpl'>    barTpl                  : null,
+</span>
+<span id='Gnt-view-ResourceHistogram-method-barRenderer'>    barRenderer             : Ext.emptyFn,
+</span><span id='Gnt-view-ResourceHistogram-method-limitLineRenderer'>    limitLineRenderer       : Ext.emptyFn,
+</span><span id='Gnt-view-ResourceHistogram-method-lineRenderer'>    lineRenderer            : Ext.emptyFn,
+</span>
+<span id='Gnt-view-ResourceHistogram-property-lineTpl'>    lineTpl                 : null,
+</span><span id='Gnt-view-ResourceHistogram-property-limitLineTpl'>    limitLineTpl            : null,
+</span>
+<span id='Gnt-view-ResourceHistogram-property-_barCls'>     // private cls properties
+</span>    _barCls                 : 'gnt-resourcehistogram-bar',
+<span id='Gnt-view-ResourceHistogram-property-_limitLineCls'>    _limitLineCls           : 'gnt-resourcehistogram-limitline',
+</span><span id='Gnt-view-ResourceHistogram-property-_limitLineVerticalCls'>    _limitLineVerticalCls   : 'gnt-resourcehistogram-limitline-vertical',
+</span><span id='Gnt-view-ResourceHistogram-property-_lineCls'>    _lineCls                : 'gnt-resourcehistogram-line',
+</span>
+<span id='Gnt-view-ResourceHistogram-property-barCls'>    barCls                  : null,
+</span><span id='Gnt-view-ResourceHistogram-property-limitLineCls'>    limitLineCls            : null,
+</span><span id='Gnt-view-ResourceHistogram-property-lineCls'>    lineCls                 : null,
+</span>
+
+<span id='Gnt-view-ResourceHistogram-property-limitLineWidth'>    limitLineWidth          : 1,
+</span>
+<span id='Gnt-view-ResourceHistogram-property-rowHeight'>    rowHeight               : 60,
+</span>
+<span id='Gnt-view-ResourceHistogram-property-showLimitLinesThreshold'>    showLimitLinesThreshold : 10,
+</span><span id='Gnt-view-ResourceHistogram-property-showVerticalLimitLines'>    showVerticalLimitLines  : true,
+</span>
+<span id='Gnt-view-ResourceHistogram-property-labelMode'>    labelMode               : false,
+</span>
+<span id='Gnt-view-ResourceHistogram-property-labelPercentFormat'>    labelPercentFormat      : '0',
+</span>
+<span id='Gnt-view-ResourceHistogram-property-labelUnitsFormat'>    labelUnitsFormat        : '0.0',
+</span><span id='Gnt-view-ResourceHistogram-property-histogram'>    histogram               : null,
+</span><span id='Gnt-view-ResourceHistogram-property-unitHeight'>    unitHeight              : null,
+</span><span id='Gnt-view-ResourceHistogram-property-availableRowHeight'>    availableRowHeight      : null,
+</span>
+<span id='Gnt-view-ResourceHistogram-event-barclick'>    /**
+</span>     * @event barclick
+     * Fires when a histogram bar is clicked
+     *
+     * @param {Gnt.view.ResourceHistogram} view The histogram panel view.
+     * @param {Object} context Object containing a description of the clicked bar.
+     * @param {Gnt.model.Resource} context.resource The resource record.
+     * @param {Date} context.startDate Start date of corresponding period.
+     * @param {Date} context.endDate End date of corresponding period.
+     * @param {Number} context.allocationMS Resource allocation time in milliseconds.
+     * @param {Number} context.totalAllocation Resource allocation (in percents).
+     * @param {Gnt.model.Assignment[]} context.assignments List of resource assignments for the corresponding period.
+     * @param {Ext.EventObject} e The event object
+     */
+
+<span id='Gnt-view-ResourceHistogram-event-bardblclick'>    /**
+</span>     * @event bardblclick
+     * Fires when a histogram bar is double clicked
+     *
+     * @param {Gnt.view.ResourceHistogram} view The histogram panel view.
+     * @param {Object} context Object containing description of clicked bar.
+     * @param {Gnt.model.Resource} context.resource The resource record.
+     * @param {Date} context.startDate Start date of corresponding period.
+     * @param {Date} context.endDate End date of corresponding period.
+     * @param {Number} context.allocationMS Resource allocation time in milliseconds.
+     * @param {Number} context.totalAllocation Resource allocation (in percents).
+     * @param {Gnt.model.Assignment[]} context.assignments List of resource assignments for the corresponding period.
+     * @param {Ext.EventObject} e The event object
+     */
+
+<span id='Gnt-view-ResourceHistogram-event-barcontextmenu'>    /**
+</span>     * @event barcontextmenu
+     * Fires when contextmenu is activated on a histogram bar
+     *
+     * @param {Gnt.view.ResourceHistogram} view The histogram panel view.
+     * @param {Object} context Object containing description of clicked bar.
+     * @param {Gnt.model.Resource} context.resource The resource record.
+     * @param {Date} context.startDate Start date of corresponding period.
+     * @param {Date} context.endDate End date of corresponding period.
+     * @param {Number} context.allocationMS Resource allocation time in milliseconds.
+     * @param {Number} context.totalAllocation Resource allocation (in percents).
+     * @param {Gnt.model.Assignment[]} context.assignments List of resource assignments for the corresponding period.
+     * @param {Ext.EventObject} e The event object
+     */
+
+<span id='Gnt-view-ResourceHistogram-event-beforetooltipshow'>    /**
+</span>     * @event beforetooltipshow
+     * Fires before the event tooltip is shown, return false to suppress it.
+     *
+     * @param {Sch.mixin.SchedulerPanel} view Resource histogram scheduling view
+     * @param {Object} allocationData Allocation data
+     * @param {Date} allocationData.startDate Allocation start date
+     * @param {Date} allocationData.endDate Allocation end date
+     * @param {Gnt.model.Assignment[]} allocationData.assignments Assignments for this allocation
+     * @param {Number} allocationData.allocationMS Resource allocation time in milliseconds
+     * @param {Number} allocationData.totalAllocation Resource allocation in percents
+     * @param {Gnt.model.Resource} allocationData.resource Resource record
+     */
+
+<span id='Gnt-view-ResourceHistogram-method-initComponent'>    /**
+</span>     */
+    initComponent : function (config) {
+
+        if (this.barCls) {
+            this.eventSelector = '.' + this.barCls;
+        }
+
+        // bar template
+        if (!this.barTpl) {
+            this.barTpl = new Ext.XTemplate(
+                '&lt;tpl for=&quot;.&quot;&gt;',
+                    '&lt;div id=&quot;{id}&quot; class=&quot;gnt-resourcehistogram-bar '+ (this.barCls || '') +' {cls}&quot; gnt-bar-index=&quot;{index}&quot; style=&quot;left:{left}px;top:{top}px;height:{height}px;width:{width}px&quot;&gt;',
+                        '&lt;tpl if=&quot;text !== \'\'&quot;&gt;',
+                            '&lt;span class=&quot;gnt-resourcehistogram-bar-text&quot; style=&quot;bottom:' + Math.floor(this.rowHeight/2) + 'px&quot;&gt;{text}&lt;/span&gt;',
+                        '&lt;/tpl&gt;',
+                    '&lt;/div&gt;',
+                '&lt;/tpl&gt;'
+            );
+        }
+
+        // scale line template
+        if (!this.lineTpl) {
+            this.lineTpl = new Ext.XTemplate(
+                '&lt;tpl for=&quot;.&quot;&gt;',
+                    '&lt;div class=&quot;gnt-resourcehistogram-line '+ (this.lineCls || '') +' {cls}&quot; style=&quot;top:{top}px;&quot;&gt;&lt;/div&gt;',
+                '&lt;/tpl&gt;'
+            );
+        }
+
+        // limit line template
+        if (!this.limitLineTpl) {
+            this.limitLineTpl = new Ext.XTemplate(
+                '&lt;tpl for=&quot;.&quot;&gt;',
+                    '&lt;div class=&quot;gnt-resourcehistogram-limitline '+ (this.limitLineCls || '') +' {cls}&quot; style=&quot;left:{left}px;top:{top}px;width:{width}px;height:{height}px&quot;&gt;&lt;/div&gt;',
+                '&lt;/tpl&gt;'
+            );
+        }
+
+        this.callParent(arguments);
+
+        // calculate pixels per scale step
+        this.unitHeight = this.getAvailableRowHeight() / (this.scaleMax - this.scaleMin + this.scaleStep);
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-renderLines'>    // histogram scale lines renderer
+</span>    renderLines : function () {
+        return this.lineTpl.apply(this.prepareLines());
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-prepareLines'>    // prepare data for scale lines renderer
+</span>    prepareLines : function () {
+        var scaleMin    = this.scaleMin,
+            scaleMax    = this.scaleMax,
+            value       = scaleMin,
+            labelStep   = this.scaleLabelStep,
+            rowHeight   = this.getAvailableRowHeight(),
+            tplData     = [],
+            lineCls     = this._lineCls,
+            cls         = lineCls + 'min';
+
+        var line, userData;
+
+        // if scale point array specified
+        if (this.scalePoints) {
+
+            for (var i = 0, l = this.scalePoints.length; i &lt; l; i++) {
+                var point   = this.scalePoints[i];
+
+                line        = {
+                    value   : point.value,
+                    top     : point.top || Math.round(rowHeight - this.unitHeight * (point.value - scaleMin)),
+                    cls     : point.cls + (point.label ? ' '+lineCls+'-label' : '') + (i === 0 ? ' '+lineCls+'-min' : (i == l ? ' '+lineCls+'-max' : ''))
+                };
+
+                // call user provided function to modify the data
+                userData    = this.lineRenderer(tplData, line);
+
+                tplData.push(Ext.apply(line, userData));
+            }
+
+        // otherwise we have to calculate line top-coordinates
+        } else {
+            // loop from scaleMin up to scaleMax
+            while (value &lt;= scaleMax) {
+
+                line        = {
+                    value   : value,
+                    top     : Math.round(rowHeight - this.unitHeight * (value - scaleMin)),
+                    cls     : cls
+                };
+
+                // call user provided function to modify the data
+                userData    = this.lineRenderer(tplData, line);
+
+                tplData.push(Ext.apply(line, userData));
+
+                // increment by scale step size
+                value   += this.scaleStep;
+
+                cls     = value % labelStep ? '' : lineCls+'-label';
+
+                if (value == scaleMax) cls += ' '+lineCls+'-max';
+            }
+
+            // ensure that we have scaleMax as last tplData element (we can step over it for some stepSize values)
+            if (tplData.length &amp;&amp; tplData[tplData.length - 1].value !== scaleMax) {
+                line        = {
+                    value   : scaleMax,
+                    top     : Math.round(rowHeight - this.unitHeight * (scaleMax - scaleMin)),
+                    cls     : (scaleMax % labelStep ? '' : lineCls+'-label') + ' '+lineCls+'-max'
+                };
+
+                // call user provided function to modify the data
+                userData    = this.lineRenderer(tplData, line);
+
+                tplData.push(Ext.apply(line, userData));
+            }
+        }
+
+        return tplData;
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-renderLimitLines'>    renderLimitLines : function (data) {
+</span>        return this.limitLineTpl.apply(this.prepareLimitLines(data));
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-getLimitLinesConnector'>    getLimitLinesConnector : function (from, to) {
+</span>        return {
+            left    : from.right,
+            width   : 1,
+            top     : Math.min(from.top, to.top),
+            height  : Math.abs(from.top - to.top) + this.limitLineWidth,
+            cls     : this._limitLineCls + '-top' + ' ' + this._limitLineVerticalCls
+        };
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-pushLimitLine'>    pushLimitLine : function (tplData, line, toMerge) {
+</span>        var prev    = tplData[tplData.length - 1];
+
+        // if we had cached lines too small to display
+        if (toMerge) {
+            // let's lengthen the previous line (if any) right coordinate
+            if (prev) {
+                prev.width  = toMerge.right - prev.left;
+                prev.right  = toMerge.right;
+            } else {
+                line.left   = toMerge.left;
+                line.width  = line.right - toMerge.left;
+            }
+        }
+
+        if (prev &amp;&amp; this.showVerticalLimitLines) {
+            // if previous line is invisible get rid of it
+            if (!prev.visible) tplData.pop();
+
+            tplData.push(this.getLimitLinesConnector(prev, line));
+        }
+
+        // call user provided function to modify the data
+        var userData    = this.limitLineRenderer(tplData, line, toMerge);
+
+        tplData.push(Ext.apply(line, userData));
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-prepareLimitLines'>    prepareLimitLines : function (data) {
+</span>        if (!data) return;
+
+        var tplData     = [],
+            scaleMin    = this.scaleMin,
+            scaleMax    = this.scaleMax,
+            scaleStep   = this.scaleStep,
+            scaleUnit   = this.scaleUnit,
+            rowHeight   = this.getAvailableRowHeight(),
+            lineCls     = this._limitLineCls,
+            maxWidth    = this.getTimeAxisViewModel() &amp;&amp; this.getTimeAxisViewModel().getTotalWidth(),
+            toMerge,
+            line,
+            prev;
+
+        for (var i = 0, l = data.length; i &lt; l; i++) {
+
+            // get allocation in scale units
+            var allocation  = this.calendar.convertMSDurationToUnit(data[i].allocationMS, scaleUnit);
+
+            var visible     = true;
+            // if the line doesn't fit into row height
+            if (allocation * this.unitHeight &gt; rowHeight) {
+                allocation  = scaleMax + scaleStep;
+                visible     = false;
+
+            } else if (allocation &lt;= 0) {
+                allocation  = 0;
+                visible     = false;
+            }
+
+            var left    = data[i].startDate &amp;&amp; this.getXFromDate(data[i].startDate, true) || 0;
+            var right   = data[i].endDate &amp;&amp; this.getXFromDate(data[i].endDate, true) || maxWidth;
+
+            // interval may start 0 timeaxis start
+            if (left &lt; 0) left = 0;
+            if (right &lt; 0) right = maxWidth;
+
+            line        = {
+                left    : left,
+                width   : right - left,
+                right   : right,
+                top     : '',
+                height  : 0,
+                cls     : '',
+                visible : visible
+            };
+
+            // get top-position based on max possible allocation
+            line.top    = Math.round(rowHeight - (allocation - scaleMin) * this.unitHeight);
+
+            if (visible) {
+                line.cls += ' '+lineCls+'-top';
+            }
+
+            prev        = tplData[tplData.length - 1] || toMerge;
+
+            // check if line size is less than threshold
+            var small   = line.width &lt;= this.showLimitLinesThreshold;
+
+            // if the line has the same allocation as the previous one
+            // or it's a small invisible line -&gt; then we merge it w/ the previous line
+            if (prev &amp;&amp; (line.top == prev.top || (small &amp;&amp; !visible))) {
+
+                prev.width  = right - prev.left;
+                prev.right  = right;
+                // reset cached line
+                line        = null;
+
+                // if we have a pushed line we simply skip small line(s) after it
+                if (tplData[tplData.length - 1]) {
+                    toMerge = null;
+                // if we enlarged &quot;toMerge&quot; line and its width got greater than threshold
+                } else if (toMerge.width &gt; this.showLimitLinesThreshold) {
+                    this.pushLimitLine(tplData, toMerge);
+                    // reset cached line since we just pushed it
+                    toMerge = null;
+                }
+
+            // if the line is small and visible we'll try to merge it w/ next lines and approximate its top coordinate
+            } else if (small &amp;&amp; visible) {
+
+                // if the previous line was also too small
+                if (toMerge) {
+                    var width = toMerge.width + line.width;
+                    // merge both lines and approximate average top level
+                    toMerge.top     = Math.round(line.top * line.width/width + toMerge.top * toMerge.width/width);
+                    toMerge.width   = right - toMerge.left;
+                    toMerge.right   = right;
+                // remember this line hoping to merge w/ the next line
+                } else {
+                    toMerge     = line;
+                }
+
+                // if merged line width is greater than threshold
+                if (toMerge.width &gt; this.showLimitLinesThreshold) {
+                    this.pushLimitLine(tplData, toMerge);
+                    // reset cached lines since we just pushed them
+                    line = toMerge = null;
+                }
+
+            // if the current line is large enough to display
+            } else {
+                this.pushLimitLine(tplData, line, toMerge);
+                // reset cached lines since we just pushed them
+                line = toMerge = null;
+            }
+
+        }
+
+        line &amp;&amp; this.pushLimitLine(tplData, line, toMerge);
+
+        // make sure we don't have invisible line in the last item
+        prev    = tplData[tplData.length - 1];
+        if (prev &amp;&amp; !prev.visible) tplData.pop();
+
+        return tplData;
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-renderBars'>    renderBars : function (data, resourceId) {
+</span>        return this.barTpl.apply(this.prepareBars(data, resourceId));
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-prepareBars'>    prepareBars : function (data, resourceId) {
+</span>        if (!data) return;
+
+        // loop over periods that we have for the resource
+        var tplData     = [],
+            rowHeight   = this.getAvailableRowHeight(),
+            barCls      = this._barCls,
+            scaleUnit       = this.scaleUnit,
+            scaleUnitName   = Sch.util.Date.getShortNameOfUnit(scaleUnit),
+            scaleMin        = this.scaleMin,
+            scaleMax        = this.scaleMax,
+            scaleStep       = this.scaleStep,
+            scaleMaximum    = scaleMax + scaleStep,
+            tplItem,
+            allocation;
+
+        for (var i = 0, l = data.length; i &lt; l; i++) {
+
+            // if resource is allocated
+            if (data[i].totalAllocation) {
+
+                // get allocation in units (hours by default)
+                allocation  = this.calendar.convertMSDurationToUnit(data[i].allocationMS, scaleUnit);
+
+                tplItem     = {
+                    id      : resourceId + '-' + i,
+                    index   : i,
+                    left    : this.getXFromDate(data[i].startDate, true),
+                    width   : this.getXFromDate(data[i].endDate, true) - this.getXFromDate(data[i].startDate, true),
+                    height  : rowHeight,
+                    top     : 0,
+                    text    : '',
+                    cls     : ''
+                };
+
+                // if label has to be shown
+                if (this.labelMode) {
+                    // what type of label requested
+                    switch (this.labelMode) {
+                        case 'percent'  :
+                            tplItem.text = Ext.util.Format.number(data[i].totalAllocation, this.labelPercentFormat) + '%';
+                            break;
+
+                        case 'units'    :
+                            tplItem.text = Ext.util.Format.number(allocation,  this.labelUnitsFormat) + scaleUnitName;
+                            break;
+
+                        // custom template
+                        default         :
+                            tplItem.text = this.labelMode.apply({
+                                allocation  : allocation,
+                                percent     : data[i].totalAllocation
+                            });
+                    }
+                }
+
+                // if the bar fits in row height
+                if (allocation &lt;= scaleMaximum) {
+                    tplItem.height  = allocation &gt;= scaleMin ? Math.round((allocation - scaleMin) * this.unitHeight) : 0;
+                    tplItem.top     = rowHeight - tplItem.height;
+                // if bar is higher than row height
+                } else {
+                    // add class to indicate it
+                    tplItem.cls     += ' '+barCls+'-partofbar';
+                }
+
+                // overworking (allocation &gt; 100%)
+                if (data[i].totalAllocation &gt; 100 || data[i].totalOverAllocationMS &gt; 0) {
+                    tplItem.cls     += ' '+barCls+'-overwork';
+                }
+
+                // get user provided data
+                var userData    = this.barRenderer(resourceId, data[i], tplItem);
+
+                // if CSS classes provided combine them w/ the panel defined ones
+                if (userData &amp;&amp; userData.cls) {
+                    userData.cls    = tplItem.cls + ' ' + userData.cls;
+                }
+
+                tplItem = Ext.apply(tplItem, userData);
+
+                tplData.push(tplItem);
+            }
+        }
+
+        return tplData;
+    },
+
+
+<span id='Gnt-view-ResourceHistogram-method-getAvailableRowHeight'>    getAvailableRowHeight : function () {
+</span>        if (this.availableRowHeight) return this.availableRowHeight;
+
+        this.availableRowHeight    = this.rowHeight - this.cellTopBorderWidth - this.cellBottomBorderWidth;
+
+        return this.availableRowHeight;
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-resolveEventRecord'>    /**
+</span>     * Returns the allocation data for a DOM element
+     * @param {HTMLElement/Ext.Element} el The DOM node or Ext Element to lookup
+     * @return {Object} Allocation data
+     * @return {Date} return.startDate Allocation start date
+     * @return {Date} return.endDate Allocation end date
+     * @return {Gnt.model.Assignment[]} return.assignments Assignments for this allocation
+     * @return {Number} return.allocationMS Resource allocation time in milliseconds
+     * @return {Number} return.totalAllocation Resource allocation in percents
+     * @return {Gnt.model.Resource} return.resource Resource record
+     */
+    resolveEventRecord : function (el) {
+        var node = this.findItemByChild(el);
+        if (node) {
+            var resource = this.getRecord(node);
+            if (resource) {
+                var result = {
+                    resource    : resource
+                };
+                var data    = this.histogram.allocationData[resource.getId()];
+                var index   = el.getAttribute('gnt-bar-index');
+                var bar     = data.bars[index];
+                if (bar) {
+                    result.startDate        = bar.startDate;
+                    result.endDate          = bar.endDate;
+                    result.assignments      = bar.assignments;
+                    result.allocationMS     = bar.allocationMS;
+                    result.totalAllocation  = bar.totalAllocation;
+                }
+
+                return result;
+            }
+        }
+        return null;
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-resolveEventRecordFromResourceRow'>    resolveEventRecordFromResourceRow : function (el) {
+</span>        return this.resolveEventRecord(el);
+    },
+
+<span id='Gnt-view-ResourceHistogram-method-getDataForTooltipTpl'>    getDataForTooltipTpl : function (record) {
+</span>        return record;
+    }
+
+});
+</pre>
+</body>
+</html>

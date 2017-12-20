@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-ConstraintType'>/**
+</span> * A Column showing the `ConstraintType` field of a task. The column is editable when adding a
+ * `Sch.plugin.TreeCellEditing` plugin to your Gantt panel. The overall setup will look like this:
+ *
+ * var gantt = Ext.create('Gnt.panel.Gantt', {
+ *       height      : 600,
+ *       width       : 1000,
+ *
+ *       columns         : [
+ *           ...
+ *           {
+ *               xtype       : 'constrainttypecolumn',
+ *               width       : 80
+ *           }
+ *           ...
+ *       ],
+ *
+ *       plugins             : [
+ *           Ext.create('Sch.plugin.TreeCellEditing', {
+ *               clicksToEdit: 1
+ *           })
+ *       ],
+ *       ...
+ *   })
+ *
+ * @class Gnt.column.ConstraintType
+ * @extends Ext.grid.column.Column
+ */
+Ext.define(&quot;Gnt.column.ConstraintType&quot;, {
+    extend              : &quot;Ext.grid.column.Column&quot;,
+
+    requires            : ['Gnt.field.ConstraintType'],
+    mixins              : ['Gnt.column.mixin.TaskFieldColumn'],
+
+    alias               : [
+        'widget.constrainttypecolumn',
+        'widget.ganttcolumn.constrainttype'
+    ],
+
+<span id='Gnt-column-ConstraintType-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n A object, purposed for the class localization.
+     * @cfg {String} l10n.text Column title
+     */
+
+<span id='Gnt-column-ConstraintType-cfg-width'>    /**
+</span>     * @cfg {Number} width The width of the column.
+     */
+    width               : 100,
+
+<span id='Gnt-column-ConstraintType-cfg-align'>    /**
+</span>     * @cfg {String} align The alignment of the text in the column.
+     */
+    align               : 'left',
+
+<span id='Gnt-column-ConstraintType-cfg-data'>    /**
+</span>     * @cfg {Array} data The to pass to Constraint Type field to be created in case the column is not configured with one already.
+     * @cfg {String} data[][0] Valid constraint type
+     * @cfg {String} data[][1] Constraint name
+     */
+    data                : null,
+
+<span id='Gnt-column-ConstraintType-property-fieldProperty'>    // Need to properly obtain the data index if none is given
+</span>    fieldProperty       : 'constraintTypeField',
+
+<span id='Gnt-column-ConstraintType-property-editor'>    editor              : 'constrainttypefield',
+</span>
+<span id='Gnt-column-ConstraintType-property-defaultEditor'>    defaultEditor       : 'constrainttypefield',
+</span>
+<span id='Gnt-column-ConstraintType-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn({
+            store           : this.data,
+            taskField       : this.fieldProperty
+        });
+
+        this.callParent(arguments);
+    }
+
+});
+</pre>
+</body>
+</html>

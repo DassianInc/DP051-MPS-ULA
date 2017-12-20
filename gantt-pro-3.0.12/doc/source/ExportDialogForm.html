@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-widget-ExportDialogForm'>/**
+</span> @class Sch.widget.ExportDialogForm
+ @private
+ @extends Ext.form.Panel
+
+ Form for {@link Sch.widget.ExportDialog}. This is a private class and can be overridden by providing `formPanel` option to
+ {@link Sch.plugin.Export#cfg-exportDialogConfig exportDialogConfig}.
+ */
+Ext.define('Sch.widget.ExportDialogForm', {
+    extend                 : 'Ext.form.Panel',
+    requires               : [
+        'Ext.data.Store',
+        'Ext.XTemplate',
+        'Ext.form.field.Number',
+        'Ext.form.field.ComboBox',
+        'Ext.form.field.Date',
+        'Ext.form.FieldContainer',
+        'Ext.form.field.Checkbox',
+        'Sch.widget.ResizePicker',
+        'Sch.widget.ColumnPicker'
+    ],
+
+    mixins                 : ['Sch.mixin.Localizable'],
+
+    alias                  : 'widget.export_dialog_form',
+
+<span id='Sch-widget-ExportDialogForm-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - formatFieldLabel         : 'Paper format',
+            - orientationFieldLabel    : 'Orientation',
+            - rangeFieldLabel          : 'Schedule range',
+            - showHeaderLabel          : 'Add page number',
+            - showFooterLabel          : 'Add footer',
+            - orientationPortraitText  : 'Portrait',
+            - orientationLandscapeText : 'Landscape',
+            - completeViewText         : 'Complete schedule',
+            - currentViewText          : 'Visible schedule',
+            - dateRangeText            : 'Date range',
+            - dateRangeFromText        : 'Export from',
+            - pickerText               : 'Resize column/rows to desired value',
+            - dateRangeToText          : 'Export to',
+            - exportersFieldLabel      : 'Control pagination',
+            - adjustCols               : 'Adjust column width',
+            - adjustColsAndRows        : 'Adjust column width and row height',
+            - specifyDateRange         : 'Specify date range',
+            - columnPickerLabel        : 'Select columns',
+            - completeDataText         : 'Complete schedule (for all events)',
+            - dpiFieldLabel            : 'DPI (dots per inch)',
+            - rowsRangeLabel           : 'Rows range',
+            - allRowsLabel             : 'All rows',
+            - visibleRowsLabel         : 'Visible rows'
+     */
+
+    border                 : false,
+<span id='Sch-widget-ExportDialogForm-property-bodyPadding'>    bodyPadding            : '10 10 0 10',
+</span><span id='Sch-widget-ExportDialogForm-property-autoHeight'>    autoHeight             : true,
+</span>
+<span id='Sch-widget-ExportDialogForm-property-stateful'>    stateful               : true,
+</span>
+<span id='Sch-widget-ExportDialogForm-property-rangeField'>    /**
+</span>     * @property {Ext.form.field.ComboBox} rangeField &quot;Export range&quot; field.
+     */
+    rangeField             : null,
+<span id='Sch-widget-ExportDialogForm-property-resizerHolder'>    resizerHolder          : null,
+</span><span id='Sch-widget-ExportDialogForm-property-resizePicker'>    /**
+</span>     * @property {Sch.widget.ResizePicker} resizePicker &quot;Resize column/rows to desired value&quot; picker.
+     */
+    resizePicker           : null,
+<span id='Sch-widget-ExportDialogForm-property-dateFromField'>    /**
+</span>     * @property {Ext.form.field.Date} &quot;Export dateFromFieldfrom&quot; field.
+     */
+    dateFromField          : null,
+<span id='Sch-widget-ExportDialogForm-property-dateToField'>    /**
+</span>     * @property {Ext.form.field.Date} dateToField &quot;Export to&quot; field.
+     */
+    dateToField            : null,
+<span id='Sch-widget-ExportDialogForm-property-datesHolder'>    datesHolder            : null,
+</span><span id='Sch-widget-ExportDialogForm-property-columnPicker'>    /**
+</span>     * @property {Sch.widget.ColumnPicker} columnPicker &quot;Select columns for export&quot; field.
+     */
+    columnPicker           : null,
+<span id='Sch-widget-ExportDialogForm-property-rangeField'>    /**
+</span>     * @property {Ext.form.field.ComboBox} rangeField &quot;Rows range&quot; field.
+     */
+    rowsRangeField         : null,
+<span id='Sch-widget-ExportDialogForm-property-exportersField'>    /**
+</span>     * @property {Ext.form.field.ComboBox} exportersField &quot;Manage pagination&quot; field.
+     */
+    exportersField         : null,
+<span id='Sch-widget-ExportDialogForm-property-formatField'>    /**
+</span>     * @property {Ext.form.field.ComboBox} formatField &quot;Paper format&quot; field.
+     */
+    formatField            : null,
+<span id='Sch-widget-ExportDialogForm-property-orientationField'>    /**
+</span>     * @property {Ext.form.field.ComboBox} orientationField &quot;Orientation&quot; field.
+     */
+    orientationField       : null,
+<span id='Sch-widget-ExportDialogForm-property-dpiField'>    /**
+</span>     * @property {Ext.form.field.Number} dpiField &quot;DPI (dots per inch)&quot; field.
+     */
+    dpiField               : null,
+<span id='Sch-widget-ExportDialogForm-property-showHeaderField'>    /**
+</span>     * @property {Ext.form.field.Checkbox} showHeaderField &quot;Add page number&quot; field.
+     */
+    showHeaderField        : null,
+<span id='Sch-widget-ExportDialogForm-property-showFooterField'>    /**
+</span>     * @property {Ext.form.field.Checkbox} showFooterField &quot;Show footer&quot; field.
+     */
+    showFooterField        : null,
+
+<span id='Sch-widget-ExportDialogForm-cfg-dateRangeFormat'>    /**
+</span>     * @cfg {String} dateRangeFormat Valid date format to be used by the date range fields (&quot;Export from&quot; and &quot;Export to&quot; fields).
+     */
+    dateRangeFormat        : '',
+
+<span id='Sch-widget-ExportDialogForm-cfg-columnPickerConfig'>    /**
+</span>     * @cfg {Object} columnPickerConfig Configuration for the &quot;Select columns for export&quot; field.
+     */
+    columnPickerConfig     : null,
+<span id='Sch-widget-ExportDialogForm-cfg-dpiFieldConfig'>    /**
+</span>     * @cfg {Object} dpiFieldConfig Configuration for the &quot;DPI (dots per inch)&quot; field
+     */
+    dpiFieldConfig         : null,
+
+<span id='Sch-widget-ExportDialogForm-cfg-dateRangeRestriction'>    /**
+</span>     * @cfg {Boolean} dateRangeRestriction Set to &quot;false&quot; to disable the maximum and minimum allowed value limits for the date range fields (&quot;Export from&quot; and &quot;Export to&quot; fields).
+     */
+    dateRangeRestriction   : true,
+
+<span id='Sch-widget-ExportDialogForm-property-rangeFieldConfig'>    rangeFieldConfig       : null,
+</span><span id='Sch-widget-ExportDialogForm-property-rowsRangeFieldConfig'>    rowsRangeFieldConfig   : null,
+</span><span id='Sch-widget-ExportDialogForm-property-formatFieldConfig'>    formatFieldConfig      : null,
+</span><span id='Sch-widget-ExportDialogForm-property-orientationFieldConfig'>    orientationFieldConfig : null,
+</span><span id='Sch-widget-ExportDialogForm-property-exportersFieldConfig'>    exportersFieldConfig   : null,
+</span><span id='Sch-widget-ExportDialogForm-property-showHeaderFieldConfig'>    showHeaderFieldConfig  : null,
+</span><span id='Sch-widget-ExportDialogForm-property-showFooterFieldConfig'>    showFooterFieldConfig  : null,
+</span><span id='Sch-widget-ExportDialogForm-property-dateFromFieldConfig'>    dateFromFieldConfig    : null,
+</span><span id='Sch-widget-ExportDialogForm-property-dateToFieldConfig'>    dateToFieldConfig      : null,
+</span>
+<span id='Sch-widget-ExportDialogForm-cfg-showResizePicker'>    /**
+</span>     * @cfg {Boolean} showResizePicker Indicates if &quot;Resize column/rows to desired value&quot; panel should to be shown in the export dialog.
+     */
+    showResizePicker       : false,
+<span id='Sch-widget-ExportDialogForm-cfg-showColumnPicker'>    /**
+</span>     * @cfg {Boolean} showColumnPicker Indicates if the &quot;Select columns for export&quot; field should to be shown in the export dialog.
+     */
+    showColumnPicker       : true,
+<span id='Sch-widget-ExportDialogForm-cfg-showDPIField'>    /**
+</span>     * @cfg {Boolean} showDPIField Indicates if the &quot;DPI (dots per inch)&quot; field should to be shown in the export dialog.
+     */
+    showDPIField           : true,
+<span id='Sch-widget-ExportDialogForm-cfg-showShowHeaderField'>    /**
+</span>     * @cfg {Boolean} showShowHeaderField Indicates if the &quot;Add page number&quot; checkbox should be displayed in the export dialog.
+     */
+    showShowHeaderField    : true,
+<span id='Sch-widget-ExportDialogForm-cfg-showShowFooterField'>    /**
+</span>     * @cfg {Boolean} showShowFooterField Indicates if the &quot;Add footer&quot; checkbox should be displayed in the export dialog.
+     */
+    showShowFooterField    : false,
+<span id='Sch-widget-ExportDialogForm-cfg-showRowsRangeField'>    /**
+</span>     * @cfg {Boolean} showRowsRangeField Indicates if the &quot;Rows range&quot; field should be displayed in the export dialog.
+     */
+    showRowsRangeField     : true,
+
+<span id='Sch-widget-ExportDialogForm-method-initComponent'>    initComponent : function () {
+</span>        var me = this;
+
+        me.fieldDefaults = Ext.apply({
+            labelAlign   : 'left',
+            labelWidth   : 120,
+            anchor       : '99%'
+        }, me.fieldDefaults);
+
+        me.items = me.createFields();
+
+        me.callParent(arguments);
+        // trigger fields `change` listeners to enable/disable related fields and do other UI cosmetics changes
+        me.onRangeChange(me.rangeField, me.rangeField.getValue());
+        me.onExporterChange(me.exportersField, me.exportersField.getValue());
+        me.onOrientationChange(me.orientationField, me.orientationField.getValue());
+
+        // if the form is not rendered we'll need to call &quot;onOrientationChange&quot; after render
+        // to toggle &quot;landscape/portrait&quot; icon properly
+        if (!this.rendered) {
+            this.on('afterrender', function () {
+                this.onOrientationChange(me.orientationField, me.orientationField.getValue());
+            }, this, { single : true });
+        }
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-isValid'>    isValid : function () {
+</span>        var me  = this;
+
+        if (me.rangeField.getValue() == 'date') {
+            return me.dateFromField.isValid() &amp;&amp; me.dateToField.isValid();
+        }
+
+        return true;
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-getValues'>    getValues : function (asString, dirtyOnly, includeEmptyText, useDataValues) {
+</span>        var result      = this.callParent(arguments);
+
+        result.showHeader = !!result.showHeader;
+        result.showFooter = !!result.showFooter;
+        result.onlyVisibleRows = !!result.onlyVisibleRows;
+
+        if (this.resizePicker &amp;&amp; this.rangeField.getValue() == 'current') {
+            var cellSize = this.resizePicker.getValues();
+
+            if (asString) {
+                result += '&amp;cellSize[0]=' + cellSize[0] + '&amp;cellSize[1]=' + cellSize[1];
+            } else {
+                result.cellSize = cellSize;
+            }
+        }
+
+        if (this.columnPicker) {
+            result.columns = this.columnPicker.getSelectedColumns();
+        }
+
+        return result;
+    },
+
+
+<span id='Sch-widget-ExportDialogForm-method-createFields'>    createFields : function () {
+</span>        var me                 = this,
+            beforeLabelTextTpl = '&lt;table class=&quot;sch-fieldcontainer-label-wrap&quot;&gt;&lt;td width=&quot;1&quot; class=&quot;sch-fieldcontainer-label&quot;&gt;',
+            afterLabelTextTpl  = '&lt;td&gt;&lt;div class=&quot;sch-fieldcontainer-separator&quot;&gt;&lt;/div&gt;&lt;/table&gt;';
+
+        // col/row resizer
+        if (me.showResizePicker) {
+            me.resizePicker = new Sch.widget.ResizePicker({
+                dialogConfig : me,
+                margin       : '10 20'
+            });
+
+            me.resizerHolder = new Ext.form.FieldContainer({
+                fieldLabel         : me.scrollerDisabled ? me.L('adjustCols') : me.L('adjustColsAndRows'),
+                labelAlign         : 'top',
+                hidden             : true,
+                labelSeparator     : '',
+                beforeLabelTextTpl : beforeLabelTextTpl,
+                afterLabelTextTpl  : afterLabelTextTpl,
+                layout             : 'vbox',
+                defaults           : {
+                    flex       : 1,
+                    allowBlank : false
+                },
+                items              : [me.resizePicker]
+            });
+        }
+
+        // from date
+        me.dateFromField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+            xtype       : 'datefield',
+            fieldLabel  : me.L('dateRangeFromText'),
+            baseBodyCls : 'sch-exportdialogform-date',
+            name        : 'dateFrom',
+            format      : me.dateRangeFormat || Ext.Date.defaultFormat,
+            allowBlank  : false,
+            maxValue    : me.dateRangeRestriction &amp;&amp; me.endDate || null,
+            minValue    : me.dateRangeRestriction &amp;&amp; me.startDate || null,
+            value       : me.startDate
+        }), me.dateFromFieldConfig));
+
+        // till date
+        me.dateToField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+            xtype       : 'datefield',
+            fieldLabel  : me.L('dateRangeToText'),
+            name        : 'dateTo',
+            format      : me.dateRangeFormat || Ext.Date.defaultFormat,
+            baseBodyCls : 'sch-exportdialogform-date',
+            allowBlank  : false,
+            maxValue    : me.dateRangeRestriction &amp;&amp; me.endDate || null,
+            minValue    : me.dateRangeRestriction &amp;&amp; me.startDate || null,
+            value       : me.endDate
+        }), me.dateToFieldConfig));
+
+        // date fields holder
+        me.datesHolder  = new Ext.form.FieldContainer({
+            fieldLabel          : me.L('specifyDateRange'),
+            labelAlign          : 'top',
+            hidden              : true,
+            labelSeparator      : '',
+            beforeLabelTextTpl  : beforeLabelTextTpl,
+            afterLabelTextTpl   : afterLabelTextTpl,
+            layout              : 'vbox',
+            defaults            : {
+                flex        : 1,
+                allowBlank  : false
+            },
+            items               : [me.dateFromField, me.dateToField]
+        });
+
+        if (me.showColumnPicker) {
+            me.columnPicker = new Sch.widget.ColumnPicker(me.applyStateful(Ext.apply({
+                fieldLabel      : me.L('columnPickerLabel'),
+                cls             : 'sch-export-dialog-columns'
+            }, me.columnPickerConfig )));
+        }
+
+        if (me.showDPIField) {
+            me.dpiField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+                xtype           : 'numberfield',
+                fieldLabel      : me.L('dpiFieldLabel'),
+                cls             : 'sch-export-dialog-dpi',
+                minValue        : 65,
+                name            : 'DPI',
+                value           : me.exportConfig.DPI,
+                maxValue        : 200
+            }), me.dpiFieldConfig));
+        }
+
+        if (me.showShowHeaderField) {
+            me.showHeaderField = Ext.ComponentManager.create(Ext.apply(me.applyStatefulFull({
+                xtype           : 'checkbox',
+                fieldLabel      : me.L('showHeaderLabel'),
+                cls             : 'sch-export-dialog-header',
+                name            : 'showHeader',
+                checked         : !!me.exportConfig.showHeader,
+                checkedValue    : true,
+                uncheckedValue  : false
+            }), me.showHeaderFieldConfig));
+        }
+
+        if (me.showShowFooterField) {
+            me.showFooterField = Ext.ComponentManager.create(Ext.apply(me.applyStatefulFull({
+                xtype           : 'checkbox',
+                fieldLabel      : me.L('showFooterLabel'),
+                cls             : 'sch-export-dialog-footer',
+                name            : 'showFooter',
+                checked         : !!me.exportConfig.showFooter,
+                checkedValue    : true,
+                uncheckedValue  : false
+            }), me.showFooterFieldConfig));
+        }
+
+        me.formatField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+            xtype          : 'combobox',
+            fieldLabel     : me.L('formatFieldLabel'),
+            value          : me.exportConfig.format,
+            triggerAction  : 'all',
+            forceSelection : true,
+            editable       : false,
+            name           : 'format',
+            queryMode      : 'local',
+            store          : me.pageFormats || [&quot;A5&quot;, &quot;A4&quot;, &quot;A3&quot;, &quot;Letter&quot;, &quot;Legal&quot;]
+        }), me.formatFieldConfig));
+
+        me.orientationField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+            xtype          : 'combobox',
+            fieldLabel     : me.L('orientationFieldLabel'),
+            value          : me.exportConfig.orientation,
+            triggerAction  : 'all',
+            componentCls   : 'sch-exportdialogform-orientation',
+            forceSelection : true,
+            editable       : false,
+            name           : 'orientation',
+            displayField   : 'name',
+            valueField     : 'value',
+            queryMode      : 'local',
+            store          : {
+                fields : ['name', 'value'],
+                data   : [
+                    { name : me.L('orientationPortraitText'), value : 'portrait' },
+                    { name : me.L('orientationLandscapeText'), value : 'landscape' }
+                ]
+            }
+        }), me.orientationFieldConfig));
+
+        me.mon(me.orientationField, 'change', me.onOrientationChange, me);
+
+        me.rangeField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+            xtype           : 'combobox',
+            fieldLabel      : me.L('rangeFieldLabel'),
+            value           : me.exportConfig.range,
+            triggerAction   : 'all',
+            cls             : 'sch-export-dialog-range',
+            forceSelection  : true,
+            editable        : false,
+            name            : 'range',
+            queryMode       : 'local',
+            displayField    : 'name',
+            valueField      : 'value',
+            store           : {
+                fields  : ['name', 'value'],
+                data    : [
+                    { name : me.L('completeViewText'),  value : 'complete' },
+                    { name : me.L('completeDataText'),  value : 'completedata' },
+                    { name : me.L('dateRangeText'),     value : 'date' },
+                    { name : me.L('currentViewText'),   value : 'current' }
+                ]
+            }
+        }), me.rangeFieldConfig));
+
+        me.mon(me.rangeField, 'change', me.onRangeChange, me);
+
+        me.exportersField = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+            xtype           : 'combobox',
+            fieldLabel      : me.L('exportersFieldLabel'),
+            value           : me.defaultExporter,
+            triggerAction   : 'all',
+            cls             : 'sch-export-dialog-exporter',
+            forceSelection  : true,
+            editable        : false,
+            name            : 'exporterId',
+            queryMode       : 'local',
+            displayField    : 'name',
+            valueField      : 'value',
+            store           : {
+                fields  : ['name' , 'value'],
+                data    : Ext.Array.map(me.exporters, function (exporter) {
+                    return {
+                        name  : exporter.getName(),
+                        value : exporter.getExporterId()
+                    };
+                })
+            }
+        }), me.exportersFieldConfig));
+
+        me.mon(me.exportersField, 'change', me.onExporterChange, me);
+
+        if (me.showRowsRangeField) {
+            me.rowsRangeField  = Ext.ComponentManager.create(Ext.apply(me.applyStateful({
+                xtype           : 'combobox',
+                fieldLabel      : me.L('rowsRangeLabel'),
+                value           : me.exportConfig.rowsRange,
+                triggerAction   : 'all',
+                cls             : 'sch-export-dialog-rowsrange',
+                forceSelection  : true,
+                editable        : false,
+                name            : 'rowsRange',
+                queryMode       : 'local',
+                displayField    : 'name',
+                valueField      : 'value',
+                store           : {
+                    fields  : ['name' , 'value'],
+                    data    : [{ name : me.L('allRowsLabel'), value : 'all' }, { name : me.L('visibleRowsLabel'), value : 'visible' }]
+                }
+            }), me.rowsRangeFieldConfig));
+        }
+
+
+        var items = [];
+
+        items.push(me.rangeField);
+
+        if (me.resizerHolder) {
+            items.push(me.resizerHolder);
+        }
+
+        items.push(me.datesHolder);
+
+        if (me.columnPicker) {
+            items.push(me.columnPicker);
+        }
+
+        if (me.rowsRangeField) {
+            items.push(me.rowsRangeField);
+        }
+
+        items.push(me.exportersField, me.formatField, me.orientationField);
+
+        if (me.dpiField) {
+            items.push(me.dpiField);
+        }
+
+        if (me.showHeaderField) {
+            items.push(me.showHeaderField);
+        }
+
+        if (me.showFooterField) {
+            items.push(me.showFooterField);
+        }
+
+        return items;
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-applyStateful'>    // Applies configs to enable &quot;stateful&quot; mode for the field (&quot;config&quot; being provided).
+</span>    // Should be used for the &quot;textfield&quot; ancestors (numberfield/picker fields etc)
+    applyStateful : function (config) {
+        if (!this.stateful) return config;
+
+        var me     = this,
+            prefix = me.stateId || 'exporter';
+
+        return Ext.applyIf(config, {
+            stateful : true,
+            stateId  : prefix + '_' + config.name
+        });
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-applyStatefulFull'>    // Applies configs to enable &quot;stateful&quot; mode for the field (&quot;config&quot; being provided).
+</span>    // Should be used for the NON-&quot;textfield&quot; ancestors since they require implementing a pair of applyState/getState methods
+    applyStatefulFull : function (config) {
+        if (!this.stateful) return config;
+
+        var me = this;
+
+        return Ext.apply(me.applyStateful(config), {
+            stateEvents : ['change'],
+            applyState  : me.applyFieldState,
+            getState    : me.getFieldState
+        });
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-getFieldState'>    getFieldState : function () {
+</span>        return {
+            value : this.getValue()
+        };
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-applyFieldState'>    applyFieldState : function (state) {
+</span>        if ('value' in state) {
+            this.setValue(state.value);
+        }
+    },
+
+
+<span id='Sch-widget-ExportDialogForm-method-onOrientationChange'>    onOrientationChange : function (field, newValue) {
+</span>        if (!this.rendered) {
+            return;
+        }
+
+        var fieldBody = field.bodyEl;
+
+        fieldBody.removeCls(['sch-exportdialog-portrait', 'sch-exportdialog-landscape']);
+        field.bodyEl.addCls('sch-exportdialog-'+ newValue);
+    },
+
+
+<span id='Sch-widget-ExportDialogForm-method-onRangeChange'>    onRangeChange : function (field, newValue) {
+</span>        switch (newValue) {
+            case 'complete':
+            case 'completedata':
+                this.datesHolder.hide();
+                this.resizerHolder &amp;&amp; this.resizerHolder.hide();
+                break;
+            case 'date':
+                this.datesHolder.show();
+                this.resizerHolder &amp;&amp; this.resizerHolder.hide();
+                break;
+            case 'current':
+                this.datesHolder.hide();
+
+                if (this.resizerHolder) {
+                    this.resizerHolder.show();
+                    this.resizePicker.expand(true);
+                }
+
+                break;
+        }
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-onExporterChange'>    /**
+</span>     * @protected
+     * This method is called after user selects an export mode in the corresponding field.
+     * @param  {Ext.form.field.Field} field Reference to the form field
+     * @param  {String} exporterId Selected exporter identifier
+     */
+    onExporterChange : function (field, exporterId) {
+
+        switch (exporterId) {
+            case  'singlepage':
+                this.disableFields(true);
+                break;
+            default :
+                this.disableFields(false);
+        }
+
+    },
+
+<span id='Sch-widget-ExportDialogForm-method-disableFields'>    disableFields : function (value) {
+</span>        var me = this;
+
+        if (me.showHeaderField) {
+            me.showHeaderField.setDisabled(value);
+        }
+
+        me.formatField.setDisabled(value);
+        me.orientationField.setDisabled(value);
+    }
+});
+</pre>
+</body>
+</html>

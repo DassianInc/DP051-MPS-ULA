@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-model-Assignment'>/**
+</span> * @class Sch.model.Assignment
+ * @extends Sch.model.Customizable
+ *
+ * This class represent a single assignment of a resource to an event in scheduler.
+ * It is a subclass of the {@link Sch.model.Customizable} class, which in its turn subclasses {@link Ext.data.Model}.
+ * Please refer to documentation of those classes to become familar with the base interface of this class.
+ *
+ * An Assignment has the following fields:
+ * - `Id` - The id of the assignment
+ * - `ResourceId` - The id of the resource assigned
+ * - `EventId` - The id of the event to which the resource is assigned
+ *
+ * The names of these fields can be customized by subclassing this class.
+ * Please refer to {@link Sch.model.Customizable} for details.
+ */
+if (!Ext.ClassManager.get(&quot;Sch.model.Assignment&quot;)) Ext.define('Sch.model.Assignment', {
+    extend  : 'Sch.model.Customizable',
+
+    idProperty : 'Id',
+
+    customizableFields  : [
+        { name : 'ResourceId' },
+        { name : 'EventId' }
+    ],
+
+<span id='Sch-model-Assignment-cfg-resourceIdField'>    /**
+</span>     * @cfg {String} resourceIdField The name of the field identifying the resource to which an assignment belongs.
+     * Defaults to &quot;ResourceId&quot;.
+     */
+    resourceIdField         : 'ResourceId',
+
+<span id='Sch-model-Assignment-cfg-eventIdField'>    /**
+</span>     * @cfg {String} eventIdField The name of the field identifying an event to which an assignment belongs.
+     * Defaults to &quot;EventId&quot;.
+     */
+    eventIdField             : 'EventId',
+
+    getInternalId : function() {
+        return this.internalId;
+    },
+
+<span id='Sch-model-Assignment-method-getAssignmentStore'>    /**
+</span>     * Returns an assigment store this assignment is part of. Assignment must be part of an assigment store
+     * to be able to retrieve it.
+     *
+     * @return {Sch.data.AssignmentStore|null}
+     */
+    getAssignmentStore : function() {
+        return this.joined &amp;&amp; this.joined[ 0 ];
+    },
+
+<span id='Sch-model-Assignment-method-getEventStore'>    /**
+</span>     * Returns an event store this assignment uses as default event store. Assignment must be part
+     * of an assignment store to be able to retrieve default event store.
+     *
+     * @return {Sch.data.EventStore|null}
+     */
+    getEventStore : function() {
+        var assignmentStore = this.getAssignmentStore();
+        return assignmentStore &amp;&amp; assignmentStore.getEventStore();
+    },
+
+<span id='Sch-model-Assignment-method-getResourceStore'>    /**
+</span>     * Returns a resource store this assignment uses as default resource store. Assignment must be part
+     * of an assignment store to be able to retrieve default resource store.
+     *
+     * @return {Sch.data.ResourceStore|null}
+     */
+    getResourceStore : function() {
+        var eventStore = this.getEventStore();
+        return eventStore &amp;&amp; eventStore.getResourceStore();
+    },
+
+<span id='Sch-model-Assignment-method-getEvent'>    /**
+</span>     * Returns an event associated with this assignment.
+     *
+     * @privateparam  {Sch.data.EventStore} [eventStore]
+     * @return {Sch.model.Range} Event instance
+     */
+    getEvent: function(eventStore) {
+        var me = this;
+        // removed assignment will not have &quot;this.joined&quot; so we are providing a way to get an event via provided
+        // event store
+        eventStore = eventStore || me.getEventStore();
+        return eventStore &amp;&amp; eventStore.getModelById(me.getEventId());
+    },
+
+<span id='Sch-model-Assignment-method-getResource'>    /**
+</span>     * Returns the resource associated with this assignment.
+     *
+     * @privateparam {Sch.data.ResourceStore} [resourceStore]
+     * @return {Sch.model.Resource} Instance of resource
+     */
+    getResource: function(resourceStore) {
+        var me = this;
+        // removed assignment will not have &quot;this.joined&quot; so we are providing a way to get a resource via provided
+        // resource store
+        resourceStore = resourceStore || me.getResourceStore();
+        return resourceStore &amp;&amp; resourceStore.getModelById(me.getResourceId());
+    },
+
+<span id='Sch-model-Assignment-method-getEventName'>    /**
+</span>     * Convenience method to get a name of the associated event.
+     *
+     * @privateparam  {Sch.data.EventStore} [eventStore]
+     * @return {String} name
+     */
+    getEventName : function(eventStore) {
+        var evnt = this.getEvent(eventStore);
+        return evnt &amp;&amp; evnt.getName() || '';
+    },
+
+<span id='Sch-model-Assignment-method-getResourceName'>    /**
+</span>     * Convenience method to get a name of the associated resource.
+     *
+     * @privateparam {Sch.data.ResourceStore} [resourceStore]
+     * @return {String} name
+     */
+    getResourceName : function(resourceStore) {
+        var resource = this.getResource(resourceStore);
+        return resource &amp;&amp; resource.getName() || '';
+    },
+
+<span id='Sch-model-Assignment-method-isPersistable'>    /**
+</span>     * Returns true if the Assignment can be persisted (e.g. task and resource are not 'phantoms')
+     *
+     * @return {Boolean} true if this model can be persisted to server.
+     */
+    isPersistable : function() {
+        var me       = this,
+            event    = me.getEvent(),
+            resource = me.getResource();
+
+        return event &amp;&amp; !event.phantom &amp;&amp; resource &amp;&amp; !resource.phantom;
+    },
+
+    fullCopy : function() {
+        return this.copy.apply(this, arguments);
+    }
+});
+</pre>
+</body>
+</html>

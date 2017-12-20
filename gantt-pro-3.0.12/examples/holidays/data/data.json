@@ -1,0 +1,179 @@
+{
+    "success" : true,
+
+    "calendars"     : {
+
+        "metaData"  : {
+            "projectCalendar"   : "general"
+        },
+
+        "rows" : [{
+            "Id"                  : "general",
+            "Name"                : "General",
+            "DaysPerMonth"        : 20,
+            "DaysPerWeek"         : 5,
+            "HoursPerDay"         : 8,
+            "WeekendsAreWorkdays" : false,
+            "WeekendFirstDay"     : 6,
+            "WeekendSecondDay"    : 0,
+            "DefaultAvailability" : [ "08:00-12:00", "13:00-17:00" ],
+            "Days"                : {
+                "rows" : [{
+                    "Id"   : 1,
+                    "Date" : "2010-01-13",
+                    "Cls"  : "gnt-national-holiday",
+                    "Name" : "Mats's birthday"
+                }, {
+                    "Id"   : 2,
+                    "Date" : "2010-02-01",
+                    "Cls"  : "gnt-company-holiday",
+                    "Name" : "Bryntum company holiday"
+                }, {
+                    "Id"           : 3,
+                    "Date"         : "2010-12-01",
+                    "IsWorkingDay" : true,
+                    "Name"         : "Bryntum 1st birthday"
+                }]
+            }
+        }]
+    },
+
+    "tasks" : {
+        "rows" : [{
+            "Id"           : 1,
+            "Name"         : "Sencha Releases",
+            "StartDate"    : "2010-01-18",
+            "Duration"     : 5,
+            "PercentDone"  : 50,
+
+            "leaf"         : false,
+            "expanded"     : true,
+            "children"     : [{
+                "Id"          : 2,
+                "Name"        : "Ext 4.x branch",
+                "StartDate"   : "2010-01-18",
+                "Duration"    : 5,
+                "PercentDone" : 50,
+
+                "leaf"        : false,
+                "expanded"    : true,
+                "children"    : [{
+                    "Id"          : 3,
+                    "Name"        : "Ext JS 4.0.1",
+                    "StartDate"   : "2010-01-18",
+                    "Duration"    : 5,
+                    "PercentDone" : 100,
+                    "leaf"        : true
+                }, {
+                    "Id"          : 4,
+                    "Name"        : "Ext JS 4.0.2",
+                    "StartDate"   : "2010-01-25",
+                    "Duration"    : 5,
+                    "PercentDone" : 100,
+                    "leaf"        : true
+                }, {
+                    "Id"          : 5,
+                    "Name"        : "Ext JS 4.0.3",
+                    "StartDate"   : "2010-02-02",
+                    "Duration"    : 5,
+                    "PercentDone" : 30,
+                    "leaf"        : true
+                }]
+            }, {
+                "Id"          : 22,
+                "Name"        : "Gxt 3 branch",
+                "StartDate"   : "2010-01-20",
+                "Duration"    : 11,
+                "PercentDone" : 14,
+
+                "leaf"        : false,
+                "expanded"    : 1,
+                "children"    : [{
+                    "Id"          : 23,
+                    "Name"        : "Gxt 3.0 Preview",
+                    "PercentDone" : 30,
+                    "StartDate"   : "2010-01-20",
+                    "Duration"    : 4,
+                    "leaf"        : true
+                }, {
+                    "Id"          : 24,
+                    "Name"        : "Gxt 3.0 Beta",
+                    "PercentDone" : 10,
+                    "StartDate"   : "2010-01-26",
+                    "Duration"    : 4,
+                    "leaf"        : true
+                }, {
+                    "Id"          : 25,
+                    "Name"        : "Gxt 3.0 Final",
+                    "StartDate"   : "2010-02-02",
+                    "Duration"    : 3,
+                    "PercentDone" : 0,
+                    "leaf"        : true
+                }]
+            }]
+        }, {
+            "Id"          : 11,
+            "Name"        : "Bryntum Releases",
+            "StartDate"   : "2010-02-09",
+            "Duration"    : 15,
+            "PercentDone" : 60,
+
+            "leaf"        : false,
+            "expanded"    : true,
+            "children"    : [{
+                "Id"          : 13,
+                "Name"        : "Product X",
+                "PercentDone" : 50,
+                "StartDate"   : "2010-02-09",
+                "Duration"    : 5,
+                "leaf"        : true
+            }, {
+                "Id"          : 14,
+                "Name"        : "Ext Scheduler 2.0",
+                "StartDate"   : "2010-02-16",
+                "Duration"    : 5,
+                "PercentDone" : 80,
+                "leaf"        : true
+            }, {
+                "Id"          : 15,
+                "Name"        : "Ext Gantt 2.0",
+                "StartDate"   : "2010-02-23",
+                "Duration"    : 5,
+                "PercentDone" : 50,
+                "leaf"        : true
+            }]
+        }]
+    },
+
+    "dependencies" : {
+        "rows" : [{
+            "Id"   : 1,
+            "From" : 3,
+            "To"   : 4
+        }, {
+            "Id"   : 2,
+            "From" : 4,
+            "To"   : 5
+        }, {
+            "Id"   : 3,
+            "From" : 5,
+            "To"   : 13
+        }, {
+            "Id"   : 4,
+            "From" : 13,
+            "To"   : 14
+        }, {
+            "Id"   : 5,
+            "From" : 14,
+            "To"   : 15
+        }, {
+            "Id"   : 6,
+            "From" : 23,
+            "To"   : 24
+        }, {
+            "Id"   : 7,
+            "From" : 24,
+            "To"   : 25
+        }]
+    }
+}

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-Calendar'>/**
+</span>@class Gnt.field.Calendar
+@extends Ext.form.field.ComboBox
+
+A specialized field allowing a user to select particular calendar for a task.
+This class inherits from the standard Ext JS &quot;combo box&quot; field, so any standard `Ext.form.field.ComboBox`
+configs can be used.
+*/
+
+Ext.define('Gnt.field.Calendar', {
+    extend                  : 'Ext.form.field.ComboBox',
+
+    requires                : ['Ext.data.Store', 'Gnt.model.Calendar', 'Gnt.data.Calendar'],
+
+    mixins                  : ['Gnt.field.mixin.TaskField', 'Gnt.mixin.Localizable'],
+
+    alias                   : 'widget.calendarfield',
+    alternateClassName      : 'Gnt.widget.CalendarField',
+
+<span id='Gnt-field-Calendar-property-taskField'>    taskField               : 'calendarIdField',
+</span><span id='Gnt-field-Calendar-property-getTaskValueMethod'>    getTaskValueMethod      : 'getCalendarId',
+</span><span id='Gnt-field-Calendar-property-setTaskValueMethod'>    setTaskValueMethod      : 'setCalendarId',
+</span>
+<span id='Gnt-field-Calendar-cfg-pickerAlign'>    /**
+</span>     * @cfg {String} pickerAlign The align for combo-box's picker.
+     */
+    pickerAlign             : 'tl-bl?',
+
+<span id='Gnt-field-Calendar-cfg-matchFieldWidth'>    /**
+</span>     * @cfg {Boolean} matchFieldWidth Defines if the picker dropdown width should be explicitly set to match the width of the field. Defaults to true.
+     */
+    matchFieldWidth         : true,
+
+<span id='Gnt-field-Calendar-property-editable'>    editable                : true,
+</span>
+<span id='Gnt-field-Calendar-property-triggerAction'>    triggerAction           : 'all',
+</span>
+<span id='Gnt-field-Calendar-property-valueField'>    valueField              : 'Id',
+</span>
+<span id='Gnt-field-Calendar-property-displayField'>    displayField            : 'Name',
+</span>
+<span id='Gnt-field-Calendar-property-queryMode'>    queryMode               : 'local',
+</span>
+<span id='Gnt-field-Calendar-property-forceSelection'>    forceSelection          : true,
+</span>
+<span id='Gnt-field-Calendar-property-allowBlank'>    allowBlank              : true,
+</span>
+<span id='Gnt-field-Calendar-method-initComponent'>    initComponent : function () {
+</span>        var me      = this,
+            config  = me.getInitialConfig();
+
+        if (!config.store || me.store.isEmptyStore) {
+            me.store    = {
+                xclass  : 'Ext.data.Store',
+                model   : 'Gnt.model.Calendar'
+            };
+        }
+
+        if (!(me.store instanceof Ext.data.Store)) {
+            me.store = Ext.create(me.store);
+        }
+
+        me.callParent(arguments);
+
+        // load calendars list
+        me.updateCalendarsStore();
+
+        // listen to new calendars creation/removal and update the field store
+        me.mon(Ext.data.StoreManager, {
+            add     : function (index, store, key) {
+                if (store instanceof Gnt.data.Calendar) {
+                    this.updateCalendarsStore();
+                }
+            },
+            remove  : function (index, store, key) {
+                if (store instanceof Gnt.data.Calendar) {
+                    this.updateCalendarsStore();
+                }
+            },
+            scope   : me
+        });
+
+        me.on({
+            show    : me.setReadOnlyIfEmpty,
+            scope   : me
+        });
+
+        me.on('change', me.onFieldChange, me);
+    },
+
+
+<span id='Gnt-field-Calendar-method-updateCalendarsStore'>    updateCalendarsStore : function () {
+</span>        this.store.loadData(this.getCalendarData());
+    },
+
+
+<span id='Gnt-field-Calendar-method-setReadOnlyIfEmpty'>    // @private
+</span>    // Sets field to readonly if no calendars found.
+    setReadOnlyIfEmpty : function () {
+        if (!this.store.count()) {
+            this.setReadOnly(true);
+        }
+    },
+
+
+<span id='Gnt-field-Calendar-method-getCalendarData'>    getCalendarData : function () {
+</span>        return Ext.Array.map(Gnt.data.Calendar.getAllCalendars(), function (cal) {
+            return {
+                Id      : cal.calendarId,
+                Name    : cal.name || cal.calendarId
+            };
+        });
+    },
+
+
+<span id='Gnt-field-Calendar-method-onSetTask'>    onSetTask : function () {
+</span>        // set field to readonly if no calendars
+        this.setReadOnlyIfEmpty();
+
+        this.setValue(this.getTaskValue());
+    },
+
+
+<span id='Gnt-field-Calendar-method-valueToVisible'>    // Used in the column renderer
+</span>    valueToVisible : function (value, task) {
+        var me              = this,
+            displayTplData  = [];
+
+        var record = this.findRecordByValue(value);
+
+        if (record) {
+            displayTplData.push(record.data);
+        } else if (Ext.isDefined(me.valueNotFoundText) &amp;&amp; typeof me.valueNotFoundText == 'string') {
+            displayTplData.push(me.valueNotFoundText);
+        }
+
+        return me.displayTpl.apply(displayTplData);
+    },
+
+
+<span id='Gnt-field-Calendar-method-getValue'>    // @OVERRIDE
+</span>    getValue : function () {
+        return this.value || '';
+    },
+
+
+<span id='Gnt-field-Calendar-method-getErrors'>    getErrors : function (value) {
+</span>        if (value) {
+            var record = this.findRecordByDisplay(value);
+            if (record) {
+                if (this.task &amp;&amp; !this.task.isCalendarApplicable(record.getId())) return [ this.L('calendarNotApplicable') ];
+            }
+        }
+
+        return this.callParent(arguments);
+    },
+
+
+<span id='Gnt-field-Calendar-method-onFieldChange'>    onFieldChange : function (field, value) {
+</span>        this.setValue(value);
+    },
+
+
+<span id='Gnt-field-Calendar-method-setValue'>    // @OVERRIDE
+</span>    // We need to have both onFieldChange and setValue
+    // since setValue is not called when user select an option from the dropdown list
+    setValue : function (value) {
+
+        this.callParent([ value ]);
+
+        // we keep '' for empty field
+        if (undefined === value || null === value || '' === value) this.value = '';
+
+        if (this.instantUpdate &amp;&amp; !this.getSuppressTaskUpdate() &amp;&amp; this.task) {
+
+            if (this.getTaskValue() != this.value) {
+                // apply changes to task
+                this.applyChanges();
+            }
+
+        }
+    },
+
+
+<span id='Gnt-field-Calendar-method-assertValue'>    // @OVERRIDE
+</span>    assertValue : function () {
+        var raw = this.getRawValue();
+        if (!raw &amp;&amp; this.value) {
+            this.setValue('');
+        } else {
+            this.callParent(arguments);
+        }
+    }
+});
+</pre>
+</body>
+</html>

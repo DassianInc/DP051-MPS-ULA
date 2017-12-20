@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-ConstraintType'>/**
+</span> * A specialized field, allowing a user to specify task constraint type.
+ * This class inherits from the standard Ext JS &quot;combo&quot; field, so any usual `Ext.form.field.ComboBox` configs can be used.
+ *
+ * In default setup the value of this field can be one of the following strings:
+ * - finishnoearlythan
+ * - finishnolaterthan
+ * - mustfinishon
+ * - muststarton
+ * - startnoearlierthan
+ * - startnolaterthan
+ * but if one has created a new constraint class (see {@link Gnt.constraint.Base}) then this field value
+ * might be that new class alias part after the 'gntconstraint.' prefix.
+ *
+ * @class Gnt.field.ConstraintType
+ * @extends Ext.form.field.ComboBox
+ */
+Ext.define('Gnt.field.ConstraintType', {
+    extend                  : 'Ext.form.field.ComboBox',
+
+    mixins                  : [
+        'Gnt.field.mixin.TaskField',
+        'Gnt.mixin.Localizable'
+    ],
+
+    uses : [
+        'Gnt.constraint.Base'
+    ],
+
+    alias                   : 'widget.constrainttypefield',
+
+    alternateClassName      : 'Gnt.widget.ConstraintType.Field',
+
+<span id='Gnt-field-ConstraintType-property-taskField'>    taskField               : 'constraintTypeField',
+</span><span id='Gnt-field-ConstraintType-property-getTaskValueMethod'>    getTaskValueMethod      : 'getConstraintType',
+</span><span id='Gnt-field-ConstraintType-property-setTaskValueMethod'>    setTaskValueMethod      : 'setConstraint',
+</span>
+<span id='Gnt-field-ConstraintType-cfg-pickerAlign'>    /**
+</span>     * @cfg {String} pickerAlign The align for combo-box's picker.
+     */
+    pickerAlign             : 'tl-bl?',
+
+<span id='Gnt-field-ConstraintType-cfg-matchFieldWidth'>    /**
+</span>     * @cfg {Boolean} matchFieldWidth Whether the picker dropdown's width should be explicitly set to match the width of the field. Defaults to true.
+     */
+    matchFieldWidth         : false,
+
+<span id='Gnt-field-ConstraintType-property-editable'>    editable                : false,
+</span>
+<span id='Gnt-field-ConstraintType-property-forceSelection'>    forceSelection          : true,
+</span>
+<span id='Gnt-field-ConstraintType-property-triggerAction'>    triggerAction           : 'all',
+</span>
+<span id='Gnt-field-ConstraintType-property-'>    /**
+</span>     * Localication object
+     */
+<span id='Gnt-field-ConstraintType-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+     - none : 'None'
+     */
+
+    initComponent : function() {
+        var me = this;
+
+        me.store = me.store || Gnt.field.ConstraintType.buildDefaultConstraintTypeList(me.L('none'));
+        me.callParent(arguments);
+
+        this.on('change', this.onFieldChange, this);
+    },
+
+
+<span id='Gnt-field-ConstraintType-method-valueToVisible'>    // will be used in the column's renderer
+</span>    valueToVisible : function (value, task) {
+        var me              = this,
+            displayTplData  = [];
+
+        var record = this.findRecordByValue(!Ext.isEmpty(value) ? value : null);
+
+        if (record) {
+            displayTplData.push(record.data);
+        } else if (Ext.isDefined(me.valueNotFoundText)) {
+            displayTplData.push(me.valueNotFoundText);
+        }
+
+        return me.displayTpl.apply(displayTplData);
+    },
+
+<span id='Gnt-field-ConstraintType-method-applyChanges'>    applyChanges : function (task) {
+</span>        var me          = this,
+            value       = me.getValue(),
+            constraintClass;
+
+        task            = task || me.task;
+        constraintClass = Gnt.constraint.Base.getConstraintClass(value);
+
+        me.setTaskValue(task, value, constraintClass &amp;&amp; constraintClass.getInitialConstraintDate(task) || null);
+
+        // since we have an &quot;applyChanges&quot; method different from the one provided by &quot;TaskField&quot; mixin
+        // we need to fire &quot;taskupdated&quot; ourself
+        task.fireEvent('taskupdated', task, me);
+    },
+
+<span id='Gnt-field-ConstraintType-method-onFieldChange'>    onFieldChange : function (value) {
+</span>        var me = this;
+
+        if (!me.getSuppressTaskUpdate() &amp;&amp; me.task &amp;&amp; value) {
+            // apply changes to task
+            me.applyChanges();
+        }
+    },
+
+    statics : {
+<span id='Gnt-field-ConstraintType-static-method-buildDefaultConstraintTypeList'>        /**
+</span>         * Builds default constraint type list by scanning Gnt.constraint namespace for suitable constraint classes
+         *
+         * @param {String} [noneText] Text to use for no constraint item, no constraint will be prepended to the list
+         *  if text is given.
+         */
+        buildDefaultConstraintTypeList : function(noneText) {
+            var result = [];
+
+            Ext.Array.each(Ext.ClassManager.getNamesByExpression('gntconstraint.*'), function(name) {
+                var singleton = Ext.ClassManager.get(name),
+                    alias     = singleton.alias[0],
+                    id        = alias.split('.').pop();
+
+                singleton &amp;&amp; (result.push([ id, singleton.L('name') ]));
+            });
+
+            result = Ext.Array.sort(result, function(a, b) { return a[1] &gt; b[1] ? 1 : -1; });
+            noneText &amp;&amp; result.unshift( [ null, noneText ] );
+
+            return result;
+        }
+    }
+
+});
+</pre>
+</body>
+</html>

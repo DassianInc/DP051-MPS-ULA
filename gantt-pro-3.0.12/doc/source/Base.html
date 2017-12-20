@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">Ext.define('Gnt.constraint.Base', {
+
+    mixins : ['Gnt.mixin.Localizable'],
+
+<span id='global-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * An object, purposed for the class localization. Contains the following keys/values:
+     *
+     *      - &quot;name&quot; : &quot;A constraint&quot;,
+     *      - &quot;Remove the constraint&quot; : &quot;Remove the constraint&quot;,
+     *      - &quot;Cancel the change and do nothing&quot; : &quot;Cancel the change and do nothing&quot;
+     */
+
+    isSatisfied : function (task, date, precision) {
+        throw &quot;Abstract method&quot;;
+    },
+
+
+    getResolution : function (callback, task, date) {
+        var me = this,
+            called = false;
+
+        date = date || task.getConstraintDate();
+
+        var next = function () {
+            if (!called) {
+                called  = true;
+                callback.apply(this, arguments);
+            }
+        };
+
+        return {
+            title       : me.L(&quot;name&quot;),
+            task        : task,
+            date        : date,
+
+            resolutions : this.getResolutionOptions(next, task, date),
+
+            getCancelActionOption : function () {
+                return this.resolutions[ 0 ];
+            },
+
+            cancelAction : function () {
+                return this.getCancelActionOption().resolve();
+            },
+
+            proceedAction : function () {
+                next();
+            },
+
+            getResolution : function (id) {
+                return Ext.Array.findBy(this.resolutions, function(item) {
+                    return item.id == id;
+                });
+            }
+        };
+    },
+
+
+    getResolutionOptions : function (callback, task, date, precision) {
+        return [{
+            id          : 'cancel',
+            title       : this.L(&quot;Cancel the change and do nothing&quot;),
+            resolve     : function () {
+                callback(true);
+            }
+        }];
+    },
+
+
+    hasThisConstraintApplied : function (task) {
+        return task.getConstraintClass() === this;
+    },
+
+
+    getInitialConstraintDate : function(task) {
+        return task.getConstraintDate();
+    },
+
+
+    getDisplayableConstraintDateForFormat : function(date, format, task) {
+        return date;
+    },
+
+
+    adjustConstraintDateFromDisplayableWithFormat : function(date, format, task) {
+        return date;
+    },
+
+
+    shiftToNearestValidConstraintDate : function(date, format, task) {
+        return date;
+    },
+
+
+    statics : {
+<span id='global-method-getConstraintClass'>        /**
+</span>         * Returns constraint instance by its type, if type is null or empty string returns null
+         *
+         * @param {String} type Constraint type to return instance for.
+         * @return {Gnt.constraint.Base|null} Constraint class singleton
+         */
+        getConstraintClass : function (type) {
+            var result = !Ext.isEmpty(type) &amp;&amp; Ext.ClassManager.getByAlias('gntconstraint.' + type);
+            // &lt;debug&gt;
+            // Postcondition: constraint class must exist
+            Ext.isEmpty(type) || result ||
+                Ext.Error.raise(&quot;Can't get constraint class, unrecognized constraint type: &quot; + type);
+            // &lt;/debug&gt;
+            return result || null;
+        }
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,20 @@
+.CustomerApproval {
+    border           : 2px solid #ddd;
+    background-color : #222;
+}
+
+.sch-gantt-project-line-end.sch-gantt-project-line-Delivery .sch-gantt-project-line-text {
+    top : 44px;
+}
+
+.Important .sch-gantt-progress-bar {
+    background-image  : url(../../../../resources/images/pattern.png);
+    background-repeat : repeat;
+}
+
+.projectIcon {
+}
+
+.crossPD-line {
+    border : dashed;
+}

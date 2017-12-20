@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-preset-ViewPreset'>/**
+</span>@class Sch.preset.ViewPreset
+Not used directly, but the properties below are rather provided inline as seen in the source of {@link Sch.preset.Manager}. This class is just provided for documentation purposes.
+
+A sample preset looks like:
+
+    hourAndDay : {
+        timeColumnWidth         : 60,       // Time column width (used for rowHeight in vertical mode)
+        rowHeight               : 24,       // Only used in horizontal orientation
+        resourceColumnWidth     : 100,      // Only used in vertical orientation
+
+        displayDateFormat       : 'G:i',    // Controls how dates will be displayed in tooltips etc
+
+        shiftIncrement          : 1,        // Controls how much time to skip when calling shiftNext and shiftPrevious.
+        shiftUnit               : &quot;DAY&quot;,    // Valid values are &quot;MILLI&quot;, &quot;SECOND&quot;, &quot;MINUTE&quot;, &quot;HOUR&quot;, &quot;DAY&quot;, &quot;WEEK&quot;, &quot;MONTH&quot;, &quot;QUARTER&quot;, &quot;YEAR&quot;.
+        defaultSpan             : 12,       // By default, if no end date is supplied to a view it will show 12 hours
+
+        timeResolution          : {         // Dates will be snapped to this resolution
+            unit        : &quot;MINUTE&quot;,         // Valid values are &quot;MILLI&quot;, &quot;SECOND&quot;, &quot;MINUTE&quot;, &quot;HOUR&quot;, &quot;DAY&quot;, &quot;WEEK&quot;, &quot;MONTH&quot;, &quot;QUARTER&quot;, &quot;YEAR&quot;.
+            increment   : 15
+        },
+
+        headerConfig            : {         // This defines your header, you must include a &quot;middle&quot; object, and top/bottom are optional.
+            middle      : {                 // For each row you can define &quot;unit&quot;, &quot;increment&quot;, &quot;dateFormat&quot;, &quot;renderer&quot;, &quot;align&quot;, and &quot;scope&quot;
+                unit        : &quot;HOUR&quot;,
+                dateFormat  : 'G:i'
+            },
+            top         : {
+                unit        : &quot;DAY&quot;,
+                dateFormat  : 'D d/m'
+            }
+        },
+
+        linesFor                : 'middle'  // Defines header level column lines will be drawn for
+    },
+
+See the {@link Sch.preset.Manager} for the list of available presets.
+
+*/
+Ext.define(&quot;Sch.preset.ViewPreset&quot;, {
+<span id='Sch-preset-ViewPreset-property-name'>    name                : null,
+</span>
+<span id='Sch-preset-ViewPreset-cfg-rowHeight'>    /**
+</span>     * @cfg {Number} rowHeight The height of the row in horizontal orientation
+     */
+    rowHeight           : null,
+
+<span id='Sch-preset-ViewPreset-cfg-timeColumnWidth'>    /**
+</span>     * @cfg {Number} timeColumnWidth The width of the time tick column in horizontal orientation. Also used as height of time tick row
+     * in vertical orientation, unless {@link #timeRowHeight} is provided.
+     */
+    timeColumnWidth     : 50,
+
+<span id='Sch-preset-ViewPreset-cfg-timeRowHeight'>    /**
+</span>     * @cfg {Number} timeRowHeight The height of the time tick row in vertical orientation. If omitted, a value of {@link #timeColumnWidth}
+     * is used.
+     */
+    timeRowHeight       : null,
+
+<span id='Sch-preset-ViewPreset-cfg-timeAxisColumnWidth'>    /**
+</span>     * @cfg {Number} timeAxisColumnWidth The width of the time axis column in the vertical orientation
+     */
+    timeAxisColumnWidth : null,
+
+<span id='Sch-preset-ViewPreset-cfg-displayDateFormat'>    /**
+</span>    * @cfg {String} displayDateFormat Defines how dates will be formatted in tooltips etc
+    */
+    displayDateFormat   : 'G:i',
+
+<span id='Sch-preset-ViewPreset-cfg-shiftUnit'>    /**
+</span>     * @cfg {String} shiftUnit The unit to shift when calling shiftNext/shiftPrevious to navigate in the chart.
+     * Valid values are &quot;MILLI&quot;, &quot;SECOND&quot;, &quot;MINUTE&quot;, &quot;HOUR&quot;, &quot;DAY&quot;, &quot;WEEK&quot;, &quot;MONTH&quot;, &quot;QUARTER&quot;, &quot;YEAR&quot;.
+     */
+    shiftUnit           : &quot;HOUR&quot;,
+
+<span id='Sch-preset-ViewPreset-cfg-shiftIncrement'>    /**
+</span>     * @cfg {Number} shiftIncrement The amount to shift (in shiftUnits)
+     */
+    shiftIncrement      : 1,
+
+<span id='Sch-preset-ViewPreset-cfg-defaultSpan'>    /**
+</span>     * @cfg {Number} defaultSpan The amount of time to show by default in a view (in the unit defined by the middle header)
+     */
+    defaultSpan         : 12,
+
+<span id='Sch-preset-ViewPreset-cfg-timeResolution'>    /**
+</span>     * @cfg {Object} timeResolution An object containing a unit identifier and an increment variable. Example:
+     *
+        timeResolution : {
+            unit        : &quot;HOUR&quot;,  //Valid values are &quot;MILLI&quot;, &quot;SECOND&quot;, &quot;MINUTE&quot;, &quot;HOUR&quot;, &quot;DAY&quot;, &quot;WEEK&quot;, &quot;MONTH&quot;, &quot;QUARTER&quot;, &quot;YEAR&quot;.
+            increment   : 1
+        }
+     *
+     */
+    timeResolution      : null,
+
+<span id='Sch-preset-ViewPreset-cfg-headerConfig'>    /**
+</span>     * @cfg {Object} headerConfig An object containing one or more {@link Sch.preset.ViewPresetHeaderRow} rows defining how your headers shall be composed.
+     * Your 'main' unit should be the middle header unit. This object can contain &quot;bottom&quot;, &quot;middle&quot; and &quot;top&quot; header definitions. The 'middle' header is mandatory.
+     */
+    headerConfig        : null,
+
+<span id='Sch-preset-ViewPreset-cfg-columnLinesFor'>    /**
+</span>     * @cfg {String} columnLinesFor Defines the header level that the column lines will be drawn for. See {@link Sch.mixin.AbstractTimelinePanel#columnLines}
+     */
+    columnLinesFor            : 'middle',
+
+<span id='Sch-preset-ViewPreset-property-headers'>    // internal properties
+</span>    headers             : null,
+<span id='Sch-preset-ViewPreset-property-mainHeader'>    mainHeader          : 0,
+</span>
+
+<span id='Sch-preset-ViewPreset-method-constructor'>    constructor : function (config) {
+</span>        Ext.apply(this, config);
+    },
+
+<span id='Sch-preset-ViewPreset-method-getHeaders'>    getHeaders : function () {
+</span>        if (this.headers) return this.headers;
+
+        var headerConfig        = this.headerConfig;
+
+        this.mainHeader         = headerConfig.top ? 1 : 0;
+
+        return this.headers     = [].concat(headerConfig.top || [], headerConfig.middle || [], headerConfig.bottom || []);
+    },
+
+
+<span id='Sch-preset-ViewPreset-method-getMainHeader'>    getMainHeader : function () {
+</span>        return this.getHeaders()[ this.mainHeader ];
+    },
+
+
+<span id='Sch-preset-ViewPreset-method-getBottomHeader'>    getBottomHeader : function () {
+</span>        var headers     = this.getHeaders();
+
+        return headers[ headers.length - 1 ];
+    },
+
+
+<span id='Sch-preset-ViewPreset-method-clone'>    clone : function () {
+</span>        var config      = {};
+        var me          = this;
+
+        Ext.each([
+            'rowHeight',
+            'timeColumnWidth',
+            'timeRowHeight',
+            'timeAxisColumnWidth',
+            'displayDateFormat',
+            'shiftUnit',
+            'shiftIncrement',
+            'defaultSpan',
+            'timeResolution',
+            'headerConfig'
+        ], function (name) {
+            config[ name ] = me[ name ];
+        });
+
+        return new this.self(Ext.clone(config));
+    }
+});
+</pre>
+</body>
+</html>

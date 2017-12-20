@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-CellPlugin'>/**
+</span>
+@class Sch.plugin.CellPlugin
+@extends Ext.AbstractPlugin
+@mixin Ext.util.Observable
+
+This plugin allow user to navigate through cells using arrow keys or simple clicking, creating/editing events
+and perform selection. Plugin is built on &quot;1 cell - 1 event&quot; logic and tested over that,
+using this plugin under different conditions may lead to unpredictable results.
+
+NOTES:
+1) supports only horizontal view
+2) Tested mainly for 'table' event layout, 'horizontal' works, but you may experience some glitches
+
+*/
+Ext.define('Sch.plugin.CellPlugin', {
+    extend          : 'Ext.AbstractPlugin',
+    alias           : 'plugin.scheduler_cellplugin',
+    
+    requires        : [
+        'Ext.form.field.Base',
+        'Sch.field.CellEditor',
+        'Sch.util.Date'
+    ],
+    
+    mixins          : {
+        observable      : 'Ext.util.Observable'
+    },
+
+<span id='Sch-plugin-CellPlugin-cfg-frameCls'>    /**
+</span>     * @cfg {String} frameCls CSS class of the plugin container div.
+     */
+    frameCls        : 'sch-cellplugin-highlighter',
+
+<span id='Sch-plugin-CellPlugin-cfg-frameTemplate'>    /**
+</span>     * @cfg {Ext.Template/Ext.XTemplate} frameTemplate A template providing markup for plugin.
+     */
+    frameTemplate   : new Ext.Template([
+        '&lt;div class=&quot;{cls} active&quot; style=&quot;width: {width}px; height: {height}px;&quot;&gt;',
+            '&lt;div class=&quot;sch-cellplugin-border sch-cellplugin-border-horizontal sch-cellplugin-border-top&quot;&gt;&lt;/div&gt;',
+            '&lt;div class=&quot;sch-cellplugin-border sch-cellplugin-border-horizontal sch-cellplugin-border-bottom&quot;&gt;&lt;/div&gt;',
+            '&lt;div class=&quot;sch-cellplugin-border sch-cellplugin-border-vertical sch-cellplugin-border-left&quot;&gt;&lt;/div&gt;',
+            '&lt;div class=&quot;sch-cellplugin-border sch-cellplugin-border-vertical sch-cellplugin-border-right&quot;&gt;&lt;/div&gt;',
+        '&lt;/div&gt;'
+    ]),
+
+<span id='Sch-plugin-CellPlugin-cfg-editor'>    /**
+</span>     * @cfg {String/Object/Ext.form.field.Field} editor Configuration for the {@link Sch.field.CellEditor}.
+     *
+     * Examples:
+     *
+     *      @example
+     *      // Simple string config:
+     *      var plugin1 = new Sch.plugin.CellPlugin({
+     *          editor  : 'Ext.form.field.Text'
+     *      });
+     *
+     *      // {@link Sch.field.CellEditor} config
+     *      var plugin2 = new Sch.plugin.CellPlugin({
+     *          editor  : {
+     *              dateFormat  : 'H:i',
+     *              divider     : ' '
+     *          }
+     *      });
+     *
+     *      // Custom field
+     *      Ext.define('MyEditor', {
+     *          extend  : 'Ext.form.field.Trigger'
+     *      });
+     *
+     *      var plugin3 = new Sch.plugin.CellPlugin({
+     *          editor  : new MyEditor()
+     *      });
+     *
+     */
+    editor          : 'Sch.field.CellEditor',
+
+<span id='Sch-plugin-CellPlugin-cfg-singleClickEditing'>    /**
+</span>     * @cfg {Boolean} singleClickEditing If true editing mode will be set on plugin on a single click in the cell.
+     */
+    singleClickEditing  : true,
+
+<span id='Sch-plugin-CellPlugin-cfg-dblClickTimeout'>    /**
+</span>     * @cfg {Number} dblClickTimeout Timeout required to catch cell double click event if {@link #singleClickEditing} is true
+     */
+    dblClickTimeout : 100,
+    
+<span id='Sch-plugin-CellPlugin-property-editing'>    editing         : false,
+</span>
+<span id='Sch-plugin-CellPlugin-property-context'>    /**
+</span>     * @property {Object} context Object containing information about current selection. Isn't used for navigation purposes.
+     * @property {Date} context.startDate Start date of selected tick
+     * @property {Date} context.endDate End date of selected tick
+     * @property {Sch.model.Resource} context.resource Selected resource
+     * @private
+     */
+    context         : {},
+
+<span id='Sch-plugin-CellPlugin-property-selContext'>    /**
+</span>     * @property {Object[]} selContext Array of {@link #context} objects for multiple selection. Doesn't contain
+     * currently selected cell.
+     * @private
+     */
+    selContext      : [],
+
+<span id='Sch-plugin-CellPlugin-event-cellclick'>    /**
+</span>     * @event cellclick
+     * Fires when cell click performed and not intercepted by double click. Return false to prevent handling.
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {Number} tickIndex Current tick
+     * @param {Number} resourceIndex Current resource
+     */
+
+<span id='Sch-plugin-CellPlugin-event-celldblclick'>    /**
+</span>     * @event celldblclick
+     * Fires when cell double click performed. Return false to prevent handling.
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {Number} tickIndex Current tick
+     * @param {Number} resourceIndex Current resource
+     */
+
+<span id='Sch-plugin-CellPlugin-event-beforeselect'>    /**
+</span>     * @event beforeselect
+     * Fires before cell is selected. Return false to prevent selection.
+     *
+     * @param {Sch.view.TimelineGridView} view Scheduling view
+     * @param {Sch.model.Resource} resource Currently selected resource
+     * @param {Date} startDate Current tick start date
+     * @param {Date} endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-select'>    /**
+</span>     * @event select
+     * Fires after cell is selected.
+     *
+     * @param {Sch.view.TimelineGridView} view Scheduling view
+     * @param {Sch.model.Resource} resource Currently selected resource
+     * @param {Date} startDate Current tick start date
+     * @param {Date} endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-selectionchange'>    /**
+</span>     * @event selectionchange
+     * Fires after {@link #select} event.
+     *
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {Object[]} selection Current selection
+     * @param {Sch.model.Resource} selection.resource Currently selected resource
+     * @param {Date} selection.startDate Current tick start date
+     * @param {Date} selection.endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-beforecelledit'>    /**
+</span>     * @event beforecelledit
+     * Fires before cell enters editing mode. Return false to prevent editing.
+     *
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {Object[]} selection Current selection
+     * @param {Sch.model.Resource} selection.resource Currently selected resource
+     * @param {Date} selection.startDate Current tick start date
+     * @param {Date} selection.endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-begincelledit'>    /**
+</span>     * @event begincelledit
+     * Fires after {@link #select} event.
+     *
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {Object[]} selection Current selection
+     * @param {Sch.model.Resource} selection.resource Currently selected resource
+     * @param {Date} selection.startDate Current tick start date
+     * @param {Date} selection.endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-beforecompletecelledit'>    /**
+</span>     * @event beforecompletecelledit
+     * Fires before cell enters editing mode. Return false to continue editing cell.
+     *
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {String} value Editor value
+     * @param {Object[]} selection Current selection
+     * @param {Sch.model.Resource} selection.resource Currently selected resource
+     * @param {Date} selection.startDate Current tick start date
+     * @param {Date} selection.endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-completecelledit'>    /**
+</span>     * @event completecelledit
+     * Fires before cell enters editing mode. Return false to continue editing cell.
+     *
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {String} value Editor value
+     * @param {Object[]} selection Current selection
+     * @param {Sch.model.Resource} selection.resource Currently selected resource
+     * @param {Date} selection.startDate Current tick start date
+     * @param {Date} selection.endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-beforecancelcelledit'>    /**
+</span>     * @event beforecancelcelledit
+     * Fires before cell editing is cancelled. Return false to continue editing cell.
+     *
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {String} value Editor value
+     * @param {Object[]} selection Current selection
+     * @param {Sch.model.Resource} selection.resource Currently selected resource
+     * @param {Date} selection.startDate Current tick start date
+     * @param {Date} selection.endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-event-cancelcelledit'>    /**
+</span>     * @event cancelcelledit
+     * Fires after cell editing is cancelled.
+     *
+     * @param {Sch.plugin.CellPlugin} this Plugin instance
+     * @param {String} value Editor value
+     * @param {Object[]} selection Current selection
+     * @param {Sch.model.Resource} selection.resource Currently selected resource
+     * @param {Date} selection.startDate Current tick start date
+     * @param {Date} selection.endDate Current tick end date
+     */
+
+<span id='Sch-plugin-CellPlugin-method-constructor'>    /**
+</span>     */
+    constructor : function (cfg) {
+        Ext.apply(this, cfg || {}, {
+            context         : {},
+            editing         : false,
+
+            tickIndex       : null,
+            resource        : null,
+            startDate       : null,
+
+            // index of currently selected event in cell
+            eventIndexInCell    : -1,
+            // currently selected event
+            eventRecord         : null
+        });
+
+        this.mixins.observable.constructor.call(this);
+
+        this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-init'>    init  : function (scheduler) {
+</span>        var me          = this;
+        me.view         = scheduler.getSchedulingView();
+
+        me.lockedView   = scheduler.lockedGrid.getView();
+        // disable default grid key navigation to handle multiple cell events
+
+        // HACK keynav couldn't be disabled using config http://www.sencha.com/forum/showthread.php?296161
+        scheduler.getNavigationModel().setPosition = Ext.emptyFn;
+
+        me.timeAxisViewModel    = scheduler.timeAxisViewModel;
+
+        me.tickCount    = scheduler.timeAxis.getCount();
+        me.rowsCount    = scheduler.resourceStore.getCount();
+
+        me.keyNav = new Ext.util.KeyNav({
+            target: scheduler.lockedGrid.view,
+            eventName: 'itemkeydown',
+            processEvent: function(view, record, node, index, event) {
+                return event;
+            },
+            ignoreInputFields: true,
+            up      : me.onKeyUp,
+            down    : me.onKeyDown,
+            right   : me.onKeyRight,
+            left    : me.onKeyLeft,
+            tab     : me.onKeyTab,
+            enter   : me.onKeyEnter,
+            esc     : me.onKeyEsc,
+            scope   : me
+        });
+
+        if (me.view.bufferedRenderer) {
+            me.view.on('afterrender', function () {
+                me.view.el.on('scroll', me.onViewScroll, me);
+            }, me, { single : true });
+
+            me.mon(me.view, 'itemadd', me.onItemAdd, me);
+        }
+
+        me.handleSingleClickTask = new Ext.util.DelayedTask(me.handleCellClick, me);
+        
+        me.mon(scheduler, {
+            headerclick         : me.onContainerClick,
+            zoomchange          : me.destroyHighlighter,
+            scope               : me
+        });
+
+        me.mon(me.view, {
+            containerclick      : me.onContainerClick,
+            scheduleclick       : me.onCellClick,
+            scheduledblclick    : me.onCellDblClick,
+            eventclick          : me.onEventClick,
+            eventdblclick       : me.onEventDblClick,
+            // in case editor doesn't allow 'keydown' events we listem them on view
+            containerkeydown    : me.onEditorKeyDown,
+            groupcollapse       : me.onGroupCollapse,
+            groupexpand         : me.onGroupExpand,
+            scope               : me
+        });
+
+        me.mon(me.timeAxisViewModel, {
+            update              : me.onViewModelUpdate,
+            scope               : me
+        });
+
+        me.mon(me.view.timeAxis, {
+            beforereconfigure   : me.onBeforeReconfigure,
+            scope               : me
+        });
+
+        me.mon(me.view.resourceStore, {
+            load                : me.onResourceLoad,
+            add                 : me.onResourceAdd,
+            remove              : me.onResourceRemove,
+            clear               : me.destroyHighlighter,
+            scope               : me
+        });
+
+        me.mon(me.view.eventStore, {
+            load                : me.destroyHighlighter,
+            scope               : me
+        });
+
+        me.mon(me.lockedView, {
+            cellclick           : me.onLockedCellClick,
+            beforeitemkeydown   : me.onBeforeItemKeyDown,
+            scope               : me
+        });
+    },
+    
+<span id='Sch-plugin-CellPlugin-method-onEditorKeyDown'>    onEditorKeyDown : function (view, e) {
+</span>        switch (e.getKey()) {
+            case e.TAB    :
+                e.preventDefault();
+
+                if (e.shiftKey) {
+                    this.moveLeft(e);
+                } else {
+                    this.moveRight(e);
+                }
+                break;
+            case e.ENTER  :
+                this.onEditorKeyEnter();
+                break;
+            case e.ESC    :
+                this.cancelEdit(e);
+                break;
+            default : break;
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onEditorKeyEnter'>    onEditorKeyEnter    : function () {
+</span>        if (this.completeEdit()) {
+            this.beginEditBelow();
+        } else {
+            this.showEditorInCell(this.getEventOrCell(this.context, true));
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-destroy'>    destroy : function () {
+</span>        this.keyNav.destroy();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-destroyHighlighter'>    destroyHighlighter  : function () {
+</span>        var me = this;
+
+        me.clearSelection();
+        me.containerEl &amp;&amp; me.containerEl.destroy();
+
+        delete me.containerEl;
+        delete me.startDate;
+        delete me.resource;
+        delete me.resourceIndex;
+        delete me.eventRecord;
+
+        delete me.tickIndex;
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onGroupCollapse'>    onGroupCollapse     : function () {
+</span>        var me = this;
+
+        me.rowsCount = me.view.getNodes().length;
+
+        if (me.getResourceIndex() === -1) {
+            me.destroyHighlighter();
+        } else {
+            me.refreshCell();
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onGroupExpand'>    onGroupExpand       : function () {
+</span>        var me = this;
+
+        me.rowsCount = me.view.getNodes().length;
+        me.refreshCell();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onViewScroll'>    onViewScroll        : function () {
+</span>        var me = this;
+
+        if (me.containerEl) {
+            var node        = Ext.get(me.view.getNodeByRecord(me.resource));
+            if (node) {
+                me.containerEl.setY(node.getY() - 1);
+            }
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onItemAdd'>    onItemAdd    : function () {
+</span>        var me      = this;
+
+        if (!me.resource) return;
+
+        var node = me.view.getNodeByRecord(me.resource);
+
+        // record is rendered to view
+        if (node) {
+            me.containerEl.show();
+        } else {
+            me.containerEl.hide();
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getResourceIndex'>    getResourceIndex    : function (resource) {
+</span>        var me      = this;
+        resource    = resource || me.resource;
+
+        // dataSource.indexOf will return index of this record in main store
+        // we need index of this record in dataSource store, so we add 'data' property
+        return me.view.dataSource.data.indexOf(resource);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getResource'>    getResource         : function (resourceIndex) {
+</span>        return this.view.dataSource.getAt(resourceIndex);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onResourceLoad'>    onResourceLoad      : function (store, records, successful) {
+</span>        if (successful) {
+            this.rowsCount  = records.length;
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onResourceAdd'>    onResourceAdd       : function (store, records) {
+</span>        this.rowsCount += records.length;
+
+        this.refreshCell();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onResourceRemove'>    onResourceRemove    : function (store, records) {
+</span>        var me = this;
+
+        me.rowsCount = store.getCount();
+
+        // if all rows are removed we should also remove box
+        if (me.rowsCount === 0) {
+            me.destroyHighlighter();
+        }
+        // TODO: also check if selection should be partially removed
+
+        // currently selected row is removed
+        if (Ext.Array.indexOf(records, me.resource) !== -1) {
+            me.destroyHighlighter();
+        }
+
+        me.refreshCell();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onBeforeReconfigure'>    onBeforeReconfigure : function (timeAxis) {
+</span>        // save editor position only if it wasn't saved before
+        if (!this.startDate &amp;&amp; Ext.isNumber(this.tickIndex)) {
+            this.startDate = timeAxis.getAt(this.tickIndex).getStartDate();
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onLockedCellClick'>    onLockedCellClick : function (lockedView, td, cellIndex, record, tr, rowIndex, e) {
+</span>        this.showEditorInCell({
+            tickIndex       : this.tickIndex || 0,
+            resourceIndex   : rowIndex,
+            eventIndexInCell: 0
+        }, e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onBeforeItemKeyDown'>    // this method is responsible for type-away behavior
+</span>    onBeforeItemKeyDown : function (lockedView, record, item, index, e) {
+        if (!e.isSpecialKey()) {
+            this.beginEdit();
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onViewModelUpdate'>    onViewModelUpdate : function (timeAxisViewModel) {
+</span>        var me          = this,
+            timeAxis    = timeAxisViewModel.timeAxis;
+
+        me.tickCount    = timeAxis.getCount();
+
+        // if selection was active before reconfigure we should try to show editor
+        if (me.startDate) {
+            var newTick     = timeAxis.getTickFromDate(me.startDate);
+
+            if (newTick &gt;= 0) {
+                // remove saved editor position
+                delete me.startDate;
+
+                me.tickIndex = newTick;
+
+                if (!me.containerEl) {
+                    me.renderElement();
+                }
+                me.refreshCell();
+            } else {
+                me.containerEl.destroy();
+                delete me.containerEl;
+
+                me.clearSelection();
+            }
+        } else {
+            me.refreshCell();
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-refreshCell'>    refreshCell         : function () {
+</span>        var me      = this;
+        var width   = me.timeAxisViewModel.getTickWidth();
+
+        if (me.containerEl) {
+            me.containerEl.setWidth(width);
+            me.containerEl.setLeft(width);
+
+            me.showEditorInCell({
+                tickIndex       : me.tickIndex,
+                resourceIndex   : me.getResourceIndex()
+            });
+        }
+
+        if (me.editor instanceof Ext.form.field.Base) {
+            me.editor.setMaxWidth(width);
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-clearSelection'>    clearSelection      : function () {
+</span>        var me = this;
+
+        me.view.getSecondaryCanvasEl().select('.' + me.frameCls + '.clone').remove();
+        me.selContext = [];
+    },
+
+<span id='Sch-plugin-CellPlugin-method-addSelection'>    addSelection        : function () {
+</span>        var me          = this;
+
+        // cloning container element leads to id issues in IE9
+        var clone       = me.frameTemplate.apply({
+            cls     : me.frameCls,
+            width   : me.containerEl.getWidth(),
+            height  : me.containerEl.getHeight()
+        });
+        clone = Ext.get(Ext.DomHelper.append(me.containerEl.parent(), clone));
+
+        clone.setStyle('top', me.containerEl.getStyle('top'));
+        clone.setStyle('left', me.containerEl.getStyle('left'));
+
+        clone.removeCls('active');
+        clone.addCls('clone');
+
+        me.selContext.push(Ext.apply({}, me.context));
+    },
+
+<span id='Sch-plugin-CellPlugin-method-renderElement'>    renderElement       : function () {
+</span>        var me = this;
+
+        me.containerEl          = me.view.getSecondaryCanvasEl();
+
+        var width               = me.timeAxisViewModel.getTickWidth();
+        var height              = me.timeAxisViewModel.getViewRowHeight();
+
+        var el                  = me.frameTemplate.apply({
+            cls     : me.frameCls,
+            width   : width,
+            height  : height
+        });
+
+        me.containerEl = Ext.get(Ext.DomHelper.append(me.containerEl, el));
+
+        var defaultCfg = {
+            height      : height,
+            maxHeight   : height,
+            width       : width,
+            maxWidth    : width,
+            renderTo    : me.containerEl
+        };
+
+        if (Ext.isObject(me.editor) &amp;&amp; !(me.editor instanceof Ext.Base)) {
+            me.editor = Ext.create(Ext.apply(defaultCfg, me.editor, { xclass : 'Sch.field.CellEditor' }));
+        } else if (Ext.isString(me.editor)) {
+            me.editor = Ext.create(me.editor, defaultCfg);
+        } else {
+            // editor is instance of form.field.Base
+            me.containerEl.appendChild(me.editor.el);
+        }
+
+        // Ext 5 has broken style for text editor in webkit, this action will
+        // stetch input element to field height
+        me.editor.inputEl.setHeight(height - 3);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onContainerClick'>    // for correct work we should always keep focus on elements in locked grid
+</span>    onContainerClick    : function () {
+        var me = this;
+
+        if (me.lockedView.getSelectionModel().getSelection().length &gt; 0) {
+            // focus row from locked grid only if one is selected and we are not editing cell
+            if (me.editor.isVisible &amp;&amp; me.editor.isVisible()) {
+                me.lockedView.getFocusEl().focus();
+            }
+        }
+    },
+    
+<span id='Sch-plugin-CellPlugin-method-onCellClick'>    onCellClick : function () {
+</span>        this.handleSingleClickTask.delay(this.dblClickTimeout, null, null, arguments);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-handleCellClick'>    handleCellClick     : function (view, date, rowIndex, resource, e) {
+</span>        var me = this;
+
+        var colIndex    = Math.floor(me.view.timeAxis.getTickFromDate(date));
+
+        if (me.fireEvent('cellclick', me, colIndex, rowIndex) !== false) {
+            me.showEditorInCell({
+                tickIndex       : colIndex,
+                resourceIndex   : rowIndex
+            }, e);
+
+            if (me.singleClickEditing) {
+                me.beginEdit();
+            }
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onCellDblClick'>    onCellDblClick      : function (view, date, rowIndex, resource, e) {
+</span>        this.handleSingleClickTask.cancel();
+        this.handleCellDblClick(view, date, rowIndex, resource, e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-handleCellDblClick'>    handleCellDblClick  : function (view, date, rowIndex, resource, e) {
+</span>        var me = this;
+
+        var colIndex    = Math.floor(me.view.timeAxis.getTickFromDate(date));
+
+        if (me.fireEvent('celldblclick', me, colIndex, rowIndex) !== false) {
+            me.showEditorInCell({
+                tickIndex       : colIndex,
+                resourceIndex   : rowIndex
+            }, e);
+            me.beginEdit();
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onEventClick'>    onEventClick        : function (view, eventRecord, e) {
+</span>        var me      = this;
+        var date    = me.view.getDateFromDomEvent(e);
+        var col     = Math.floor(me.view.timeAxis.getTickFromDate(date));
+        // in case of grouped view we can't lookup indices in main store
+        var row     = me.view.dataSource.data.indexOf(eventRecord.getResource());
+
+        me.showEditorInCell({
+            tickIndex       : col,
+            resourceIndex   : row,
+            eventRecord     : eventRecord
+        }, e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onEventDblClick'>    onEventDblClick     : function (view, eventRecord, e) {
+</span>        var me      = this;
+        var date    = me.view.getDateFromDomEvent(e);
+        var col     = Math.floor(me.view.timeAxis.getTickFromDate(date));
+        // in case of grouped view we can't lookup indices in main store
+        var row     = me.view.dataSource.data.indexOf(eventRecord.getResource());
+
+        me.showEditorInCell({
+            tickIndex       : col,
+            resourceIndex   : row,
+            eventRecord     : eventRecord
+        }, e);
+        me.beginEdit();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-showEditorInCell'>    // resource record is optional param
+</span>    showEditorInCell    : function (params, e) {
+        var me      = this;
+
+        var col     = 'tickIndex' in params ? params.tickIndex : me.tickIndex;
+        var row     = 'resourceIndex' in params ? params.resourceIndex : me.resourceIndex;
+
+        if (col === -1 || row === -1) return;
+
+        var tick        = me.view.timeAxis.getAt(col);
+        var startDate   = tick.getStartDate();
+        var endDate     = tick.getEndDate();
+        // in case view is configured with grouping feature
+        // and there is at least one collapsed group
+        // we have to lookup resources like this
+        var resource    = me.view.dataSource.getAt(row);
+
+        // user clicked on locked cell or normal cell (only if event layout is not table)
+        if (e &amp;&amp; e.type === 'click' &amp;&amp; !params.eventRecord) {
+            params.eventRecord = me.getCellEvents({
+                startDate   : startDate,
+                endDate     : endDate,
+                resource    : resource
+            }).getAt(0);
+        }
+
+        if (me.fireEvent('beforeselect', me, resource, startDate, endDate, params.eventRecord) === false) {
+            return;
+        }
+
+        me.onBeforeSelect(e);
+
+        if (!me.containerEl) {
+            me.renderElement();
+        } else {
+            if (e &amp;&amp; e.ctrlKey) {
+                me.addSelection();
+            } else {
+                me.clearSelection();
+            }
+        }
+
+        Ext.apply(me.context, {
+            startDate       : startDate,
+            endDate         : endDate,
+            resource        : resource
+        });
+
+        if (params.eventRecord) {
+            me.context.eventRecord = params.eventRecord;
+        } else {
+            delete me.context.eventRecord;
+        }
+
+        me.tickIndex    = col;
+        me.resource     = resource;
+        me.resourceIndex = row;
+        me.eventIndexInCell   = params.eventIndexInCell;
+
+        if (params.eventRecord) {
+            me.alignEditorWithRecord(params.eventRecord, params.resource);
+        } else {
+            me.alignEditorWithCell();
+        }
+
+        me.onAfterSelect(e);
+
+        me.fireEvent('select', me, resource, startDate, endDate);
+        // TODO: append check for actual selection change
+        me.fireEvent('selectionchange', me, me.getSelection());
+    },
+
+<span id='Sch-plugin-CellPlugin-method-alignEditorWithRecord'>    alignEditorWithRecord   : function(eventRecord, resourceRecord) {
+</span>        var me = this;
+
+        // some enhancements to make box visible
+        // TODO: use z-index or wrap box around event body
+        var els = me.view.getElementsFromEventRecord(eventRecord, resourceRecord),
+            box = els[0].getBox();
+        box.y--;
+        box.x--;
+        me.alignEditor(box);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-alignEditorWithCell'>    alignEditorWithCell : function () {
+</span>        var me = this;
+
+        var node = Ext.get(me.view.getRowByRecord(me.resource));
+        node &amp;&amp; me.alignEditor({
+            left    : me.timeAxisViewModel.getTickWidth() * me.tickIndex,
+            y       : node.getTop() - 1,
+            height  : node.getHeight(),
+            width   : me.timeAxisViewModel.getTickWidth()
+        });
+    },
+
+<span id='Sch-plugin-CellPlugin-method-alignEditor'>    alignEditor : function (box) {
+</span>        var me = this;
+
+        me.containerEl.setY(box.y);
+        // 'x' key is passed when box is positioned using event element - absolute coordinates
+        if ('x' in box) {
+            me.containerEl.setX(box.x);
+        } else {
+            me.containerEl.setLeft(box.left);
+        }
+
+        me.containerEl.setWidth(box.width);
+        me.containerEl.setHeight(box.height);
+
+        if (Ext.isIE8m) {
+            me.containerEl.setHeight(box.height + 1);
+            // top border is hidden in some cases, this style is fixing that
+            me.containerEl.setStyle('padding-top', 1);
+            me.containerEl.select('.sch-cellplugin-border-top').setStyle('top', 1);
+            // height/width is inherited in IE8 bug display is buggy
+            me.containerEl.select('.sch-cellplugin-border-vertical').setHeight(box.height);
+            me.containerEl.select('.sch-cellplugin-border-horizontal').setWidth(box.width);
+        } else if (Ext.isChrome) {
+            // chrome 43 is buggy too, height isn't inherited correctly
+            me.containerEl.select('.sch-cellplugin-border-vertical').setHeight(box.height);
+        }
+
+        me.containerEl.show();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getSelection'>    getSelection    : function () {
+</span>        return this.selContext.concat(this.context);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getEventRecord'>    /**
+</span>     * @method getEventRecord
+     * Accepts current context (selected cell) and should always return one event record.
+     * @param {Object} context
+     * @param {Sch.model.Resource} context.resource Selected resource
+     * @param {Date} context.startDate Current cell start date
+     * @param {Date} context.endDate Current cell end date
+     * @return {Sch.model.Event}
+     */
+    getEventRecord  : function (context) {
+        return context.eventRecord;
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getResourceRecord'>    /**
+</span>     * @method getResourceRecord
+     * Accepts current context (selected cell) and should always return one resource record.
+     * @param {Object} context
+     * @param {Sch.model.Resource} context.resource Selected resource
+     * @param {Date} context.startDate Current cell start date
+     * @param {Date} context.endDate Current cell end date
+     * @return {Sch.model.Resource}
+     */
+    getResourceRecord : function (context) {
+        return context.resource;
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onKeyUp'>    onKeyUp : function (e) {
+</span>        this.moveUp(e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onKeyDown'>    onKeyDown   : function (e) {
+</span>        this.moveDown(e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onKeyLeft'>    onKeyLeft   : function (e) {
+</span>        this.moveLeft(e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onKeyRight'>    onKeyRight  : function (e) {
+</span>        this.moveRight(e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onKeyTab'>    onKeyTab    : function (e) {
+</span>        if (e.shiftKey) {
+            this.moveLeft(e);
+        } else {
+            this.moveRight(e);
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onKeyEnter'>    onKeyEnter  : function () {
+</span>        this.beginEdit();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onKeyEsc'>    onKeyEsc    : function () {
+</span>        this.destroyHighlighter();
+    },
+    
+<span id='Sch-plugin-CellPlugin-method-findPreviousIndex'>    findPreviousIndex   : function () {
+</span>        var me      = this;
+
+        var prevRecord = me.view.walkRecs(me.resource, -1);
+
+        if (prevRecord !== me.resource) {
+            return me.getResourceIndex(prevRecord);
+        } else {
+            return -1;
+        }
+    },
+    
+<span id='Sch-plugin-CellPlugin-method-findNextIndex'>    findNextIndex       : function () {
+</span>        var me      = this;
+
+        var prevRecord = me.view.walkRecs(me.resource, 1);
+
+        if (prevRecord !== me.resource) {
+            return me.getResourceIndex(prevRecord);
+        } else {
+            return -1;
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getCellEvents'>    getCellEvents   : function (context) {
+</span>        var me  = this;
+        context = context || me.context;
+
+        if (context.resourceIndex === -1 || context.tickIndex === -1) {
+            return new Ext.util.MixedCollection();
+        }
+
+        var events = me.view.eventStore.queryBy(function (event) {
+            return event.getResourceId() === context.resource.getId() &amp;&amp;
+                   event.getStartDate()  &gt;=  context.startDate &amp;&amp;
+                   event.getStartDate()  &lt;   context.endDate;
+        });
+
+        events.sortBy(function (a, b) {
+            var aEl = me.view.getElementsFromEventRecord(a, context.resource)[0],
+                bEl = me.view.getElementsFromEventRecord(b, context.resource)[0];
+
+            return aEl.getY() &lt; bEl.getY() ? -1 : 1;
+        });
+
+        return events;
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getAbove'>    getAbove    : function (context) {
+</span>        var me  = this,
+            newEventIndex;
+
+        context = context || me.context;
+
+        // if event was clicked, we don't know relative index, have to calculate it
+        if (context.eventRecord &amp;&amp; me.eventIndexInCell == null) {
+            me.eventIndexInCell = me.getCellEvents(context).indexOf(context.eventRecord);
+        }
+
+        // if box is currently on event in cell, check if we can just reduce the index
+        if (me.eventIndexInCell &gt; 0) {
+            newEventIndex = me.eventIndexInCell - 1;
+
+            return {
+                eventIndexInCell    : newEventIndex,
+                eventRecord         : me.getCellEvents(context).getAt(newEventIndex)
+            };
+        }
+
+        var newResourceIndex = me.findPreviousIndex();
+
+        // last expanded resource, cannot move down
+        if (newResourceIndex === -1) {
+            // have to return special index to exit routine later
+            return { resourceIndex : -1 };
+        }
+
+        return me.getEventOrCell(Ext.applyIf({
+            resourceIndex   : newResourceIndex
+        }, context), true);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getBelow'>    getBelow    : function (context) {
+</span>        var me  = this;
+
+        context = context || me.context;
+
+        // if event was clicked, we don't know relative index, have to calculate it
+        if (context.eventRecord &amp;&amp; me.eventIndexInCell == null) {
+            me.eventIndexInCell = me.getCellEvents(context).indexOf(context.eventRecord);
+        }
+
+        if (me.eventIndexInCell &gt;= 0) {
+            var events  = me.getCellEvents(context);
+            var newEventIndex = me.eventIndexInCell + 1;
+            // we still have some events in cell
+            if (events.getCount() &gt; newEventIndex) {
+                return {
+                    eventIndexInCell    : newEventIndex,
+                    eventRecord         : events.getAt(newEventIndex)
+                };
+            }
+        }
+
+        var newResourceIndex = me.findNextIndex();
+
+        // last expanded resource, cannot move down
+        if (newResourceIndex === -1) {
+            return { resourceIndex : -1 };
+        }
+
+        return me.getEventOrCell(Ext.applyIf({
+            resourceIndex   : newResourceIndex
+        }, context));
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getEventOrCell'>    /**
+</span>     * @method getEventOrCell
+     * Moving box in horizontal direction should select first event in cell, or whole cell.
+     * Method requires not only conventional context for next cell, but also new tickIndex and resourceIndex -
+     * to avoid unnesessary lookups.
+     * @param {Object} context Current {@link #context} updated with two optional properties:
+     * @param {Number} [context.tickIndex] Tick index of new cell. If not provided - current is used.
+     * @param {Number} [context.resourceIndex] Resource index of new cell. If not provided - current is used.
+     * @param {Boolean} [pickLast=false] Pass true if you want to pick last event of cell
+     *
+     * @return {Object} Navigation params
+     * @return {Number} return.tickIndex New tick index, if box moved horizontally
+     * @return {Number} return.resourceIndex New resource index, if box moved vertically
+     * @return {Number} return.eventIndexInCell Index of the event to be selected, or null if cell is empty
+     * @return {Sch.model.Event} return.eventRecord First/last event in cell or null, if there's no events
+     * @private
+     */
+    getEventOrCell    : function (context, pickLast) {
+        var me                  = this,
+            eventIndexInCell    = -1,
+            eventRecord         = null,
+            tickIndex           = me.tickIndex,
+            resourceIndex       = me.resourceIndex;
+
+        // if tickIndex was provided, we have to update context for getCellEvents method
+        if ('tickIndex' in context) {
+            tickIndex = context.tickIndex;
+            var tick = me.view.timeAxis.getAt(tickIndex);
+            context.startDate   = tick.getStartDate();
+            context.endDate     = tick.getEndDate();
+        }
+
+        if ('resourceIndex' in context) {
+            resourceIndex = context.resourceIndex;
+            context.resource = me.view.dataSource.getAt(resourceIndex);
+        }
+
+        var events = me.getCellEvents(context);
+        if (events.getCount()) {
+            if (pickLast === true) {
+                eventIndexInCell = events.getCount() - 1;
+                eventRecord = events.getAt(eventIndexInCell);
+            } else {
+                eventIndexInCell = 0;
+                eventRecord = events.getAt(0);
+            }
+        }
+
+        return {
+            tickIndex           : tickIndex,
+            resourceIndex       : resourceIndex,
+            eventIndexInCell    : eventIndexInCell,
+            eventRecord         : eventRecord
+        };
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getPrevious'>    getPrevious : function (context) {
+</span>        var me  = this;
+
+        context = context || me.context;
+        
+        if (me.tickIndex &gt; 0) {
+            return me.getEventOrCell(Ext.applyIf({
+                tickIndex   : me.tickIndex - 1
+            }, context));
+        } else {
+            return me.getEventOrCell(Ext.applyIf({
+                tickIndex       : me.tickCount - 1,
+                resourceIndex   : me.findPreviousIndex()
+            }, context));
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getNext'>    getNext     : function (context) {
+</span>        var me  = this;
+
+        context = context || me.context;
+
+        if (me.tickIndex &lt; me.tickCount - 1) {
+            return me.getEventOrCell(Ext.applyIf({
+                tickIndex       : ++me.tickIndex,
+                resourceIndex   : me.getResourceIndex()
+            }, context));
+        } else {
+            return me.getEventOrCell(Ext.applyIf({
+                tickIndex       : 0,
+                resourceIndex   : me.findNextIndex()
+            }, context));
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-moveUp'>    moveUp      : function (e) {
+</span>        var me = this;
+
+        if (!me.containerEl) {
+            return;
+        }
+
+        me.showEditorInCell(me.getAbove(), e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-moveDown'>    moveDown    : function (e) {
+</span>        var me = this;
+
+        if (!me.containerEl) {
+            return;
+        }
+
+        me.showEditorInCell(me.getBelow(), e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-moveLeft'>    moveLeft    : function (e) {
+</span>        var me = this;
+
+        if (!me.containerEl) {
+            return;
+        }
+
+        me.showEditorInCell(me.getPrevious(), e);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-moveRight'>    moveRight   : function (e) {
+</span>        var me = this;
+
+        if (!me.containerEl) {
+            return;
+        }
+
+        me.showEditorInCell(me.getNext(), e);
+    },
+
+
+<span id='Sch-plugin-CellPlugin-method-expandResourceRow'>    expandResourceRow   : function (resourceNode, box, height) {
+</span>        var me = this;
+
+        resourceNode.setHeight(box.height + height);
+        Ext.get(me.lockedView.getNodeByRecord(me.context.resource)).setHeight(box.height + height);
+
+        me.__oldHeight = box.height;
+    },
+
+<span id='Sch-plugin-CellPlugin-method-getNewBottomEditorCoordinate'>    getNewBottomEditorCoordinate   : function (height) {
+</span>        var me = this;
+
+        var resourceNode = Ext.get(me.view.getNodeByRecord(me.context.resource));
+        var box = resourceNode.getBox();
+
+        var record = me.getCellEvents().last();
+        if (record) {
+            var eventBox = me.view.getElementsFromEventRecord(record, me.context.resource)[0].getBox();
+
+            // we should expand row only if we do not have enough room for input
+            if (Math.abs(eventBox.bottom - box.bottom) &lt; height) {
+                me.expandResourceRow(resourceNode, box, height);
+                return box.bottom;
+            } else {
+                return eventBox.bottom;
+            }
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-collapseResourceRow'>    collapseResourceRow : function () {
+</span>        var me = this;
+
+        if (me.__oldHeight) {
+            Ext.get(me.view.getNodeByRecord(me.context.resource)).setHeight(me.__oldHeight);
+            Ext.get(me.lockedView.getNodeByRecord(me.context.resource)).setHeight(me.__oldHeight);
+
+            delete me.__oldHeight;
+        }
+    },
+
+<span id='Sch-plugin-CellPlugin-method-beginEditBelow'>    beginEditBelow  : function () {
+</span>        var me  = this;
+
+        if (!me.containerEl) {
+            return;
+        }
+
+        delete me.context.eventRecord;
+
+        me.beginEdit();
+
+        var height = me.timeAxisViewModel.getViewRowHeight();
+
+        var bottom = me.getNewBottomEditorCoordinate(height);
+
+        me.alignEditor({
+            left    : me.timeAxisViewModel.getTickWidth() * me.tickIndex,
+            y       : bottom,
+            width   : me.timeAxisViewModel.getTickWidth(),
+            height  : height
+        });
+    },
+
+<span id='Sch-plugin-CellPlugin-method-beginEdit'>    beginEdit   : function () {
+</span>        var me      = this;
+
+        if (!me.containerEl) {
+            return;
+        }
+
+        // such event makes sense only if user is provided with selection information
+        // e.g. he selected readonly cell
+        if (me.fireEvent('beforecelledit', me, me.getSelection()) === false) {
+            return;
+        }
+
+        me.editing      = true;
+
+        me.editor.startDate = me.context.startDate;
+        me.editor.bottomUnit = Sch.util.Date.getSubUnit(me.timeAxisViewModel.getBottomHeader().unit);
+
+        me.containerEl.select('.sch-cellplugin-border').hide();
+        // set z-index in order to intercept clicks in editor
+        me.containerEl.setStyle('z-index', 1);
+
+        var event       = me.getEventRecord(me.context),
+            resource    = me.getResourceRecord(me.context);
+
+        if (event) {
+            var date        = Ext.Date;
+
+            // TODO: this should be implemented in editor, not here
+            var format      = Ext.isArray(me.editor.dateFormat) ? me.editor.dateFormat[0] : me.editor.dateFormat;
+            var startDate   = date.format(event.getStartDate(), format);
+            var endDate     = date.format(event.getEndDate(), format);
+
+            me.editor.record = event;
+
+            me.editor.setValue([startDate, endDate].join(me.editor.divider));
+
+            me.editor.recordNode = me.view.getElementsFromEventRecord(event, resource)[0];
+            Ext.fly(me.editor.recordNode).hide();
+        }
+
+        me.editor.show();
+        me.editor.setWidth(me.editor.getMaxWidth());
+        me.editor.focus();
+
+        me.fireEvent('begincelledit', me, me.getSelection());
+    },
+
+<span id='Sch-plugin-CellPlugin-method-cancelEdit'>    cancelEdit      : function () {
+</span>        var me          = this;
+
+        var value       = me.editor.getValue();
+        var selection   = me.getSelection();
+
+        if (me.fireEvent('beforecancelcelledit', me, value, selection) === false) {
+            return;
+        }
+
+        me.stopEditing();
+
+        me.fireEvent('cancelcelledit', me, value, selection);
+    },
+
+<span id='Sch-plugin-CellPlugin-method-completeEdit'>    completeEdit    : function () {
+</span>        var me          = this,
+            addNewLine  = false;
+
+        // plugin is not in editing mode
+        if (!me.editing || !me.containerEl) {
+            return;
+        }
+
+        var value = me.editor.getValue();
+        var selection = me.getSelection();
+
+        if (me.fireEvent('beforecompletecelledit', me, value, selection) === false) {
+            return;
+        }
+
+        if (value &amp;&amp; me.editor.isValid()) {
+            var record  = me.editor.record;
+            
+            var dates   = me.editor.getDates(value);
+
+            var startDate   = dates[0];
+            var endDate     = dates[1];
+
+            if (record) {
+                record.setStartEndDate(startDate, endDate);
+                delete me.editor.record;
+            } else {
+                var newRecord = new me.view.eventStore.model({
+                    StartDate   : startDate,
+                    EndDate     : endDate,
+                    ResourceId  : me.context.resource.getId()
+                });
+
+                me.view.onEventCreated(newRecord);
+
+                me.view.eventStore.add(newRecord);
+            }
+
+            addNewLine = true;
+        }
+
+        me.stopEditing();
+
+        me.fireEvent('completecelledit', me, value, selection);
+
+        return addNewLine;
+    },
+
+<span id='Sch-plugin-CellPlugin-method-stopEditing'>    // resets value, restores view to state before editing
+</span>    stopEditing     : function () {
+        var me = this;
+
+        if (me.editor.recordNode) {
+            Ext.fly(me.editor.recordNode).show();
+            delete me.editor.recordNode;
+        }
+
+        me.collapseResourceRow();
+
+        me.editor.setValue('');
+
+        me.editing  = false;
+        me.clearSelection();
+
+        me.containerEl.select('.sch-cellplugin-border').show();
+        me.containerEl.setStyle('z-index', 'auto');
+        me.editor.hide();
+
+        var node = me.lockedView.getRowByRecord(me.resource);
+        // TODO: in IE if locked grid will have more than 1 column this can mess scroll position
+        node &amp;&amp; Ext.fly(node).down('td').focus();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onBeforeSelect'>    onBeforeSelect  : function (e) {
+</span>        var me = this;
+
+        e &amp;&amp; e.isNavKeyPress &amp;&amp; e.isNavKeyPress() &amp;&amp; me.clearSelection();
+
+        me.restoreEditing = me.editing;
+        me.editing &amp;&amp; me.completeEdit();
+    },
+
+<span id='Sch-plugin-CellPlugin-method-onAfterSelect'>    onAfterSelect   : function (e) {
+</span>        var me = this;
+
+        me.lockedView.getSelectionModel().select(me.resource);
+        me.lockedView.getNodeByRecord(me.resource).focus();
+
+        me.editor.setValue('');
+
+        // we don't want to enable editing back if we changed cell using click
+        // but also we want to enable editing using showEditorInCell(col, row, true) function
+        if (me.restoreEditing &amp;&amp; (e === true || e &amp;&amp; e.isNavKeyPress())) {
+            me.beginEdit();
+        }
+        me.restoreEditing = false;
+
+        me.containerEl.scrollIntoView(me.view.getEl());
+    }
+});
+</pre>
+</body>
+</html>

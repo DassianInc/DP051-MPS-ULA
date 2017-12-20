@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Note'>/**
+</span>@class Gnt.column.Note
+@extends Ext.grid.column.Column
+
+A Column showing the `Note` field of the task.
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        columns         : [
+            ...
+            {
+                xtype       : 'notecolumn',
+                width       : 80
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+*/
+Ext.define(&quot;Gnt.column.Note&quot;, {
+    extend              : &quot;Ext.grid.column.Column&quot;,
+
+    requires            : ['Gnt.field.Note'],
+
+    mixins              : ['Gnt.column.mixin.TaskFieldColumn'],
+
+    alias               : [
+        &quot;widget.notecolumn&quot;,
+        &quot;widget.ganttcolumn.note&quot;
+    ],
+
+<span id='Gnt-column-Note-property-editor'>    editor              : 'notefield',
+</span>
+<span id='Gnt-column-Note-property-defaultEditor'>    defaultEditor       : 'notefield',
+</span>
+<span id='Gnt-column-Note-property-fieldProperty'>    fieldProperty       : 'noteField',
+</span>
+<span id='Gnt-column-Note-property-previewFn'>    previewFn           : null,
+</span><span id='Gnt-column-Note-property-previewFnScope'>    previewFnScope      : null,
+</span>
+<span id='Gnt-column-Note-property-fieldConfigs'>    fieldConfigs        : [ 'instantUpdate', 'previewFn', 'previewFnScope', 'fieldProperty' ],
+</span>
+<span id='Gnt-column-Note-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn();
+        this.callParent(arguments);
+    }
+});
+</pre>
+</body>
+</html>

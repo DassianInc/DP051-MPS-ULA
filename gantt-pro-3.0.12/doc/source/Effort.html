@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-Effort'>/**
+</span>@class Gnt.field.Effort
+@extends Gnt.field.Duration
+
+A specialized field, allowing a user to also specify a duration unit when editing the effort value.
+This class inherits from the {@link Gnt.field.Duration} field, which inherits from `Ext.form.field.Number` so any regular {@link Ext.form.field.Number} configs can be used (like `minValue/maxValue` etc).
+
+*/
+Ext.define('Gnt.field.Effort', {
+    extend                  : 'Gnt.field.Duration',
+
+    requires                : ['Gnt.util.DurationParser'],
+
+    alias                   : 'widget.effortfield',
+    alternateClassName      : 'Gnt.widget.EffortField',
+
+    mixins                  : ['Gnt.mixin.Localizable'],
+
+<span id='Gnt-field-Effort-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+     - invalidText : 'Invalid value'
+     */
+
+    taskField               : 'effortField',
+<span id='Gnt-field-Effort-property-getDurationUnitMethod'>    getDurationUnitMethod   : 'getEffortUnit',
+</span><span id='Gnt-field-Effort-property-setTaskValueMethod'>    setTaskValueMethod      : 'setEffort',
+</span><span id='Gnt-field-Effort-property-getTaskValueMethod'>    getTaskValueMethod      : 'getEffort',
+</span>
+<span id='Gnt-field-Effort-method-applyChanges'>    applyChanges : function (toTask) {
+</span>        toTask = toTask || this.task;
+
+        this.setTaskValue(toTask, this.getValue() || null, this.durationUnit);
+
+        // since we have an &quot;applyChanges&quot; method different from the one provided by &quot;TaskField&quot; mixin
+        // we need to fire &quot;taskupdated&quot; ourself
+        toTask.fireEvent('taskupdated', toTask, this);
+    }
+});
+</pre>
+</body>
+</html>

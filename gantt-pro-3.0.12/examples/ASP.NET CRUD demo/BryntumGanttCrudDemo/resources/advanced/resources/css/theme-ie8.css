@@ -1,0 +1,38 @@
+.x-ie8 .sch-ganttpanel .x-tree-icon,
+.x-ie8 .sch-ganttpanel .x-tree-expander
+{
+    background-image : none !important;
+    width            : 16px;
+    height           : 16px;
+    margin-top       : 2px;
+}
+
+div.sch-ganttpanel .sch-gantt-project-name .x-tree-icon-parent {
+    filter     : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/1387-diamond4.png', sizingMethod='scale')";
+    -ms-filter : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/1387-diamond4.png', sizingMethod='scale')";
+}
+
+.sch-ganttpanel .x-tree-icon-parent {
+    filter     : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/0220-folder2.png', sizingMethod='scale')";
+    -ms-filter : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/0220-folder2.png', sizingMethod='scale')";
+}
+
+.sch-ganttpanel .x-grid-tree-node-expanded .x-tree-icon-parent {
+    filter     : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/0221-folder-open.png', sizingMethod='scale')";
+    -ms-filter : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/0221-folder-open.png', sizingMethod='scale')";
+}
+
+.sch-ganttpanel .x-tree-icon-leaf {
+    filter     : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/0873-circle-small.png', sizingMethod='scale')";
+    -ms-filter : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/0873-circle-small.png', sizingMethod='scale')";
+}
+
+.sch-ganttpanel .x-tree-expander {
+    filter     : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/1222-arrow-right5.png', sizingMethod='scale')";
+    -ms-filter : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/1222-arrow-right5.png', sizingMethod='scale')";
+}
+
+.sch-ganttpanel .x-tree-arrows .x-grid-tree-node-expanded .x-tree-expander {
+    filter     : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/1222-arrow-downright.png', sizingMethod='scale')";
+    -ms-filter : "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='resources/images/1222-arrow-downright.png', sizingMethod='scale')";
+}

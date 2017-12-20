@@ -1,0 +1,68 @@
+[
+    {
+        Id          : 1,
+        leaf        : true,
+
+        Name        : "Task1",
+
+        StartDate   : new Date(2011, 6, 1, 8, 0),
+        Duration    : 2,
+
+        // Effort      : 32, // should be calculated by "normalization" process
+
+        SchedulingMode  : 'FixedDuration'
+    },
+    {
+        Id          : 123,
+        Name        : "Parent task",
+        StartDate   : new Date(2011, 6, 16, 11),
+        Duration    : 5.5,
+        Effort      : 6,
+        expanded    : true,
+        children    : [
+            {
+                Id          : 2,
+                leaf        : true,
+                Name        : "Task2",
+                StartDate   : new Date(2011, 6, 16, 11),
+                Duration    : 1.5,
+                Effort          : 6,
+                SchedulingMode  : 'EffortDriven'
+            },
+            {
+                Id          : 3,
+                leaf        : true,
+                Name        : "Task3",
+                StartDate   : new Date(2011, 6, 18, 8),
+                Duration    : 4
+            }
+        ]
+    },
+    {
+        Id          : 4,
+        leaf        : true,
+        Name        : "Task4",
+        StartDate   : new Date(2011, 6, 25, 8),
+        Duration    : 3,
+        CalendarId      : 'Task4',
+        SchedulingMode  : 'FixedDuration'
+    },
+    {
+        Id          : 6,
+        leaf        : true,
+        Name        : "Task6",
+        StartDate   : new Date(2011, 6, 25, 8),
+        Duration    : 3,
+        Effort          : 12,
+        CalendarId      : 'Task4',
+        SchedulingMode  : 'DynamicAssignment'
+    },
+    // Milestone
+    {
+        Id          : 5,
+        leaf        : true,
+        Name        : "Milestone",
+        StartDate   : new Date(2011, 6, 28, 8),
+        Duration    : 0
+    }
+]

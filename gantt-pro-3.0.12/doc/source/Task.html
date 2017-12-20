@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-template-Task'>/**
+</span>@class Gnt.template.Task
+@extends Ext.XTemplate
+
+Template class used to render a regular leaf task.
+*/
+Ext.define(&quot;Gnt.template.Task&quot;, {
+    extend      : 'Gnt.template.Template',
+
+<span id='Gnt-template-Task-cfg-innerTpl'>    /**
+</span>     * @cfg {String} innerTpl The template defining the inner visual markup for the task.
+     */
+    innerTpl : '&lt;div class=&quot;sch-gantt-progress-bar&quot; style=&quot;width:{progressBarWidth}px;{progressBarStyle}&quot; unselectable=&quot;on&quot;&gt;&amp;#160;&lt;/div&gt;',
+
+<span id='Gnt-template-Task-method-getInnerTpl'>    getInnerTpl : function (cfg) {
+</span>        var side = cfg.rtl ? 'right' : 'left';
+
+        return '&lt;div id=&quot;' + cfg.prefix + '{id}&quot; class=&quot;sch-gantt-item sch-gantt-task-bar {cls}&quot; unselectable=&quot;on&quot; style=&quot;width:{width}px;{style}&quot;&gt;'+
+            '&lt;tpl if=&quot;isRollup&quot;&gt;' +
+            '&lt;tpl else&gt;' +
+                '&lt;tpl if=&quot;segments&quot;&gt;' +
+                    '&lt;div class=&quot;sch-gantt-segment-connector&quot;&gt;&lt;/div&gt;' +
+                '&lt;/tpl&gt;'+
+
+                ((cfg.resizeHandles === 'both' || cfg.resizeHandles === 'left') ? '&lt;div class=&quot;sch-resizable-handle sch-gantt-task-handle sch-resizable-handle-start&quot;&gt;&lt;/div&gt;' : '') +
+
+                '&lt;tpl for=&quot;segments&quot;&gt;' +
+                    '&lt;div id=&quot;' + cfg.prefix + '{parent.Id}-segment-{[xindex-1]}&quot; class=&quot;sch-gantt-task-segment {cls}&quot; style=&quot;left:{left}px;width:{width}px;{style}&quot;' +
+                    ' data-segmentIndex=&quot;{[xindex-1]}&quot;&gt;' +
+                        this.innerTpl +
+                        ((cfg.resizeHandles === 'both' || cfg.resizeHandles === 'right') ? '&lt;div class=&quot;sch-resizable-handle sch-gantt-task-handle sch-resizable-handle-end&quot;&gt;&lt;/div&gt;' : '') +
+                    '&lt;/div&gt;' +
+                '&lt;/tpl&gt;' +
+                this.innerTpl +
+
+                ((cfg.resizeHandles === 'both' || cfg.resizeHandles === 'right') ? '&lt;div class=&quot;sch-resizable-handle sch-gantt-task-handle sch-resizable-handle-end&quot;&gt;&lt;/div&gt;' : '') +
+
+                (cfg.enableProgressBarResize ? '&lt;div style=&quot;' + side + ':{progressBarWidth}px&quot; class=&quot;sch-gantt-progressbar-handle&quot;&gt;&lt;/div&gt;': '') +
+
+                // Left / Right terminals
+                (cfg.enableDependencyDragDrop ? this.dependencyTerminalMarkup : '') +
+
+            '&lt;/tpl&gt;'+
+        '&lt;/div&gt;';
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-SimpleEditor'>/**
+</span>@class Sch.plugin.SimpleEditor
+@extends Ext.Editor
+
+A plugin (ptype = 'scheduler_simpleeditor') for basic text editing of an event name.
+
+{@img scheduler/images/simple-editor.png}
+
+To add this plugin to scheduler:
+
+        var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+            ...
+
+            resourceStore   : resourceStore,
+            eventStore      : eventStore,
+
+            plugins         : [
+                Ext.create('Sch.plugin.SimpleEditor', { dataIndex : 'Title' })
+            ]
+        });
+
+
+*/
+Ext.define(&quot;Sch.plugin.SimpleEditor&quot;, {
+    extend              : &quot;Ext.Editor&quot;,
+    alias               : 'plugin.scheduler_simpleeditor',
+
+    requires            : [
+        &quot;Ext.form.TextField&quot;
+    ],
+
+    mixins              : ['Ext.AbstractPlugin', 'Sch.mixin.Localizable'],
+<span id='Sch-plugin-SimpleEditor-property-lockableScope'>    lockableScope       : 'top',
+</span><span id='Sch-plugin-SimpleEditor-property-cls'>    cls                 : 'sch-simpleeditor',
+</span><span id='Sch-plugin-SimpleEditor-property-allowBlur'>    allowBlur           : false,
+</span>
+<span id='Sch-plugin-SimpleEditor-property-delegate'>    // private
+</span>    delegate            : '.sch-event-inner',
+
+<span id='Sch-plugin-SimpleEditor-cfg-dataIndex'>    /**
+</span>     * @cfg {String} dataIndex Required. A field, containing the task's title. This field will be updated by the editor. Defaults to the value of the {@link Sch.model.Event#nameField}.
+     */
+    dataIndex           : null,
+
+<span id='Sch-plugin-SimpleEditor-property-completeOnEnter'>    completeOnEnter     : true,
+</span><span id='Sch-plugin-SimpleEditor-property-cancelOnEsc'>    cancelOnEsc         : true,
+</span><span id='Sch-plugin-SimpleEditor-property-ignoreNoChange'>    ignoreNoChange      : true,
+</span><span id='Sch-plugin-SimpleEditor-property-height'>    height              : 19,
+</span><span id='Sch-plugin-SimpleEditor-property-dragProxyEl'>    dragProxyEl         : null,
+</span><span id='Sch-plugin-SimpleEditor-property-resourceRecord'>    resourceRecord      : null,
+</span>
+<span id='Sch-plugin-SimpleEditor-cfg-newEventText'>    /**
+</span>     * @cfg {String} newEventText The text to assign as the name for a newly created Event.
+     */
+    newEventText        : null,
+
+<span id='Sch-plugin-SimpleEditor-property-autoSize'>    autoSize            : {
+</span>        width   : 'boundEl' // The width will be determined by the width of the boundEl, the height from the editor (21)
+    },
+
+
+<span id='Sch-plugin-SimpleEditor-method-initComponent'>    initComponent : function() {
+</span>        this.field = this.field || { xtype : 'textfield', selectOnFocus : true };
+
+        this.callParent(arguments);
+    },
+
+
+<span id='Sch-plugin-SimpleEditor-method-init'>    init : function(scheduler) {
+</span>        this.scheduler = scheduler.getSchedulingView();
+
+        scheduler.on('afterrender', this.onSchedulerRender, this);
+        this.scheduler.registerEventEditor(this);
+
+        this.dataIndex = this.dataIndex || this.scheduler.getEventStore().model.prototype.nameField;
+    },
+
+<span id='Sch-plugin-SimpleEditor-method-edit'>    // Programmatically enter edit mode
+</span>    edit : function(record, el) {
+        el = el || this.scheduler.getElementsFromEventRecord(record)[0];
+
+        this.startEdit(el.child(this.delegate));
+        // workaround http://www.sencha.com/forum/showthread.php?296716
+        this.realign();
+
+        this.record = record;
+        this.setValue(this.record.get(this.dataIndex));
+    },
+
+
+<span id='Sch-plugin-SimpleEditor-method-onSchedulerRender'>    onSchedulerRender : function(scheduler) {
+</span>
+        this.on({
+            startedit   : this.onStartEdit,
+
+            complete    : function(editor, value, original) {
+                var record = this.record;
+                var eventStore = this.scheduler.eventStore;
+
+                record.set(this.dataIndex, value);
+
+                // Check if this is a new record
+                if (eventStore.indexOf(record) &lt; 0) {
+                    if (this.scheduler.fireEvent('beforeeventadd', this.scheduler, record) !== false) {
+                        eventStore.append(record);
+                        record.assign(this.resourceRecord);
+
+                        this.resourceRecord = null;
+                    }
+                }
+
+                this.onAfterEdit();
+            },
+
+            canceledit  : this.onAfterEdit,
+
+            hide        : function() {
+                if (this.dragProxyEl) {
+                    this.dragProxyEl.hide();
+                }
+            },
+
+            scope       : this
+        });
+
+        scheduler.on({
+            eventdblclick   : function(s, r, e){
+                if (!scheduler.isReadOnly()) {
+                    this.edit(r);
+                }
+            },
+            dragcreateend   : this.onDragCreateEnd,
+            scope           : this
+        });
+    },
+
+<span id='Sch-plugin-SimpleEditor-method-onStartEdit'>    onStartEdit  : function() {
+</span>        if (!this.allowBlur) {
+            // This should be removed when this bug is fixed:
+            // http://www.sencha.com/forum/showthread.php?244580-4.1-allowBlur-on-Ext.Editor-not-working
+            Ext.getBody().on('mousedown', this.onMouseDown, this);
+            this.scheduler.on('eventmousedown', function() { this.cancelEdit(); }, this);
+        }
+    },
+
+<span id='Sch-plugin-SimpleEditor-method-onAfterEdit'>    onAfterEdit  : function() {
+</span>        if (!this.allowBlur) {
+            Ext.getBody().un('mousedown', this.onMouseDown, this);
+            this.scheduler.un('eventmousedown', function() { this.cancelEdit(); }, this);
+        }
+    },
+
+<span id='Sch-plugin-SimpleEditor-method-onMouseDown'>    onMouseDown : function(e, t) {
+</span>        if (this.editing &amp;&amp; this.el &amp;&amp; !e.within(this.el)) {
+            this.cancelEdit();
+        }
+    },
+
+<span id='Sch-plugin-SimpleEditor-method-onDragCreateEnd'>    onDragCreateEnd : function(s, eventRecord, resourceRecord, e, proxyEl) {
+</span>        this.dragProxyEl        = proxyEl;
+        this.resourceRecord     = resourceRecord;
+
+        // Call scheduler template method
+        this.scheduler.onEventCreated(eventRecord);
+
+        if (eventRecord.get(this.dataIndex) === '') {
+            eventRecord.set(this.dataIndex, this.newEventText || this.L('newEventText'));
+        }
+        this.edit(eventRecord, this.dragProxyEl);
+    }
+});
+</pre>
+</body>
+</html>

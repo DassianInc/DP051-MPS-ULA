@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-model-Project'>/**
+</span>
+@class Gnt.model.Project
+@extends Gnt.model.Task
+
+This class represents a single Project in your Gantt chart.
+
+The inheritance hierarchy of this class includes {@link Gnt.model.Task}, {@link Sch.model.Customizable} and {@link Ext.data.Model} classes.
+This class will also receive a set of methods and additional fields that stem from the {@link Ext.data.NodeInterface}.
+Please refer to the documentation of those classes to become familiar with the base interface of this class.
+
+By default, a Project has the following fields as seen below.
+
+# Project Fields
+
+- `Description` - the description of the project, this field maps to the task `Note` field
+- `AllowDependencies` - this field indicates if the project tasks allowed to have dependencies with tasks external to the project
+
+*/
+Ext.define('Gnt.model.Project', {
+    extend                  : 'Gnt.model.Task',
+
+    alias                   : 'gntmodel.project',
+
+<span id='Gnt-model-Project-property-isProject'>    /**
+</span>     * @property {Boolean} isProject Indicates that this is a project.
+     * Can be used in heterogeneous stores to distinguish project records from task ones.
+     */
+    isProject               : true,
+
+<span id='Gnt-model-Project-cfg-descriptionField'>    /**
+</span>     * @cfg {String} descriptionField The description of the project.
+     */
+    descriptionField        : 'Note',
+
+<span id='Gnt-model-Project-cfg-allowDependenciesField'>    /**
+</span>     * @cfg {Boolean} allowDependenciesField The name of the field specifying if the task allows dependencies.
+     */
+    allowDependenciesField  : 'AllowDependencies',
+
+<span id='Gnt-model-Project-cfg-customizableFields'>    customizableFields      : [
+</span>        { name : 'Description', type : 'string' },
+        { name : 'AllowDependencies', persist : false, type : 'bool', defaultValue : false }
+    ],
+
+<span id='Gnt-model-Project-property-recognizedSchedulingModes'>    recognizedSchedulingModes : ['Normal'],
+</span>
+<span id='Gnt-model-Project-method-isEditable'>    isEditable : function (fieldName) {
+</span>        // some fields editing doesn't make sense for a project
+        switch (fieldName) {
+            case this.nameField:
+            case this.startDateField:
+            case this.endDateField:
+            case this.readOnlyField:
+            case this.durationField:
+            case this.durationUnitField:
+            case this.descriptionField:
+            case this.allowDependenciesField:
+                return this.callParent(arguments);
+            default :
+                return false;
+        }
+    }
+
+    /*
+     * @method setReadOnly
+     * Sets if the given project is read only. All underlying tasks will be considered as read only as well.
+     *
+     * @param {String} value `True` to mark the project as read only.
+     */
+
+});
+</pre>
+</body>
+</html>

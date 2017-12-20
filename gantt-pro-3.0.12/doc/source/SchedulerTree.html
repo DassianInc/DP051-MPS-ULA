@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-panel-SchedulerTree'>/** 
+</span>
+@class Sch.panel.SchedulerTree
+@extends Sch.panel.TimelineTreePanel
+@mixin Sch.mixin.SchedulerPanel
+
+A complete scheduler panel using a tree view. This class can be used when you have a lot of resources organized in a hierarchical structure.
+
+{@img scheduler/images/scheduler-tree.png}
+
+Please refer to the {@link Sch.panel.SchedulerGrid} for additional documentation, as these classes
+are virtually identical. This document will only provide the tree-specific details.
+
+In the scheduler tree case:
+
+- the `resourceStore` is expected to be an instance of the {@link Sch.data.ResourceTreeStore}.
+- the scheduler tree does not support vertical orientation.
+- in your columns definition, you must include a column which will contain the tree itself (the `treecolumn` xtype):
+
+        var schedulerTree = Ext.create('Sch.panel.SchedulerTree', {
+            columns: [
+                {
+                    xtype       : 'treecolumn',
+                    
+                    text        : 'Name',
+                    width       : 200,
+                    sortable    : true,
+                    dataIndex   : 'Name'
+                }
+            ]
+        });
+
+
+*/
+Ext.define(&quot;Sch.panel.SchedulerTree&quot;, {
+    extend      : &quot;Sch.panel.TimelineTreePanel&quot;,
+    mixins      : ['Sch.mixin.SchedulerPanel'], 
+    alias       : [ 'widget.schedulertree'],
+<span id='Sch-panel-SchedulerTree-property-viewType'>    viewType    : 'schedulergridview',
+</span>    
+<span id='Sch-panel-SchedulerTree-method-setOrientation'>    setOrientation : function () {
+</span>        return this.setMode.apply(this, arguments);
+    },
+
+<span id='Sch-panel-SchedulerTree-method-setMode'>    setMode : function (mode) {
+</span>        if (mode !== 'horizontal') {
+            Ext.Error.raise(&quot;Sch.panel.SchedulerTree only support horizontal mode&quot;);
+        }
+    },
+
+<span id='Sch-panel-SchedulerTree-method-initComponent'>    initComponent : function() {
+</span>        this.callParent(arguments);
+        this.getSchedulingView()._initializeSchedulerView();
+    }
+}, function() {
+    this.override(Sch.mixin.SchedulerPanel.prototype.inheritables() || {});
+});</pre>
+</body>
+</html>

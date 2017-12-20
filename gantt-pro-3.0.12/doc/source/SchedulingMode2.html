@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-SchedulingMode'>/**
+</span>
+@class Gnt.column.SchedulingMode
+@extends Ext.grid.column.Column
+
+A Column showing the `SchedulingMode` field of a task. The column is editable when adding a
+`Sch.plugin.TreeCellEditing` plugin to your Gantt panel. The overall setup will look like this:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        columns         : [
+            ...
+            {
+                xtype       : 'schedulingmodecolumn',
+                width       : 80
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+
+*/
+Ext.define(&quot;Gnt.column.SchedulingMode&quot;, {
+    extend              : 'Ext.grid.column.Column',
+
+    requires            : ['Gnt.field.SchedulingMode'],
+    mixins              : ['Gnt.column.mixin.TaskFieldColumn'],
+
+    alias               : [
+        'widget.schedulingmodecolumn',
+        'widget.ganttcolumn.schedulingmode'
+    ],
+
+<span id='Gnt-column-SchedulingMode-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - text : 'Mode'
+     */
+
+<span id='Gnt-column-SchedulingMode-cfg-width'>    /**
+</span>     * @cfg {Number} width The width of the column.
+     */
+    width               : 100,
+
+<span id='Gnt-column-SchedulingMode-cfg-align'>    /**
+</span>     * @cfg {String} align The alignment of the text in the column.
+     */
+    align               : 'left',
+
+<span id='Gnt-column-SchedulingMode-cfg-data'>    /**
+</span>     * @cfg {Array} data A 2-dimensional array used for editing in combobox. The first item of inner arrays will be treated as &quot;value&quot; and 2nd - as &quot;display&quot;
+     */
+    data                : null,
+
+<span id='Gnt-column-SchedulingMode-property-fieldProperty'>    fieldProperty       : 'schedulingModeField',
+</span>
+<span id='Gnt-column-SchedulingMode-property-editor'>    editor              : 'schedulingmodefield',
+</span>
+<span id='Gnt-column-SchedulingMode-property-defaultEditor'>    defaultEditor       : 'schedulingmodefield',
+</span>
+<span id='Gnt-column-SchedulingMode-cfg-instantUpdate'>    instantUpdate       : false,
+</span>
+<span id='Gnt-column-SchedulingMode-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn({
+            store : this.data
+        });
+
+        this.callParent(arguments);
+    }
+
+});
+</pre>
+</body>
+</html>

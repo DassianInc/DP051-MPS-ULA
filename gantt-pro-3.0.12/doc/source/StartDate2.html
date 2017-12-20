@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-StartDate'>/**
+</span>
+@class Gnt.column.StartDate
+@extends Ext.grid.column.Date
+
+A Column representing a `StartDate` field of a task. The column is editable, however to enable the editing you will need to add a
+`Sch.plugin.TreeCellEditing` plugin to your gantt panel. The overall setup will look like this:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        columns         : [
+            ...
+            {
+                xtype       : 'startdatecolumn',
+                width       : 80
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+Note, that this column will provide only a day-level editor (using a subclassed Ext JS DateField). If you need a more precise editing (ie also specify
+the start hour/minute) you will need to provide your own field which should subclass {@link Gnt.field.StartDate}. See [forumthread][1] for more information.
+
+Also note, that this class inherits from [Ext.grid.column.Date](http://docs.sencha.com/ext-js/4-1/#!/api/Ext.grid.column.Date) and supports its configuration options, notably the &quot;format&quot; option.
+
+[1]: http://bryntum.com/forum/viewtopic.php?f=16&amp;t=2277&amp;start=10#p13964
+
+*/
+Ext.define('Gnt.column.StartDate', {
+    extend              : 'Ext.grid.column.Date',
+    alias               : [
+        'widget.startdatecolumn',
+        'widget.ganttcolumn.startdate'
+    ],
+
+    requires            : ['Gnt.field.StartDate'],
+
+    mixins              : ['Gnt.column.mixin.TaskFieldColumn'],
+
+<span id='Gnt-column-StartDate-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - text : 'Start'
+     */
+
+<span id='Gnt-column-StartDate-cfg-width'>    /**
+</span>     * @cfg {Number} width A width of the column, default value is 100
+     */
+    width               : 100,
+
+<span id='Gnt-column-StartDate-cfg-align'>    /**
+</span>     * @cfg {String} align An align of the text in the column, default value is 'left'
+     */
+    align               : 'left',
+
+<span id='Gnt-column-StartDate-cfg-editorFormat'>    /**
+</span>     * @cfg {String} editorFormat A date format to be used when editing the value of the column. By default it is the same as `format` configuration
+     * option of the column itself.
+     */
+    editorFormat        : null,
+
+<span id='Gnt-column-StartDate-cfg-adjustMilestones'>    /**
+</span>     * @cfg {Boolean} adjustMilestones When set to `true`, the start/end dates of the milestones will be adjusted -1 day *during rendering and editing*. The task model will still hold unmodified date.
+     */
+    adjustMilestones    : true,
+
+<span id='Gnt-column-StartDate-cfg-keepDuration'>    /**
+</span>     * @cfg {Boolean} keepDuration Pass `true` to keep the duration of the task (&quot;move&quot; the task), `false` to change the duration (&quot;resize&quot; the task).
+     */
+    keepDuration        : true,
+
+<span id='Gnt-column-StartDate-property-fieldProperty'>    fieldProperty       : 'startDateField',
+</span>
+<span id='Gnt-column-StartDate-property-fieldConfigs'>    fieldConfigs        : [ 'instantUpdate', 'adjustMilestones', 'keepDuration', 'fieldProperty' ],
+</span>
+<span id='Gnt-column-StartDate-property-editor'>    editor              : 'startdatefield',
+</span>
+<span id='Gnt-column-StartDate-property-defaultEditor'>    defaultEditor       : 'startdatefield',
+</span>
+<span id='Gnt-column-StartDate-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn({
+            format      : this.editorFormat || this.format || Ext.Date.defaultFormat
+        });
+
+        this.callParent(arguments);
+    },
+
+
+<span id='Gnt-column-StartDate-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        return value &amp;&amp; Ext.Date.format(this.field.valueToVisible(value, task), this.format) || '';
+    }
+});
+</pre>
+</body>
+</html>

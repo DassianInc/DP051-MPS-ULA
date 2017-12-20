@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-view-HorizontalTimeAxis'>/**
+</span>* @class Sch.view.HorizontalTimeAxis
+* @extends Ext.util.Observable
+* @private
+*
+* A visual representation of the time axis described in the {@link Sch.preset.ViewPreset#headerConfig headerConfig}.
+* Normally you should not interact with this class directly.
+*/
+Ext.define(&quot;Sch.view.HorizontalTimeAxis&quot;, {
+    extend: 'Ext.util.Observable',
+
+    requires: [
+        'Ext.XTemplate'
+    ],
+
+<span id='Sch-view-HorizontalTimeAxis-cfg-trackHeaderOver'>    /**
+</span>    * @cfg {Boolean} trackHeaderOver `true` to highlight each header cell when the mouse is moved over it.
+    */
+    trackHeaderOver: true,
+
+<span id='Sch-view-HorizontalTimeAxis-cfg-compactCellWidthThreshold'>    /**
+</span>    * @cfg {Number} compactCellWidthThreshold The minimum width for a bottom row header cell to be considered 'compact', which adds a special CSS class to the row (for special styling).
+    *            Defaults to 15px.
+    */
+    compactCellWidthThreshold: 15,
+
+<span id='Sch-view-HorizontalTimeAxis-property-baseCls'>    baseCls : 'sch-column-header',
+</span><span id='Sch-view-HorizontalTimeAxis-property-tableCls'>    tableCls : 'sch-header-row',
+</span>
+<span id='Sch-view-HorizontalTimeAxis-property-headerHtmlRowTpl'>    // a 2nd template for the 2nd mode, w/o `containerEl`
+</span>    headerHtmlRowTpl:
+        '&lt;table border=&quot;0&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; style=&quot;width: {totalWidth}px; {tstyle}&quot; class=&quot;{{tableCls}} sch-header-row-{position} {cls}&quot;&gt;' +
+            '&lt;thead&gt;' +
+                '&lt;tr&gt;' +
+                    '&lt;tpl for=&quot;cells&quot;&gt;' +
+                        '&lt;td class=&quot;{{baseCls}} {headerCls} sch-header-cell-{align}&quot; style=&quot;position : static; text-align: {align}; width: {width}px; {style}&quot; tabIndex=&quot;0&quot;' +
+                            'headerPosition=&quot;{parent.position}&quot; headerIndex=&quot;{[xindex-1]}&quot;&gt;' +
+                                '&lt;div class=&quot;sch-simple-timeheader&quot;&gt;{header}&lt;/div&gt;' +
+                        '&lt;/td&gt;' +
+                    '&lt;/tpl&gt;' +
+                '&lt;/tr&gt;' +
+            '&lt;/thead&gt;' +
+        '&lt;/table&gt;',
+
+<span id='Sch-view-HorizontalTimeAxis-property-model'>    // TODO DOCS
+</span>    model           : null,
+
+<span id='Sch-view-HorizontalTimeAxis-property-hoverCls'>    // TODO DOCS
+</span>    hoverCls        : '',
+
+<span id='Sch-view-HorizontalTimeAxis-property-containerEl'>    // optional
+</span>    // this view class will work in 2 modes - one with provided `containerEl` and one w/o it
+    containerEl     : null,
+
+<span id='Sch-view-HorizontalTimeAxis-property-height'>    // Only used for IE10 in Touch Scheduler since display:box is too buggy in IE.
+</span>    height : null,
+
+<span id='Sch-view-HorizontalTimeAxis-event-timeheaderclick'>    /**
+</span>     * @event timeheaderclick
+     * Fires after a click on a time header cell
+     * @param {Sch.view.HorizontalTimeAxis} column The column object
+     * @param {Date} startDate The start date of the header cell
+     * @param {Date} endDate The start date of the header cell
+     * @param {Ext.EventObject} e The event object
+     */
+
+<span id='Sch-view-HorizontalTimeAxis-event-timeheaderdblclick'>    /**
+</span>     * @event timeheaderdblclick
+     * Fires after a double click on a time header cell
+     * @param {Sch.view.HorizontalTimeAxis} column The column object
+     * @param {Date} startDate The start date of the header cell
+     * @param {Date} endDate The end date of the header cell
+     * @param {Ext.EventObject} e The event object
+     */
+
+<span id='Sch-view-HorizontalTimeAxis-event-timeheadercontextmenu'>    /**
+</span>     * @event timeheadercontextmenu
+     * Fires after a right click on a time header cell
+     * @param {Sch.view.HorizontalTimeAxis} column The column object
+     * @param {Date} startDate The start date of the header cell
+     * @param {Date} endDate The start date of the header cell
+     * @param {Ext.EventObject} e The event object
+     */
+
+<span id='Sch-view-HorizontalTimeAxis-event-refresh'>    /**
+</span>     * @event refresh
+     * Fires after the view has been updated, (after the time axis has been reconfigured,
+     * or as a result of time column width change or available schedule width change).
+     * @param {Sch.view.HorizontalTimeAxis} timeAxisView The time axis view
+     */
+
+    constructor: function (config) {
+        var me = this;
+        var isTouch = !!Ext.versions.touch;
+
+        Ext.apply(this, config);
+        me.callParent(arguments);
+
+        me.model.on('update', me.onModelUpdate, this, { priority : 5 });
+
+        me.containerEl = Ext.get(me.containerEl);
+
+        if (!(me.headerHtmlRowTpl instanceof Ext.Template)) {
+            me.headerHtmlRowTpl = me.headerHtmlRowTpl.replace('{{baseCls}}', this.baseCls).replace('{{tableCls}}', this.tableCls);
+            me.headerHtmlRowTpl = new Ext.XTemplate(me.headerHtmlRowTpl);
+        }
+
+        if (me.trackHeaderOver &amp;&amp; me.hoverCls) {
+            me.containerEl.on({
+                mousemove   : me.highlightCell,
+                delegate    : '.sch-column-header',
+                scope       : me
+            });
+
+            me.containerEl.on({
+                mouseleave  : me.clearHighlight,
+                scope       : me
+            });
+        }
+
+        var listenerCfg = {
+            scope       : this,
+            delegate    : '.sch-column-header'
+        };
+
+        if (isTouch) {
+            listenerCfg.tap = this.onElClick('tap');
+            listenerCfg.doubletap = this.onElClick('doubletap');
+
+        } else {
+            listenerCfg.click = this.onElClick('click');
+            listenerCfg.dblclick = this.onElClick('dblclick');
+            listenerCfg.contextmenu = this.onElClick('contextmenu');
+        }
+
+        me._listenerCfg = listenerCfg;
+        if (me.containerEl) me.containerEl.on(listenerCfg);
+    },
+
+<span id='Sch-view-HorizontalTimeAxis-method-destroy'>    destroy : function() {
+</span>        var me = this;
+
+        if (me.containerEl) {
+            me.containerEl.un(me._listenerCfg);
+
+            me.containerEl.un({
+                mousemove   : me.highlightCell,
+                delegate    : '.sch-simple-timeheader',
+                scope       : me
+            });
+
+            me.containerEl.un({
+                mouseleave: me.clearHighlight,
+                scope: me
+            });
+        }
+
+        me.model.un({
+            update  : me.onModelUpdate,
+            scope   : me
+        });
+    },
+
+<span id='Sch-view-HorizontalTimeAxis-method-onModelUpdate'>    onModelUpdate: function () {
+</span>        this.render();
+    },
+
+
+<span id='Sch-view-HorizontalTimeAxis-method-getHTML'>    getHTML : function (header, meta, column) {
+</span>        var columnConfig        = this.model.getColumnConfig();
+        var totalWidth          = this.model.getTotalWidth();
+        var nbrRows             = Ext.Object.getKeys(columnConfig).length;
+        var rowHeight           = this.height ? this.height / nbrRows : 0;
+        var html                = '';
+
+        if (columnConfig.top) {
+            this.embedCellWidths(columnConfig.top);
+
+            html                += this.headerHtmlRowTpl.apply({
+                totalWidth      : totalWidth,
+                cells           : columnConfig.top,
+                position        : 'top',
+                tstyle          : 'border-top : 0;' + (rowHeight ?  'height:' + rowHeight + 'px' : '')
+            });
+        }
+
+        if (columnConfig.middle) {
+            this.embedCellWidths(columnConfig.middle);
+
+            html                += this.headerHtmlRowTpl.apply({
+                totalWidth      : totalWidth,
+                cells           : columnConfig.middle,
+                position        : 'middle',
+                tstyle          : (columnConfig.top ? '' : 'border-top : 0;') + (rowHeight ?  'height:' + rowHeight + 'px' : ''),
+                cls             : !columnConfig.bottom &amp;&amp; this.model.getTickWidth() &lt;= this.compactCellWidthThreshold ? 'sch-header-row-compact' : ''
+            });
+        }
+
+        if (columnConfig.bottom) {
+            this.embedCellWidths(columnConfig.bottom);
+
+            html                += this.headerHtmlRowTpl.apply({
+                totalWidth      : totalWidth,
+                cells           : columnConfig.bottom,
+                position        : 'bottom',
+                tstyle          : (rowHeight ? 'height:' + rowHeight + 'px' : ''),
+                cls             : this.model.getTickWidth() &lt;= this.compactCellWidthThreshold ? 'sch-header-row-compact' : ''
+            });
+        }
+
+        return html + '&lt;div class=&quot;sch-header-secondary-canvas&quot;&gt;&lt;/div&gt;';
+    },
+
+
+<span id='Sch-view-HorizontalTimeAxis-method-render'>    // Outputs the tables and cells based on the header row config in the active viewPreset
+</span>    render: function () {
+        if (!this.containerEl) return;
+
+        var innerCt     = this.containerEl,
+            ctDom       = innerCt.dom,
+            oldDisplay  = ctDom.style.display,
+            columnConfig = this.model.getColumnConfig(),
+            parent      = ctDom.parentNode;
+
+        ctDom.style.display = 'none';
+        parent.removeChild(ctDom);
+
+        var renderData = this.getHTML();
+
+        ctDom.innerHTML = renderData;
+
+        if (!columnConfig.top &amp;&amp; !columnConfig.middle) {
+            this.containerEl.addCls('sch-header-single-row');
+        } else {
+            this.containerEl.removeCls('sch-header-single-row');
+        }
+
+        parent &amp;&amp; parent.appendChild(ctDom);
+        ctDom.style.display = oldDisplay;
+
+        this.fireEvent('refresh', this);
+    },
+
+<span id='Sch-view-HorizontalTimeAxis-method-embedCellWidths'>    embedCellWidths : function (cells) {
+</span>        // For desktop only, flags such as Ext.isSafari only exist in Ext JS (in touch it's set in Ext.os)
+        var widthAdjust     = (Ext.isIE7 || (Ext.isSafari &amp;&amp; !Ext.supports.Touch)) ? 1 : 0;
+
+        for (var i = 0; i &lt; cells.length; i++) {
+            var cell        = cells[ i ];
+            var width       = this.model.getDistanceBetweenDates(cell.start, cell.end);
+
+            if (width) {
+                cell.width  = width - (i ? widthAdjust : 0);
+            } else {
+                cell.width  = 0;
+                cell.style  = 'display: none';
+            }
+        }
+    },
+
+
+<span id='Sch-view-HorizontalTimeAxis-method-onElClick'>    // private
+</span>    onElClick: function(eventName) {
+        return function (event, target) {
+            // Normalize ST vs Ext JS (Ext passes the delegated target as the target argument, ST passes the clicked DOM node)
+            target = event.delegatedTarget || target;
+
+            var position        = Ext.fly(target).getAttribute('headerPosition'),
+                index           = Ext.fly(target).getAttribute('headerIndex'),
+                headerConfig    = this.model.getColumnConfig()[position][index];
+
+            this.fireEvent('timeheader' + eventName, this, headerConfig.start, headerConfig.end, event);
+        };
+    },
+
+
+<span id='Sch-view-HorizontalTimeAxis-method-highlightCell'>    highlightCell: function (e, cell) {
+</span>        var me = this;
+
+        if (cell !== me.highlightedCell) {
+            me.clearHighlight();
+            me.highlightedCell = cell;
+            Ext.fly(cell).addCls(me.hoverCls);
+        }
+    },
+
+<span id='Sch-view-HorizontalTimeAxis-method-clearHighlight'>    clearHighlight: function () {
+</span>        var me = this,
+            highlighted = me.highlightedCell;
+
+        if (highlighted) {
+            Ext.fly(highlighted).removeCls(me.hoverCls);
+            delete me.highlightedCell;
+        }
+    }
+    /* EOF Proxied model methods */
+});
+
+
+</pre>
+</body>
+</html>

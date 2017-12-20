@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Dependency'>/**
+</span>
+@class Gnt.column.Dependency
+@extends Ext.grid.column.Column
+@private
+
+An internal private class serving as base class for Predecessor and Successor column classes.
+
+*/
+Ext.define(&quot;Gnt.column.Dependency&quot;, {
+    extend      : &quot;Ext.grid.column.Column&quot;,
+
+    requires    : [
+        'Gnt.field.Dependency'
+    ],
+
+<span id='Gnt-column-Dependency-property-separator'>    separator   : ';',
+</span><span id='Gnt-column-Dependency-property-type'>    type        : 'predecessors',        // Or 'successors'
+</span>
+<span id='Gnt-column-Dependency-property-field'>    // Reference to the field used by the Editor
+</span>    field       : null,
+
+<span id='Gnt-column-Dependency-cfg-useSequenceNumber'>    /**
+</span>     * @cfg {Boolean} useSequenceNumber Set to `true` to use auto-generated sequential identifiers
+     * to reference other tasks (see {@link Gnt.model.Task#getSequenceNumber} for definition).
+     * If value is `false`then the &quot;real&quot; id (that is stored in the database) will be used.
+     */
+    useSequenceNumber : false,
+
+<span id='Gnt-column-Dependency-method-constructor'>    constructor : function (config) {
+</span>        config      = config || {};
+
+        var field   = config.editor;
+
+        delete config.editor;
+
+        Ext.apply(this, config);
+
+        config.editor   = field || Ext.create('Gnt.field.Dependency', {
+            type              : this.type,
+            separator         : this.separator,
+            useSequenceNumber : this.useSequenceNumber
+        });
+
+        if (!(config.editor instanceof Gnt.widget.DependencyField)) {
+            config.editor = Ext.ComponentManager.create(config.editor, 'dependencyfield');
+        }
+
+        config.field = config.editor;
+
+        this.scope      = this;
+
+        this.callParent([ config ]);
+
+    },
+
+<span id='Gnt-column-Dependency-method-afterRender'>    afterRender : function() {
+</span>        var panel = this.up('ganttpanel');
+
+        // Make top Gantt panel aware of the need for refreshing locked grid after changes in the dependency store
+        panel.registerLockedDependencyListeners();
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-Dependency-method-getContainingPanel'>    getContainingPanel : function() {
+</span>        if (!this.panel) {
+            this.panel = this.up('tablepanel');
+        }
+
+        return this.panel;
+    },
+
+<span id='Gnt-column-Dependency-method-setDirtyClass'>    setDirtyClass : function (meta, task) {
+</span>        var view    = this.getContainingPanel().getView();
+        if (view.markDirty &amp;&amp; this.field.isDirty(task)) {
+            meta.tdCls   = view.dirtyCls;
+        }
+    },
+
+<span id='Gnt-column-Dependency-method-isEditable'>    /**
+</span>     * @protected
+     * Gantt panel is aware of this method and uses it (if the method is presented)
+     * to check if corresponding column is editable.
+     * @param  {Gnt.model.Task}  task Task about to being edited
+     * @return {Boolean}      Return false to prevent editing
+     */
+    isEditable : function (task) {
+        var panel   = this.gantt || this.up('ganttpanel');
+
+        if (task.isProject) return false;
+
+        return !task.isProject &amp;&amp; (panel &amp;&amp; panel.allowParentTaskDependencies || task.isLeaf());
+    },
+
+<span id='Gnt-column-Dependency-method-renderer'>    renderer    : function (value, meta, task) {
+</span>        if (!task.isEditable(this.dataIndex) || !this.isEditable(task)) {
+            meta.tdCls      = (meta.tdCls || '') + ' sch-column-readonly';
+        } else {
+            this.setDirtyClass(meta, task);
+        }
+
+        return this.field.getFieldDisplayValue(task);
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-Note'>/**
+</span>
+ @class Gnt.field.Note
+ @extends Ext.form.field.Picker
+
+ A specialized field to be used for editing in the {@link Gnt.column.Note} column.
+
+ */
+
+Ext.define('Gnt.field.Note', {
+    extend              : 'Ext.form.field.Picker',
+
+    alias               : ['widget.notefield', 'widget.noteeditor'],
+    alternateClassName  : 'Gnt.widget.NoteField',
+
+    requires            : ['Ext.form.field.HtmlEditor'],
+
+    mixins              : ['Gnt.field.mixin.TaskField', 'Gnt.mixin.Localizable'],
+
+<span id='Gnt-field-Note-property-matchFieldWidth'>    matchFieldWidth     : false,
+</span><span id='Gnt-field-Note-property-editable'>    editable            : false,
+</span>
+<span id='Gnt-field-Note-cfg-pickerConfig'>    /**
+</span>     * @cfg {Object} pickerConfig Configuration of the field picker (Ext.form.field.HtmlEditor instance)
+     */
+    pickerConfig        : null,
+
+<span id='Gnt-field-Note-cfg-previewFn'>    /**
+</span>     * @cfg {Function} previewFn
+     * Function to return raw field value. If not provided the field uses text stripped of tags
+     */
+    previewFn           : null,
+<span id='Gnt-field-Note-cfg-previewFnScope'>    /**
+</span>     * @cfg {Function} previewFnScope
+     * Scope for {!link #previewFn} function to return raw field value
+     */
+    previewFnScope      : null,
+
+<span id='Gnt-field-Note-property-taskField'>    taskField           : 'noteField',
+</span><span id='Gnt-field-Note-property-getTaskValueMethod'>    getTaskValueMethod  : 'getNote',
+</span><span id='Gnt-field-Note-property-setTaskValueMethod'>    setTaskValueMethod  : 'setNote',
+</span>
+<span id='Gnt-field-Note-method-afterRender'>    afterRender : function() {
+</span>        this.callParent(arguments);
+        this.on('collapse', this.onPickerCollapse, this);
+    },
+
+
+<span id='Gnt-field-Note-method-valueToVisible'>    valueToVisible : function (value) {
+</span>        if (this.previewFn) {
+            return this.previewFn.call(this.previewFnScope || this, value);
+        } else {
+            return Ext.util.Format.stripTags(value);
+        }
+    },
+
+
+<span id='Gnt-field-Note-method-createPicker'>    createPicker: function() {
+</span>        var field = new Ext.form.field.HtmlEditor(Ext.apply({
+            frame       : true,
+            shadow      : false,
+            floating    : true,
+            height      : 200,
+            width       : 300,
+            listeners   : {
+                change : this.onPickerChange,
+                initialize : this.onPickerInit,
+                scope  : this
+            }
+        }, this.pickerConfig || {}));
+
+        return field;
+    },
+
+<span id='Gnt-field-Note-method-onPickerInit'>    // https://www.sencha.com/forum/showthread.php?303342
+</span>    // disable iframe window focus to avoid picker collapse
+    onPickerInit : function (picker) {
+        picker.win.focus = Ext.emptyFn;
+    },
+
+<span id='Gnt-field-Note-method-onPickerChange'>    onPickerChange : function (picker, value) {
+</span>        this.setRawValue(this.valueToVisible(value));
+    },
+
+<span id='Gnt-field-Note-method-getValue'>    getValue : function () {
+</span>        return this.getPicker().getValue();
+    },
+
+<span id='Gnt-field-Note-method-setValue'>    setValue : function (value) {
+</span>        this.callParent([ this.valueToVisible(value) ]);
+
+        this.getPicker().setValue(value);
+
+        if (this.instantUpdate &amp;&amp; !this.getSuppressTaskUpdate() &amp;&amp; this.task) {
+            this.applyChanges();
+        }
+    },
+
+<span id='Gnt-field-Note-method-onPickerCollapse'>    onPickerCollapse : function() {
+</span>        this.setValue(this.getPicker().getValue());
+    },
+
+<span id='Gnt-field-Note-method-onTriggerClick'>    onTriggerClick: function() {
+</span>        var me = this;
+
+        if (!me.readOnly &amp;&amp; !me.disabled) {
+            if (me.isExpanded) {
+                me.collapse();
+            } else {
+               me.expand();
+            }
+        }
+    }
+});
+</pre>
+</body>
+</html>

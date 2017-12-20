@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-HeaderZoom'>/**
+</span> @class Sch.plugin.HeaderZoom
+ @extends Sch.util.DragTracker
+
+ This plugin (ptype = 'scheduler_headerzoom') enables zooming to a timespan selected using drag drop in the header area of the timeline panel.
+
+ Zooming will be performed to the nearest zooming level that will make all columns to fit in the scheduling view width,
+ additionally a column width of that zooming level will be slightly adjusted to improve the fit.
+
+ After zooming, the selected time span will appear centered in the scheduling view.
+
+ **NOTE*: This plugin only supports timeline panels in horizontal orientation.
+
+ To add this plugin to the scheduler:
+
+ var s1  = new Sch.panel.SchedulerGrid({
+            ...
+                
+            plugins     : [
+                new Sch.plugin.HeaderZoom(),
+
+                // or lazy style definition
+                'scheduler_headerzoom'
+            ]
+        })
+
+ */
+Ext.define(&quot;Sch.plugin.HeaderZoom&quot;, {
+    extend        : &quot;Sch.util.DragTracker&quot;,
+    mixins        : ['Ext.AbstractPlugin'],
+    alias         : 'plugin.scheduler_headerzoom',
+<span id='Sch-plugin-HeaderZoom-property-lockableScope'>    lockableScope : 'top',
+</span>
+<span id='Sch-plugin-HeaderZoom-property-scheduler'>    scheduler    : null,
+</span><span id='Sch-plugin-HeaderZoom-property-proxy'>    proxy        : null,
+</span><span id='Sch-plugin-HeaderZoom-property-headerRegion'>    headerRegion : null,
+</span>
+<span id='Sch-plugin-HeaderZoom-event-beforeheaderzoom'>    /**
+</span>     * @event beforeheaderzoom
+     * Fires before the new zoom level is set on the timeline panel.
+     * @param {Sch.plugin.HeaderZoom} plugin The plugin instance
+     * @param {Sch.mixin.TimelinePanel} panel The timeline panel
+     * @param {Date} startDate The new start date
+     * @param {Date} endDate The new end date
+     */
+
+
+    init : function (scheduler) {
+
+        this.scheduler = scheduler;
+
+        this.onModeChange();
+
+        scheduler.on('modechange', this.onModeChange, this);
+    },
+
+<span id='Sch-plugin-HeaderZoom-method-onOrientationChange'>    onOrientationChange : function () {
+</span>        return this.onModeChange.apply(this, arguments);
+    },
+
+<span id='Sch-plugin-HeaderZoom-method-onModeChange'>    onModeChange : function () {
+</span>        var timeAxisColumn = this.scheduler.down('timeaxiscolumn');
+
+        if (timeAxisColumn) {
+
+            if (timeAxisColumn.rendered) {
+                this.onTimeAxisColumnRender(timeAxisColumn);
+            } else {
+                timeAxisColumn.on({
+                    afterrender : this.onTimeAxisColumnRender,
+                    scope       : this
+                });
+            }
+        }
+    },
+
+<span id='Sch-plugin-HeaderZoom-method-onTimeAxisColumnRender'>    onTimeAxisColumnRender : function (column) {
+</span>        this.proxy = column.el.createChild({cls : 'sch-drag-selector'});
+
+        this.initEl(column.el);
+    },
+
+
+<span id='Sch-plugin-HeaderZoom-method-onStart'>    onStart : function (e) {
+</span>        this.proxy.show();
+
+        this.headerRegion = this.scheduler.normalGrid.headerCt.getRegion();
+    },
+
+
+<span id='Sch-plugin-HeaderZoom-method-onDrag'>    onDrag : function (e) {
+</span>        var headerRegion = this.headerRegion;
+        var dragRegion = this.getRegion().constrainTo(headerRegion);
+
+        dragRegion.top = headerRegion.top;
+        dragRegion.bottom = headerRegion.bottom;
+
+        this.proxy.setBox(dragRegion);
+    },
+
+
+<span id='Sch-plugin-HeaderZoom-method-onEnd'>    onEnd : function (e) {
+</span>        if (this.proxy) {
+            this.proxy.setDisplayed(false);
+
+            var scheduler = this.scheduler;
+            var region = this.getRegion();
+            var range = scheduler.getSchedulingView().getStartEndDatesFromRegion(region);
+
+            if (range) {
+                var timeAxis    = scheduler.timeAxis;
+                var unit        = scheduler.getSchedulingView().timeAxisViewModel.getBottomHeader().unit;
+                var start       = timeAxis.floorDate(range.start, false, unit, 1);
+                var end         = timeAxis.ceilDate(range.end, false, unit, 1);
+
+                if (this.fireEvent('beforeheaderzoom', this, scheduler, start, end) !== false) {
+                    scheduler.zoomToSpan({
+                        start : start,
+                        end   : end
+                    });
+                }
+            }
+        }
+    },
+
+
+<span id='Sch-plugin-HeaderZoom-method-destroy'>    destroy : function () {
+</span>        if (this.proxy) {
+            Ext.destroy(this.proxy);
+
+            this.proxy = null;
+        }
+
+        this.callParent(arguments);
+    }
+});</pre>
+</body>
+</html>

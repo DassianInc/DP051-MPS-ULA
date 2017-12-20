@@ -1,0 +1,32 @@
+[
+    {
+        "title": "Ext Scheduler 2.0 Guides",
+        "items": [
+            {
+                "name"          : "scheduler_getting_started",
+                "title"         : "Getting Started with Ext Scheduler 2",
+                "description"   : "This guide will allow you to get started with Ext Scheduler 2."
+            },
+            {
+                "name"          : "gantt_scheduler_localization",
+                "title"         : "Localizing Ext Scheduler and Ext Gantt",
+                "description"   : "This guide describes how to localize Ext Scheduler and Ext Gantt."
+            },
+            {
+                "name"          : "crud_manager",
+                "title"         : "Introducing the CRUD manager",
+                "description"   : "This guide describes the generic parts of the CrudManager."
+            },
+            {
+                "name"          : "scheduler_crud_manager",
+                "title"         : "Using CRUD manager with Ext Scheduler",
+                "description"   : "This guide describes the Scheduler specific details when implementing the CrudManager."
+            },
+            {
+                "name"          : "scheduler_extension",
+                "title"         : "Sencha Architect 3 extension",
+                "description"   : "This guide gives brief information about extension installation and usage"
+            }
+        ]
+    }
+]

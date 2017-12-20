@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-template-ParentTask'>/**
+</span>@class Gnt.template.ParentTask
+@extends Ext.XTemplate
+
+Class used to render a parent task.
+*/
+Ext.define(&quot;Gnt.template.ParentTask&quot;, {
+    extend : 'Gnt.template.Template',
+
+<span id='Gnt-template-ParentTask-cfg-innerTpl'>    /**
+</span>     * @cfg {String} innerTpl The template defining the inner visual markup for the task.
+     */
+    innerTpl    : '&lt;div class=&quot;sch-gantt-progress-bar&quot; style=&quot;width:{progressBarWidth}px;{progressBarStyle}&quot;&gt;&amp;#160;&lt;/div&gt;'+
+        '&lt;div class=&quot;sch-gantt-parenttask-arrow sch-gantt-parenttask-leftarrow&quot;&gt;&lt;/div&gt;' +
+        '&lt;div class=&quot;sch-gantt-parenttask-arrow sch-gantt-parenttask-rightarrow&quot;&gt;&lt;/div&gt;',
+
+<span id='Gnt-template-ParentTask-method-getInnerTpl'>    getInnerTpl : function(cfg) {
+</span>        return '&lt;div id=&quot;' + cfg.prefix + '{id}&quot; class=&quot;sch-gantt-item sch-gantt-parenttask-bar {cls}&quot; style=&quot;width:{width}px; {style}&quot;&gt;'+
+                    this.innerTpl +
+                    // Left / Right terminals
+                    ((cfg.enableDependencyDragDrop &amp;&amp; cfg.allowParentTaskDependencies) ? this.dependencyTerminalMarkup : '') +
+                '&lt;/div&gt;';
+
+    }
+});
+</pre>
+</body>
+</html>

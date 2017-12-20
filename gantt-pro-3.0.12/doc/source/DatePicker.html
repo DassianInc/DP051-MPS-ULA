@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">Ext.define('Gnt.widget.calendar.DatePicker', {
+    extend      : 'Ext.picker.Date',
+
+    alias       : 'widget.gntdatepicker',
+
+
+    workingDayCls           : 'gnt-datepicker-workingday',
+    nonWorkingDayCls        : 'gnt-datepicker-nonworkingday',
+    overriddenDayCls        : 'gnt-datepicker-overriddenday',
+    overriddenWeekDayCls    : 'gnt-datepicker-overriddenweekday',
+
+    weekOverridesStore      : null,
+    dayOverridesCalendar    : null,
+
+
+    // @OVERRIDE
+    // Adds custom classes to certain day cells
+    update : function () {
+        this.callParent(arguments);
+
+        this.refreshCssClasses();
+    },
+
+
+    refreshCssClasses : function () {
+        var me      = this,
+            cells   = me.cells.elements;
+
+        this.removeCustomCls();
+
+        for (var i = 0; i &lt; me.numDays; i++) {
+            // will contain number of ms since Epoch, so need to convert it into Date on the next line
+            var date                = cells[ i ].firstChild.dateValue;
+            cells[ i ].className    += ' ' + this.getDateCls(new Date(date));
+        }
+    },
+
+
+    getDateCls : function (date) {
+        var cls         = &quot;&quot;;
+
+        if (date.getMonth() !== this.getActive().getMonth()) return;
+
+        var dayOverridesCalendar   = this.dayOverridesCalendar;
+
+        if (dayOverridesCalendar.getOwnCalendarDay(date)) {
+            cls         += &quot; &quot; + this.overriddenDayCls;
+
+            if (!dayOverridesCalendar.isWorkingDay(date)) cls += &quot; &quot; + this.nonWorkingDayCls;
+
+        } else {
+            // this will be an internal week override model instance from the weekStore
+            var week    = null;
+
+            this.weekOverridesStore.each(function (internalWeekModel) {
+                if (Ext.Date.between(date, internalWeekModel.get('startDate'), internalWeekModel.get('endDate'))) {
+                    week = internalWeekModel;
+                    return false;
+                }
+            });
+
+            if (week) {
+                cls                     += &quot; &quot; + this.overriddenWeekDayCls;
+
+                var index               = date.getDay(),
+                    weekAvailability    = week.get('weekAvailability');
+
+                if (weekAvailability &amp;&amp; weekAvailability[ index ] &amp;&amp; !weekAvailability[ index ].getIsWorkingDay()) {
+                    cls                 += &quot; &quot; + this.nonWorkingDayCls;
+                }
+
+            } else if (!dayOverridesCalendar.isWorkingDay(date)) {
+                cls                     += &quot; &quot; + this.nonWorkingDayCls;
+            }
+        }
+
+        return cls || this.workingDayCls;
+    },
+
+
+    removeCustomCls : function () {
+        this.cells.removeCls([ this.overriddenDayCls, this.nonWorkingDayCls, this.workingDayCls, this.overriddenWeekDayCls ]);
+    }
+});</pre>
+</body>
+</html>

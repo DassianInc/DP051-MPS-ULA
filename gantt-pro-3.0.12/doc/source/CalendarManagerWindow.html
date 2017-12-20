@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-widget-calendar-CalendarManagerWindow'>/**
+</span>
+@class Gnt.widget.calendar.CalendarManagerWindow
+@extends Ext.window.Window
+@aside guide gantt_calendars
+
+{@img gantt/images/calendar_manager_window.png}
+
+This is just a {@link Gnt.widget.calendar.CalendarManager} widget, wrapped with the Ext.window.Window instance.
+It proxies the {@link #calendar} config and {@link #applyChanges} method.
+
+*/
+Ext.define('Gnt.widget.calendar.CalendarManagerWindow', {
+    extend          : 'Ext.window.Window',
+
+    requires        : ['Gnt.widget.calendar.CalendarManager'],
+
+    mixins          : ['Gnt.mixin.Localizable'],
+
+    alias           : 'widget.calendarmanagerwindow',
+
+<span id='Gnt-widget-calendar-CalendarManagerWindow-property-width'>    width           : 850,
+</span><span id='Gnt-widget-calendar-CalendarManagerWindow-property-height'>    height          : 600,
+</span><span id='Gnt-widget-calendar-CalendarManagerWindow-property-layout'>    layout          : 'fit',
+</span><span id='Gnt-widget-calendar-CalendarManagerWindow-property-border'>    border          : false,
+</span>
+<span id='Gnt-widget-calendar-CalendarManagerWindow-cfg-calendarConfig'>    /**
+</span>     * @cfg {Object} calendarConfig An object to be applied to the newly created instance of the {@link Gnt.widget.calendar.Calendar}
+     */
+    calendarConfig  : null,
+
+<span id='Gnt-widget-calendar-CalendarManagerWindow-cfg-calendarManager'>    /**
+</span>     * @cfg {Gnt.data.CalendarManager} calendarManager An instance of the {@link Gnt.data.CalendarManager}
+     */
+    calendarManager : null,
+
+<span id='Gnt-widget-calendar-CalendarManagerWindow-property-panel'>    /**
+</span>     * @property {Gnt.widget.calendar.Calendar} panel The underlying calendar widget instance
+     */
+    panel           : null,
+
+<span id='Gnt-widget-calendar-CalendarManagerWindow-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - title           : 'Calendar manager',
+            - ok              : 'Ok',
+            - cancel          : 'Cancel',
+            - confirm_action  : 'Confirm action',
+            - confirm_message : 'Calendar has unsaved changes. Would you like to save your changes?'
+     */
+
+    initComponent : function () {
+
+        this.panel = new Gnt.widget.calendar.CalendarManager({
+            calendarManager : this.calendarManager,
+            calendarConfig  : this.calendarConfig
+        });
+
+        Ext.apply(this, {
+            title       : this.title || this.L('title'),
+            items       : [ this.panel ],
+            buttons     : [
+                {
+                    text        : this.L('ok'),
+                    handler     : function () {
+                        this.applyChanges();
+                    },
+                    scope       : this
+                },
+                {
+                    text        : this.L('cancel'),
+                    handler     : function () {
+                        this.close();
+                    },
+                    scope       : this
+                }
+            ],
+
+            listeners   : {
+                beforeclose : this.onBeforeClose,
+                close       : this.onAfterClose
+            }
+        });
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-widget-calendar-CalendarManagerWindow-method-applyChanges'>    /**
+</span>     * Call this method when user is satisfied with the current state of the calendar in the UI. It will apply all the changes made in the UI
+     * to the original calendar.
+     */
+    applyChanges : function () {
+        this.panel.applyChanges();
+    },
+
+<span id='Gnt-widget-calendar-CalendarManagerWindow-method-onBeforeClose'>    onBeforeClose : function () {
+</span>        var me      = this;
+        var panel   = this.panel;
+
+        if (!me.closing &amp;&amp; panel.hasChanges()) {
+            Ext.Msg.show({
+                title      : me.L('confirm_action'),
+                msg        : me.L('confirm_message'),
+                buttons    : Ext.Msg.YESNOCANCEL,
+                icon       : Ext.Msg.QUESTION,
+                fn         : function (btn) {
+                    switch (btn) {
+                        case 'yes' :
+                            panel.applyChanges();
+                            me.close();
+                            break;
+                        case 'no' :
+                            // set flag to skip this onBeforeClose processing again when we call me.close()
+                            me.closing = true;
+                            me.close();
+                            break;
+                    }
+                }
+            });
+
+            return false;
+        }
+    },
+
+
+<span id='Gnt-widget-calendar-CalendarManagerWindow-method-onAfterClose'>    onAfterClose : function () {
+</span>        this.closing = false;
+    }
+
+});
+</pre>
+</body>
+</html>

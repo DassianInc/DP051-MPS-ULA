@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-plugin-exporter-SinglePage'>/**
+</span> @class Gnt.plugin.exporter.SinglePage
+ @extends Sch.plugin.exporter.SinglePage
+
+ This class extracts all scheduler data to fit in a single page.
+
+ The exporterId of this exporter is `singlepage`
+ */
+
+
+Ext.define('Gnt.plugin.exporter.SinglePage', {
+
+    extend : 'Sch.plugin.exporter.SinglePage',
+
+    mixins : ['Gnt.plugin.exporter.mixin.DependencyPainter'],
+
+<span id='Gnt-plugin-exporter-SinglePage-method-setComponent'>    setComponent : function () {
+</span>        this.callParent(arguments);
+        this.initDependencyPainter();
+    },
+
+
+<span id='Gnt-plugin-exporter-SinglePage-method-collectNormalRow'>    /**
+</span>     * @protected
+     * Collects the normal grid row and its taskBoxes.
+     * @param  {Element} item The normal grid row
+     * @param  {Ext.data.Model} recordIndex Index of the record corresponding to the row.
+     * @return {Object} Object keeping reference to the cloned row element and its height.
+     */
+    collectNormalRow : function (item, recordIndex) {
+        var me  = this,
+            row = me.callParent(arguments);
+
+        me.fillTaskBox(row.record);
+
+        return row;
+    },
+
+<span id='Gnt-plugin-exporter-SinglePage-method-onRowsCollected'>    onRowsCollected : function () {
+</span>        var me  = this;
+
+        me.renderDependencies();
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-plugin-exporter-SinglePage-method-preparePageToCommit'>    /**
+</span>     * @protected
+     * Performs last changes to {@link #getCurrentPage the current page} being extracted before it's pushed into {@link #extractedPages} array.
+     * This function will add dependencies to the output fragment.
+     * @param {Object} [config] Optional configuration object.
+     * @return {Ext.dom.Element} element Element holding the page.
+     */
+    preparePageToCommit : function () {
+        var me          = this,
+            frag        = me.callParent(arguments),
+            depsCt      = frag.select('.sch-dependencyview-ct').first(),
+            splitter    = frag.select('.' + Ext.baseCSSPrefix + 'splitter').first();
+
+        depsCt.dom.innerHTML = me.dependenciesHtml;
+
+        //move the dependencies div to match the position of the dependency lines
+        depsCt.applyStyles({
+            top     : '0px',
+            left    : '0px'
+        });
+
+        splitter &amp;&amp; splitter.setHeight('100%');
+
+        // hiding dependencies
+        var normalGrid  = me.component.normalGrid,
+            tableWidth = normalGrid.el.down(me.tableSelector).getWidth(),
+            id          = normalGrid.getView().id,
+            el          = frag.select('#' + id).first().dom;
+
+        el.style.width = tableWidth + 'px';
+
+        return frag;
+    }
+
+});
+</pre>
+</body>
+</html>

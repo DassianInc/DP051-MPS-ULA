@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-util-ScrollManager'>/**
+</span> * @class 
+ * @static
+ * @private
+ * Private utility class for dealing with scroll triggering based on various mousemove events in the UI
+ */
+Ext.define('Sch.util.ScrollManager', {
+    singleton      : true,
+
+<span id='Sch-util-ScrollManager-property-vthresh'>    vthresh        : 25,
+</span><span id='Sch-util-ScrollManager-property-hthresh'>    hthresh        : 25,
+</span><span id='Sch-util-ScrollManager-property-increment'>    increment      : 100,
+</span><span id='Sch-util-ScrollManager-property-frequency'>    frequency      : 500,
+</span><span id='Sch-util-ScrollManager-property-animate'>    animate        : true,
+</span><span id='Sch-util-ScrollManager-property-animDuration'>    animDuration   : 200,
+</span><span id='Sch-util-ScrollManager-property-activeCmp'>    activeCmp      : null,
+</span><span id='Sch-util-ScrollManager-property-activeEl'>    activeEl       : null,
+</span><span id='Sch-util-ScrollManager-property-targetScroller'>    targetScroller : null,
+</span><span id='Sch-util-ScrollManager-property-scrollElRegion'>    scrollElRegion : null,
+</span><span id='Sch-util-ScrollManager-property-scrollProcess'>    scrollProcess  : {},
+</span><span id='Sch-util-ScrollManager-property-pt'>    pt             : null,
+</span><span id='Sch-util-ScrollManager-property-scrollWidth'>    scrollWidth    : null,
+</span><span id='Sch-util-ScrollManager-property-scrollHeight'>    scrollHeight   : null,
+</span>
+<span id='Sch-util-ScrollManager-property-direction'>    // &quot;horizontal&quot;, &quot;vertical&quot; or &quot;both&quot;
+</span>    direction		: 'both',
+
+<span id='Sch-util-ScrollManager-method-constructor'>    constructor : function () {
+</span>        this.doScroll = Ext.Function.bind(this.doScroll, this);
+    },
+
+<span id='Sch-util-ScrollManager-method-triggerRefresh'>    triggerRefresh : function () {
+</span>
+        if (this.activeEl) {
+
+            this.refreshElRegion();
+
+            this.clearScrollInterval();
+            this.onMouseMove();
+        }
+    },
+
+<span id='Sch-util-ScrollManager-method-doScroll'>    doScroll : function () {
+</span>        var scrollProcess   = this.scrollProcess,
+            scrollProcessCmp = scrollProcess.cmp,
+            rtl              = scrollProcessCmp.rtl,
+            dir              = scrollProcess.dir[0],
+            increment        = this.increment,
+            scrollLeft       = this.activeCmp.getScrollX(),
+            scrollTop        = this.activeCmp.getScrollY();
+
+        // Make sure we don't scroll too far
+        if (dir === 'r') {
+            increment = Math.min(increment, rtl ? scrollLeft : this.scrollWidth - scrollLeft - this.activeEl.dom.clientWidth);
+        } else if (dir === 'd') {
+            increment = Math.min(increment, this.scrollHeight - scrollTop - this.activeEl.dom.clientHeight);
+        }
+
+        increment = Math.max(increment, 0);
+        var deltaX = 0, deltaY = 0;
+
+        if (dir === 'r') deltaX = increment;
+        if (dir === 'l') deltaX = -increment;
+        if (dir === 'u') deltaY = -increment;
+        if (dir === 'd') deltaY = increment;
+
+        if (rtl) {
+            deltaX = -deltaX;
+        }
+
+        scrollProcessCmp.scrollBy(deltaX, deltaY, {
+            duration : this.animDuration,
+            callback : this.triggerRefresh,
+            scope    : this
+        });
+    },
+
+<span id='Sch-util-ScrollManager-method-clearScrollInterval'>    clearScrollInterval : function () {
+</span>        var scrollProcess = this.scrollProcess;
+
+        if (scrollProcess.id) {
+            clearTimeout(scrollProcess.id);
+        }
+
+        scrollProcess.id = 0;
+        scrollProcess.cmp = null;
+        scrollProcess.dir = &quot;&quot;;
+    },
+
+<span id='Sch-util-ScrollManager-method-isScrollAllowed'>	isScrollAllowed : function(dir){
+</span>		
+		switch(this.direction){
+			case 'both':
+				return true;
+				
+			case 'horizontal':
+				return dir === 'right' || dir === 'left';	
+		
+			case 'vertical':
+				return dir === 'up' || dir === 'down';
+				
+			default:
+				throw 'Invalid direction: ' + this.direction;
+		
+		}
+		
+	},
+
+<span id='Sch-util-ScrollManager-method-startScrollInterval'>    startScrollInterval : function (cmp, dir) {
+</span>
+       if(!this.isScrollAllowed(dir)){
+			return;
+       }
+        
+        this.clearScrollInterval();
+        this.scrollProcess.cmp = cmp;
+        this.scrollProcess.dir = dir;
+
+        this.scrollProcess.id = setTimeout(this.doScroll, this.frequency);
+    },
+
+<span id='Sch-util-ScrollManager-method-onMouseMove'>    onMouseMove : function (e) {
+</span>
+        var pt = e ? e.getPoint() : this.pt,
+            x = pt.x,
+            y = pt.y,
+            scrollProcess = this.scrollProcess,
+            cmp           = this.activeCmp,
+            scrollLeft    = cmp.getScrollX(),
+            scrollTop     = cmp.getScrollY(),
+            id,
+            rtl = cmp.rtl,
+            el = this.activeEl,
+            region = this.scrollElRegion,
+            elDom = el.dom,
+            me = this;
+
+        this.pt = pt;
+
+        if (region &amp;&amp; region.contains(pt) &amp;&amp; el.isScrollable()) {
+            if (region.bottom - y &lt;= me.vthresh &amp;&amp; (this.scrollHeight - scrollTop - elDom.clientHeight &gt; 0)) {
+                if (scrollProcess.cmp != cmp) {
+                    this.startScrollInterval(cmp, &quot;down&quot;);
+                }
+                return;
+            } else if (region.right - x &lt;= me.hthresh &amp;&amp; (rtl ? scrollLeft &gt; 0 : this.scrollWidth - scrollLeft - elDom.clientWidth &gt; 0) ) {
+                if (scrollProcess.cmp != cmp) {
+                    this.startScrollInterval(cmp, &quot;right&quot;);
+                }
+                return;
+            } else if (y - region.top &lt;= me.vthresh &amp;&amp; scrollTop &gt; 0) {
+                if (scrollProcess.cmp != cmp) {
+                    this.startScrollInterval(cmp, &quot;up&quot;);
+                }
+                return;
+            } else if (x - region.left &lt;= me.hthresh &amp;&amp; (rtl ? elDom.clientWidth + scrollLeft &lt; this.scrollWidth : scrollLeft &gt; 0 )) {
+                if (scrollProcess.cmp != cmp) {
+                    this.startScrollInterval(cmp, &quot;left&quot;);
+                }
+                return;
+            }
+        }
+
+        this.clearScrollInterval();
+    },
+
+<span id='Sch-util-ScrollManager-method-refreshElRegion'>    refreshElRegion : function () {
+</span>        this.scrollElRegion = this.activeEl.getRegion();
+    },
+
+<span id='Sch-util-ScrollManager-method-activate'>    // Pass an element, and optionally a direction (&quot;horizontal&quot;, &quot;vertical&quot; or &quot;both&quot;)
+</span>    activate : function (cmp, direction) {
+        
+        this.direction = direction || 'both';
+
+        this.activeCmp = cmp;
+        this.activeEl  = cmp.getEl();
+
+        if (cmp.scrollManager) {
+            this.targetScroller = cmp.scrollManager.scroller;
+
+            this.scrollWidth  = this.targetScroller.getMaxPosition().x;
+            this.scrollHeight = this.targetScroller.getMaxPosition().y;
+        } else {
+            this.scrollWidth  = this.activeEl.dom.scrollWidth;
+            this.scrollHeight = this.activeEl.dom.scrollHeight;
+        }
+
+        this.refreshElRegion();
+        this.activeEl.on('mousemove', this.onMouseMove, this);
+    },
+
+<span id='Sch-util-ScrollManager-method-deactivate'>    deactivate : function () {
+</span>        this.clearScrollInterval();
+
+        this.activeEl.un('mousemove', this.onMouseMove, this);
+        this.targetScroller = this.activeEl = this.activeCmp = this.scrollElRegion = this.scrollWidth = this.scrollHeight = null;
+
+        this.direction = 'both';
+    }
+});
+</pre>
+</body>
+</html>

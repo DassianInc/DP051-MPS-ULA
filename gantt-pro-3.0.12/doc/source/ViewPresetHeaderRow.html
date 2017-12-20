@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-preset-ViewPresetHeaderRow'>/**
+</span>@class Sch.preset.ViewPresetHeaderRow
+
+A part of the {@link Sch.preset.ViewPreset} declaration. Not used directly, but the properties below are rather provided 
+inline as seen in sources of {@link Sch.preset.Manager}. This class is just provided for documentation purposes.
+
+A sample header configuration will looks like: 
+
+        headerConfig    : {
+             bottom     : {
+                unit        : &quot;WEEK&quot;,
+                increment   : 1,
+                renderer    : function(start, end, headerConfig, index) {
+                    return Ext.Date.format(start, 'd');
+                }
+            },
+            middle : {
+                unit        : &quot;MONTH&quot;,
+                renderer : function(start, end, headerConfig, index) {
+                    var month = start.getMonth();
+                    // Simple alternating month in bold
+                    if (start.getMonth()) % 2) {
+                        return '&lt;strong&gt;' + month + '&lt;/strong'&gt;';
+                    }
+                    return month
+                },
+                align       : 'left'
+            }
+        }
+
+*/
+Ext.define(&quot;Sch.preset.ViewPresetHeaderRow&quot;, {
+<span id='Sch-preset-ViewPresetHeaderRow-cfg-unit'>    /**
+</span>    * @cfg {String} unit The unit of time represented by each cell in this header row. See also increment property. 
+    * Valid values are &quot;MILLI&quot;, &quot;SECOND&quot;, &quot;MINUTE&quot;, &quot;HOUR&quot;, &quot;DAY&quot;, &quot;WEEK&quot;, &quot;MONTH&quot;, &quot;QUARTER&quot;, &quot;YEAR&quot;.
+    */
+
+<span id='Sch-preset-ViewPresetHeaderRow-cfg-increment'>    /**
+</span>    * @cfg {Number} increment The number of units each header cell will represent (e.g. 30 together with unit: &quot;MINUTE&quot; for 30 minute cells)
+    */
+
+<span id='Sch-preset-ViewPresetHeaderRow-cfg-dateFormat'>    /**
+</span>    * @cfg {String} dateFormat Defines how the cell date will be formatted 
+    */
+
+<span id='Sch-preset-ViewPresetHeaderRow-cfg-renderer'>    /**
+</span>    * @cfg {Function} renderer A custom renderer function used to render the cell contents. It should return the text to put in the header cell.
+    * The render function is called with the following parameters:
+    * 
+    * - `startDate` : Date - The start date of the cell.
+    * - `endDate` : Date - The end date of the cell
+    * - `headerConfig` : Object - An object containing the header config object. You can set 'align' (for text-align) and headerCls (a CSS class added to the cell) properties on it.
+    * - `i` : Int - The index of the cell in the row.
+    * 
+    * Example : 
+
+    function (startDate, endDate, headerConfig, i) {
+        headerConfig.align = &quot;left&quot;;
+        headerConfig.headerCls = &quot;myClass&quot;; // will be added as a CSS class of the header cell DOM element
+
+        return Ext.Date.format(startDate, 'Y-m-d');
+    }
+
+    */
+
+<span id='Sch-preset-ViewPresetHeaderRow-cfg-scope'>    /**
+</span>    * @cfg {Object} scope The scope to use for the renderer function
+    */
+
+<span id='Sch-preset-ViewPresetHeaderRow-cfg-cellGenerator'>    /**
+</span>    * @cfg {Function} cellGenerator A function that should return an array of objects containing 'start', 'end' and 'header' properties. 
+    * Use this if you want full control over how the header rows are generated. This is not applicable for the lowest row in your configuration. 
+    */
+});
+
+</pre>
+</body>
+</html>

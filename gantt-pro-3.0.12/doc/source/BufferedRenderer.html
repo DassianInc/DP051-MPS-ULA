@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">if (!Ext.ClassManager.get(&quot;Sch.patches.BufferedRenderer&quot;)) {
+
+    Ext.define('Sch.patches.BufferedRenderer', {
+        extend : 'Sch.util.Patch',
+
+        requires : ['Ext.grid.plugin.BufferedRenderer'],
+        target   : 'Ext.grid.plugin.BufferedRenderer',
+
+        overrides : {
+            // Patch to solve this issue: http://www.sencha.com/forum/showthread.php?294996
+            // remove when fixed
+            onRangeFetched : function () {
+                this.tableTopBorderWidth = this.tableTopBorderWidth || 0;
+
+                return this.callParent(arguments);
+            },
+
+            refreshSize : function (e, t) {
+
+                var me = this,
+                    view = me.view;
+
+                if (view.body.dom) {
+                    this.callParent(arguments);
+                }
+            },
+            // Ext forces blockRefresh to false for tree view, we need to stop this action, or our
+            // autotimespan feature will break refresh.
+            // Caught by 062_reload_store in gantt
+            init    : function (grid) {
+                var blockRefresh = grid.view.blockRefresh;
+                this.callParent(arguments);
+                grid.view.blockRefresh = blockRefresh;
+            }
+        }
+    });
+}
+</pre>
+</body>
+</html>

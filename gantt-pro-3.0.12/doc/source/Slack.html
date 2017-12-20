@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Slack'>/**
+</span>
+@class Gnt.column.Slack
+@extends Ext.grid.column.Column
+
+A column showing the available amount of slack for a task. The _slack_ (or _float_) is the amount of time that a task can be delayed
+without causing a delay to any of its successors.
+
+The slack is displayed in units specified by the {@link #slackUnit} config (by default it's displayed in _days_).
+
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        // Setup your grid columns
+        columns         : [
+            ...
+            {
+                xtype       : 'slackcolumn',
+                width       : 70
+            }
+            ...
+        ],
+        ...
+    })
+
+*/
+Ext.define('Gnt.column.Slack', {
+    extend              : 'Ext.grid.column.Column',
+
+    requires            : ['Ext.Number', 'Sch.util.Date'],
+
+    mixins              : ['Gnt.mixin.Localizable'],
+
+    alias               : [
+        'widget.slackcolumn',
+        'widget.ganttcolumn.slack'
+    ],
+
+<span id='Gnt-column-Slack-cfg-decimalPrecision'>    /**
+</span>     * @cfg {Number} decimalPrecision A number of digits to show after the dot when rendering the value of the slack.
+     */
+    decimalPrecision    : 2,
+
+<span id='Gnt-column-Slack-cfg-useAbbreviation'>    /**
+</span>     * @cfg {Boolean} useAbbreviation When set to `true`, the column will render the abbreviated slack unit name, not full.
+     * Useful if the column width is limited.
+     */
+    useAbbreviation     : false,
+
+<span id='Gnt-column-Slack-cfg-slackUnit'>    /**
+</span>     * @cfg {String} slackUnit The time unit to use when displaying the slack amount.
+     */
+    slackUnit           : 'd',
+
+<span id='Gnt-column-Slack-property-width'>    width               : 100,
+</span>
+<span id='Gnt-column-Slack-property-align'>    align               : 'left',
+</span>
+<span id='Gnt-column-Slack-method-constructor'>    constructor : function (config) {
+</span>        config = config || {};
+
+        this.text   = config.text || this.L('text');
+
+        this.callParent(arguments);
+
+        this.renderer   = config.renderer || this.rendererFunc;
+        this.scope      = config.scope || this;
+
+        this.hasCustomRenderer = true;
+    },
+
+<span id='Gnt-column-Slack-method-afterRender'>    afterRender : function() {
+</span>        var panel = this.up('ganttpanel');
+
+        // Make top Gantt panel aware of the need for refreshing locked grid after changes in the dependency store
+        panel.registerLockedDependencyListeners();
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-Slack-method-rendererFunc'>    rendererFunc : function (value, meta, task) {
+</span>        meta.tdCls = (meta.tdCls || '') + ' sch-column-readonly';
+
+        value = task.getSlack();
+
+        if (Ext.isNumber(value)) {
+            return parseFloat(Ext.Number.toFixed(value, this.decimalPrecision)) + ' ' +
+                Sch.util.Date[ this.useAbbreviation ? 'getShortNameOfUnit' : 'getReadableNameOfUnit' ](this.slackUnit, value !== 1);
+        }
+
+        return '';
+    }
+});
+</pre>
+</body>
+</html>

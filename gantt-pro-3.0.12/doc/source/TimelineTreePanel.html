@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-panel-TimelineTreePanel'>/**
+</span>
+ @class Sch.panel.TimelineTreePanel
+ @extends Ext.tree.Panel
+ @mixin Sch.mixin.TimelinePanel
+
+ Internal class.
+
+ */
+if (!Ext.ClassManager.get(&quot;Sch.panel.TimelineTreePanel&quot;)) {
+
+Ext.define(&quot;Sch.panel.TimelineTreePanel&quot;, {
+    extend      : &quot;Ext.tree.Panel&quot;,
+    requires    : [
+        // need to require grid panel too here, because one of the sub-grids will be a normal grid
+        'Ext.grid.Panel',
+        'Ext.data.TreeStore',
+        // will be used in the `setupLockableTree` of lockable mixin
+        'Sch.mixin.FilterableTreeView',
+        'Sch.patches.TreePanel',
+        'Sch.patches.ColumnResizeTree'
+    ],
+    mixins      : [
+        'Sch.mixin.Localizable',
+        'Sch.mixin.TimelinePanel'
+    ],
+    alias       : [ 'widget.timelinetree'],
+
+    useArrows   : true,
+    rootVisible : false,
+    lockedXType : 'treepanel',
+
+    initComponent : function () {
+        this.callParent(arguments);
+        this.getSchedulingView()._initializeTimelineView();
+    }
+}, function () {
+    this.override(Sch.mixin.TimelinePanel.prototype.inheritables() || {});
+});
+
+}
+</pre>
+</body>
+</html>

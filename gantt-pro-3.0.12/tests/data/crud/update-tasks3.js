@@ -1,0 +1,42 @@
+[
+    {
+        "StartDate": "2010-02-03T00:00:00",
+        "EndDate": "2020-02-01T00:00:00",
+        "Cls": "",
+        "Id": 114,
+        "parentId": "",
+        "leaf": false,
+        "Name": "Parent 1",
+        "Duration": 2608,
+        "Effort": null,
+        "EffortUnit": "h",
+        "CalendarId": "",
+        "PercentDone": 0,
+        "ManuallyScheduled": false,
+        "SchedulingMode": "Normal",
+        "BaselineStartDate": null,
+        "BaselineEndDate": null,
+        "BaselinePercentDone": 0,
+        "DurationUnit": "d"
+    },
+    {
+        "StartDate": "2010-02-03T00:00:00",
+        "EndDate": "2020-02-01T00:00:00",
+        "Cls": "",
+        "Id": 118,
+        "parentId": 114,
+        "leaf": false,
+        "Name": "Child 2",
+        "Duration": 2608,
+        "Effort": null,
+        "EffortUnit": "h",
+        "CalendarId": "",
+        "PercentDone": 0,
+        "ManuallyScheduled": false,
+        "SchedulingMode": "Normal",
+        "BaselineStartDate": null,
+        "BaselineEndDate": null,
+        "BaselinePercentDone": 0,
+        "DurationUnit": "d"
+    }
+]

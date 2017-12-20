@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">if (!Ext.ClassManager.get(&quot;Sch.patches.RowSynchronizer&quot;)) {
+    Ext.define('Sch.patches.RowSynchronizer', {
+        extend : 'Sch.util.Patch',
+
+        requires : ['Ext.grid.locking.RowSynchronizer'],
+
+        target     : 'Ext.grid.locking.RowSynchronizer',
+        minVersion : '5.1.0',
+
+        overrides : Ext.versions.extjs.isGreaterThan('5.1.0') ? {
+
+            finish : function (other) {
+                if (!other) return;
+
+                return this.callParent(arguments);
+            }
+        } : {}
+    });
+}
+</pre>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-model-mixin-ProjectableModel'>/**
+</span> * This mixin adds transaction alike functionality into a model and works in pair with {@link Gnt.data.mixin.ProjectableStore}.
+ * If you mix-in this class into a model, make sure you also mix-in {@link Gnt.model.mixin.ProjectableStore} into the store(s)
+ * which will work with this model class.
+ *
+ * Make sure you call the {@link #initProjection} method in your model class constructor, otherwise mixing in this mixin
+ * won't have any effect.
+ */
+Ext.define('Gnt.model.mixin.ProjectableModel', function() {
+
+    var overridables = {};
+
+<span id='Gnt-model-mixin-ProjectableModel-method-initProjectable'>    /**
+</span>     * Initializes record's projectable mechanics.
+     * @protected
+     * @method initProjectable
+     * @member Gnt.model.mixin.ProjectableModel
+     */
+    function initProjectable() {
+        Ext.override(this, overridables);
+    }
+
+    
+    // Private
+    function getUnprojected(fieldName) {
+        return this.data[fieldName];
+    }
+
+
+<span id='Gnt-model-mixin-ProjectableModel-method-isProjected'>    /**
+</span>     * Checks whether the record is projected, i.e. a projection has changed values for this record.
+     *
+     * @return {Boolean}
+     */
+    function isProjected() {
+        var me         = this,
+            store      = me.getTreeStore &amp;&amp; me.getTreeStore() || me.store,
+            projection = store &amp;&amp; store.getProjection &amp;&amp; store.getProjection();
+
+        return projection &amp;&amp; projection.hasOwnProperty(me.internalId) ? true : false;
+    }
+
+
+    overridables.get = function get(fieldName) {
+        var me         = this,
+            store      = me.getTreeStore &amp;&amp; me.getTreeStore() || me.store,
+            projection = store &amp;&amp; store.getProjection &amp;&amp; store.getProjection(),
+            internalId = me.internalId,
+            data, value;
+
+        if (projection &amp;&amp; projection.hasOwnProperty(internalId)) {
+            data  = projection[ internalId ];
+            if (fieldName in data) {
+                value = data[ fieldName ];
+            }
+            else {
+                value = me.callParent([ fieldName ]);
+            }
+        }
+        else {
+            value = me.callParent([ fieldName ]);
+        }
+
+        return value;
+    };
+
+
+    overridables.set = function set(fieldName, value) {
+        var me         = this,
+            store      = me.getTreeStore &amp;&amp; me.getTreeStore() || me.store,
+            projection = store &amp;&amp; store.getProjection &amp;&amp; store.getProjection(),
+            internalId = me.internalId,
+            data, prop, result, currentValue,
+            currentValueAdopted, valueAdopted;
+
+        if (projection) {
+
+            result = [];
+
+            if (arguments.length == 1) {
+                for (prop in fieldName) {
+                    if (fieldName.hasOwnProperty(prop)) {
+                        value        = fieldName[ prop ];
+                        currentValue = me.get(prop); //me.getUnprojected(prop);
+
+                        valueAdopted        = (value !== undefined &amp;&amp; value !== null) ? (value).valueOf() : value;
+                        currentValueAdopted = (currentValue !== undefined &amp;&amp; currentValue !== null) ? (currentValue).valueOf() : currentValue;
+
+                        if (
+                            ((valueAdopted === undefined || valueAdopted === null) &amp;&amp; valueAdopted !== currentValueAdopted) ||
+                            valueAdopted != currentValueAdopted
+                        ) {
+                            data = projection[ internalId ] = projection.hasOwnProperty( internalId ) &amp;&amp; projection[ internalId ] || {};
+                            data[ prop ] = value;
+                            result.push(prop);
+                        }
+                    }
+                }
+            }
+            // there can be 3 arguments to 'set' method call
+            else if (arguments.length &gt; 1) {
+                currentValue = me.get(fieldName); //me.getUnprojected(fieldName);
+
+                valueAdopted        = (value !== undefined &amp;&amp; value !== null) ? (value).valueOf() : value;
+                currentValueAdopted = (currentValue !== undefined &amp;&amp; currentValue !== null) ? (currentValue).valueOf() : currentValue;
+
+                if (
+                    ((valueAdopted === undefined || valueAdopted === null) &amp;&amp; valueAdopted !== currentValueAdopted) ||
+                    valueAdopted != currentValueAdopted
+                ) {
+                    data = projection[ internalId ] = projection.hasOwnProperty( internalId ) &amp;&amp; projection[ internalId ] || {};
+                    data[ fieldName ] = value;
+                    result.push(fieldName);
+                }
+            }
+        }
+        else {
+            result = me.callParent(arguments);
+        }
+
+        return result;
+    };
+
+
+    return {
+        initProjectable : initProjectable,
+        getUnprojected  : getUnprojected,
+        isProjected     : isProjected
+    };
+});
+</pre>
+</body>
+</html>

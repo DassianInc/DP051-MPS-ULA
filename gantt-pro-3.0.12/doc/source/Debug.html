@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-util-Debug'>/**
+</span> * To analyze possible errors in your setup, include this on your HTML page and use Firebug (or any other console application) to execute line below:
+ * &gt;
+ * &gt; Sch.util.Debug.runDiagnostics();
+ * &gt; ...
+ */
+Ext.define(&quot;Sch.util.Debug&quot;, {
+    singleton : true,
+
+<span id='Sch-util-Debug-method-runDiagnostics'>    runDiagnostics : function () {
+</span>        var log;
+        var me = this;
+        var C = window.console;
+
+        if (C &amp;&amp; C.log) {
+            log = function () {
+                C.log.apply(C, arguments);
+            };
+        } else {
+            if (!me.schedulerDebugWin) {
+                me.schedulerDebugWin = new Ext.Window({
+                    height      : 400,
+                    width       : 500,
+                    bodyStyle   : 'padding:10px',
+                    closeAction : 'hide',
+                    autoScroll  : true
+                });
+            }
+            me.schedulerDebugWin.show();
+            me.schedulerDebugWin.update('');
+
+            log = function (text) {
+                me.schedulerDebugWin.update((me.schedulerDebugWin.body.dom.innerHTML || '') + text + '&lt;br/&gt;');
+            };
+        }
+
+        var els = Ext.select('.sch-schedulerpanel');
+
+        if (els.getCount() === 0) log('No scheduler component found');
+
+        var s               = Ext.getCmp(els.elements[0].id),
+            resourceStore   = s.getResourceStore(),
+            eventStore      = s.getEventStore();
+
+        if (!eventStore.isEventStore) {
+            log(&quot;Your event store must be or extend Sch.data.EventStore&quot;);
+        }
+
+        log('Scheduler view start: ' + s.getStart() + ', end: ' + s.getEnd());
+
+        if (!resourceStore) {
+            log('No store configured');
+            return;
+        }
+        if (!eventStore) {
+            log('No event store configured');
+            return;
+        }
+
+        var eventFields     = new Ext.util.MixedCollection(),
+            resourceFields  = new Ext.util.MixedCollection();
+
+        for (var i = 0; i &lt; eventStore.model.prototype.fields.length; i++) {
+            eventFields.add(eventStore.model.prototype.fields[i].name, eventStore.model.prototype.fields[i]);
+        }
+
+        for (i = 0; i &lt; resourceStore.model.prototype.fields.length; i++) {
+            resourceFields.add(resourceStore.model.prototype.fields[i].name, resourceStore.model.prototype.fields[i]);
+        }
+
+        log(resourceStore.getCount() + ' records in the resource store');
+        log(eventStore.getCount() + ' records in the eventStore');
+        var eventIdProp = eventStore.model.prototype.idProperty;
+        var resourceIdProp = resourceStore.model.prototype.idProperty;
+
+        var eventIdPropertyFound = eventFields.getByKey(eventIdProp);
+        var resourceIdPropertyFound = resourceFields.getByKey(resourceIdProp);
+
+        if (!(new eventStore.model() instanceof Sch.model.Event)) {
+            log(&quot;Your event model must extend Sch.model.Event&quot;);
+        }
+        if (!(new resourceStore.model() instanceof Sch.model.Resource)) {
+            log(&quot;Your resource model must extend Sch.model.Resource&quot;);
+        }
+
+        if (!eventIdPropertyFound) {
+            log(&quot;idProperty on the event model is incorrectly setup, value: &quot; + eventIdProp);
+        }
+        if (!resourceIdPropertyFound) {
+            log(&quot;idProperty on the resource model is incorrectly setup, value: &quot; + resourceIdProp);
+        }
+
+        var view = s.getSchedulingView();
+
+        log(view.el.select(view.eventSelector).getCount() + ' events present in the DOM');
+
+        if (eventStore.getCount() &gt; 0) {
+            if (!eventStore.first().getStartDate() || !(eventStore.first().getStartDate() instanceof Date)) {
+                log('The eventStore reader is misconfigured - The StartDate field is not setup correctly, please investigate');
+                log('StartDate is configured with dateFormat: ' + eventFields.getByKey(eventStore.model.prototype.startDateField).dateFormat);
+                log('See Ext JS docs for information about different date formats: http://docs.sencha.com/extjs/#!/api/Ext.Date');
+            }
+
+            if (!eventStore.first().getEndDate() || !(eventStore.first().getEndDate() instanceof Date)) {
+                log('The eventStore reader is misconfigured - The EndDate field is not setup correctly, please investigate');
+                log('EndDate is configured with dateFormat: ' + eventFields.getByKey(eventStore.model.prototype.endDateField).dateFormat);
+                log('See Ext JS docs for information about different date formats: http://docs.sencha.com/extjs/#!/api/Ext.Date');
+            }
+
+            if (eventStore.proxy &amp;&amp; eventStore.proxy.reader &amp;&amp; eventStore.proxy.reader.jsonData) {
+                log('Dumping jsonData to console');
+                console &amp;&amp; console.dir &amp;&amp; console.dir(eventStore.proxy.reader.rawData);
+            }
+
+            log('Records in the event store:');
+            eventStore.each(function (r, i) {
+                log((i + 1) + '. ' + r.startDateField + ':' + r.getStartDate() + ', ' + r.endDateField + ':' + r.getEndDate() + ', ' + r.resourceIdField + ':' + r.getResourceId());
+
+                if (!r.getStartDate()) {
+                    log(r.getStartDate());
+                }
+            });
+        } else {
+            log('Event store has no data. Has it been loaded properly?');
+        }
+
+        if (resourceStore instanceof Ext.data.TreeStore) resourceStore = resourceStore.nodeStore;
+
+        if (resourceStore.getCount() &gt; 0) {
+            log('Records in the resource store:');
+            resourceStore.each(function (r, i) {
+                log((i + 1) + '. ' + r.idProperty + ':' + r.getId());
+                return;
+            });
+        } else {
+            log('Resource store has no data.');
+            return;
+        }
+
+        log('Everything seems to be setup ok!');
+    }
+});
+</pre>
+</body>
+</html>

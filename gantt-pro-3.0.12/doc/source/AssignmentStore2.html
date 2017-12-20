@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-data-AssignmentStore'>/**
+</span> * @class Sch.data.AssignmentStore
+ * @extends Ext.data.Store
+ *
+ * A class representing a collection of assignments between events in the {@link Sch.data.EventStore} and resources
+ * in the {@link Sch.data.ResourceStore}.
+ *
+ * Contains a collection of {@link Sch.model.Assignment} records.
+ */
+if (!Ext.ClassManager.get(&quot;Sch.data.AssignmentStore&quot;)) Ext.define('Sch.data.AssignmentStore', {
+    extend      : 'Ext.data.Store',
+
+    mixins : [
+        'Sch.data.mixin.UniversalModelGetter',
+        'Sch.data.mixin.CacheHintHelper'
+    ],
+
+    requires    : [
+        'Sch.model.Assignment',
+        'Sch.model.Range',
+        'Sch.model.Resource',
+        'Sch.data.util.EventAssignmentsCache',
+        'Sch.data.util.ResourceAssignmentsCache',
+        'Sch.data.util.AssignmentStoreEventResourcesCache',
+        'Sch.data.util.AssignmentStoreResourceEventsCache'
+    ],
+
+    model       : 'Sch.model.Assignment',
+    alias       : 'store.assignmentstore',
+    storeId     : 'assignments',
+    proxy       : 'memory',
+
+    eventResourceCache    : null,
+    resourceEventsCache   : null,
+
+    eventStoreDetacher    : null,
+    resourceStoreDetacher : null,
+
+<span id='Sch-data-AssignmentStore-property-eventStore'>    /**
+</span>     * @property {Sch.data.EventStore} eventStore The event store to which this assignment store is associated.
+     * Usually it is configured automatically, by the event store itself.
+     *
+     * @readonly
+     */
+    eventStore   : null,
+
+    constructor : function(config) {
+        var me = this;
+
+        me.callParent([config]);
+
+        me.eventAssignmentsCache    = me.eventAssignmentsCache    || new Sch.data.util.EventAssignmentsCache(me);
+        me.resourceAssignmentsCache = me.resourceAssignmentsCache || new Sch.data.util.ResourceAssignmentsCache(me);
+        // The caches commented are conflicting with the fact that assignments might be added to assignment store
+        // before corresponding events/records are. For example SchedulerDragZone::updateRecords() does that
+        // as soon as it's fixed this might be uncommented thus we might gain more performace at
+        // event::getResources()/resource::getEvents() and corresponding methods
+        //me.eventResourceCache       = me.eventResourceCache       || new Sch.data.util.AssignmentStoreEventResourcesCache(me);
+        //me.resourceEventsCache      = me.resourceEventsCache      || new Sch.data.util.AssignmentStoreResourceEventsCache(me);
+    },
+
+    destroy : function() {
+        var me = this;
+        Ext.destroyMembers(
+            me,
+            'eventResourceCache',
+            'resourceEventsCache',
+            'eventAssignmentsCache',
+            'resourceEventsCache',
+            'eventStoreDetacher',
+            'resourceStoreDetacher'
+        );
+        me.callParent();
+    },
+
+<span id='Sch-data-AssignmentStore-method-getEventStore'>    /**
+</span>     * Returns the associated event store instance.
+     *
+     * @return {Gnt.data.EventStore}
+     */
+    getEventStore: function() {
+        return this.eventStore;
+    },
+
+<span id='Sch-data-AssignmentStore-method-setEventStore'>    /**
+</span>     * Sets the associated event store instance.
+     *
+     * @param {Sch.data.EventStore} eventStore
+     */
+    setEventStore: function(eventStore) {
+        var me = this,
+            oldStore = me.eventStore;
+
+        if (me.eventStore) {
+        }
+
+        me.eventStore = eventStore &amp;&amp; Ext.StoreMgr.lookup(eventStore) || null;
+
+        if (me.eventStore) {
+        }
+
+        me.attachToEventStore(me.eventStore);
+
+        if ((oldStore || eventStore) &amp;&amp; oldStore !== eventStore) {
+<span id='Sch-data-AssignmentStore-event-eventstorechange'>            /**
+</span>             * @event eventstorechange
+             * Fires when new event store is set via {@link #setEventStore} method.
+             * @param {Sch.data.AssignmentStore} this
+             * @param {Sch.data.EventStore} newEventStore
+             * @param {Sch.data.EventStore} oldEventStore
+             */
+            me.fireEvent('eventstorechange', me, eventStore, oldStore);
+        }
+    },
+
+    attachToEventStore : function(eventStore) {
+        var me = this;
+
+        Ext.destroy(me.eventStoreDetacher);
+
+        if (eventStore &amp;&amp; eventStore instanceof Ext.data.TreeStore) {
+            me.eventStoreDetacher = eventStore.on({
+                'noderemove'          : me.onEventNodeRemove,
+                'resourcestorechange' : me.onEventStoreResourceStoreChange,
+                scope       : me,
+                destroyable : true,
+                priority    : 200 // higher then in cache
+            });
+        }
+        else if (eventStore) {
+            me.eventStoreDetacher = eventStore.on({
+                'remove'              : me.onEventRemove,
+                'resourcestorechange' : me.onEventStoreResourceStoreChange,
+                scope       : me,
+                destroyable : true,
+                priority    : 200 // higher then in cache
+            });
+        }
+
+        me.attachToResourceStore(eventStore &amp;&amp; eventStore.getResourceStore());
+    },
+
+    attachToResourceStore : function(resourceStore) {
+        var me = this;
+
+        Ext.destroy(me.resourceStoreDetacher);
+
+        if (resourceStore &amp;&amp; resourceStore instanceof Ext.data.TreeStore) {
+            me.resourceStoreDetacher = resourceStore.on({
+                'noderemove' : me.onResourceNodeRemove,
+                scope        : me,
+                destroyable  : true,
+                priority     : 200 // higher then in cache
+            });
+        }
+        else if (resourceStore) {
+            me.resourceStoreDetacher = resourceStore.on({
+                'remove'    : me.onResourceRemove,
+                scope       : me,
+                destroyable : true,
+                priority    : 200 // higher then in cache
+            });
+        }
+    },
+
+    onEventStoreResourceStoreChange : function(eventStore, newResourceStore, oldResourceStore) {
+        this.attachToResourceStore(newResourceStore);
+    },
+
+    onEventRemove : function(eventStore, events, index, isMove) {
+        var me = this,
+            assignments;
+
+        if (!isMove) {
+            assignments = [];
+
+            Ext.Array.forEach(events, function(event) {
+                assignments = assignments.concat(me.getAssignmentsForEvent(event));
+            });
+
+            assignments.length &amp;&amp; me.remove(assignments);
+        }
+    },
+
+    onEventNodeRemove : function(eventStore, event, isMove) {
+        var me = this,
+            assignments;
+
+        if (!isMove) {
+            assignments = [];
+
+            event.cascadeBy(function(cascadingEvent) {
+                assignments = assignments.concat(me.getAssignmentsForEvent(cascadingEvent));
+            });
+
+            assignments.length &amp;&amp; me.remove(assignments);
+        }
+    },
+
+    onResourceRemove : function(resourceStore, resources, index, isMove) {
+        var me = this,
+            assignments;
+
+        if (!isMove) {
+            assignments = [];
+
+            Ext.Array.forEach(resources, function(resource) {
+                assignments = assignments.concat(me.getAssignmentsForResource(resource));
+            });
+
+            assignments.length &amp;&amp; me.remove(assignments);
+        }
+    },
+
+    onResourceNodeRemove : function(resourceStore, resource, isMove) {
+        var me = this,
+            assignments;
+
+        if (!isMove) {
+            assignments = [];
+
+            resource.cascadeBy(function(cascadingResource) {
+                assignments = assignments.concat(me.getAssignmentsForResource(cascadingResource));
+            });
+
+            assignments.length &amp;&amp; me.remove(assignments);
+        }
+    },
+
+<span id='Sch-data-AssignmentStore-method-mapAssignmentsForEvent'>    /**
+</span>     * Maps over event assignments.
+     *
+     * @param {Sch.model.Range/Mixed} event
+     * @param {Function} [fn=Ext.identityFn]
+     * @param {Function} [filterFn=Ext.returnTrue]
+     * @return {Mixed[]}
+     */
+    mapAssignmentsForEvent : function(event, fn, filterFn) {
+        var me = this,
+            result = [];
+
+        fn       = fn || Ext.identityFn;
+        filterFn = filterFn || Ext.returnTrue;
+
+
+        if (fn !== Ext.identityFn || filterFn !== Ext.returnTrue) {
+            Ext.Array.forEach(me.eventAssignmentsCache.get(event), function(assignment) {
+                var mapResult = fn(assignment);
+                filterFn(mapResult) &amp;&amp; result.push(mapResult);
+            });
+        }
+        else {
+            result = [].concat(me.eventAssignmentsCache.get(event));
+        }
+
+        return result;
+    },
+
+<span id='Sch-data-AssignmentStore-method-mapAssignmentsForResource'>    /**
+</span>     * Maps over resource assignments.
+     *
+     * @param {Sch.model.Resource/Mixed} resource
+     * @param {Function} [fn=Ext.identityFn]
+     * @param {Function} [filterFn=Ext.returnTrue]
+     * @return {Mixed[]}
+     */
+    mapAssignmentsForResource : function(resource, fn, filterFn) {
+        var me = this,
+            result = [];
+
+        fn       = fn || Ext.identityFn;
+        filterFn = filterFn || Ext.returnTrue;
+
+        if (fn !== Ext.identityFn || filterFn !== Ext.returnTrue) {
+            Ext.Array.forEach(me.resourceAssignmentsCache.get(resource), function(assignment) {
+                var mapResult = fn(assignment);
+                filterFn(mapResult) &amp;&amp; result.push(mapResult);
+            });
+        }
+        else {
+            result = [].concat(me.resourceAssignmentsCache.get(resource));
+        }
+
+        return result;
+    },
+
+<span id='Sch-data-AssignmentStore-method-getAssignmentsForEvent'>    /**
+</span>     * Returns all assignments for a given event.
+     *
+     * @param {Sch.model.Range/Mixed} event
+     * @return {Sch.model.Assignment[]}
+     */
+    getAssignmentsForEvent : function(event) {
+        return this.mapAssignmentsForEvent(event);
+    },
+
+<span id='Sch-data-AssignmentStore-method-removeAssignmentsForEvent'>    /**
+</span>     * Removes all assignments for given event
+     *
+     * @param {Sch.model.Range/Mixed} event
+     */
+    removeAssignmentsForEvent : function(event) {
+        var me = this;
+        me.remove(me.getAssignmentsForEvent(event));
+    },
+
+<span id='Sch-data-AssignmentStore-method-getAssignmentsForResource'>    /**
+</span>     * Returns all assignments for a given resource.
+     *
+     * @param {Sch.model.Resource/Mixed} event
+     * @return {Sch.model.Range[]}
+     */
+    getAssignmentsForResource : function(resource) {
+        return this.mapAssignmentsForResource(resource);
+    },
+
+<span id='Sch-data-AssignmentStore-method-removeAssignmentsForResource'>    /**
+</span>     * Removes all assignments for given resource
+     *
+     * @param {Sch.model.Resource/Mixed} resource
+     */
+    removeAssignmentsForResource : function(resource) {
+        var me = this;
+        me.remove(me.getAssignmentsForResource(resource));
+    },
+
+<span id='Sch-data-AssignmentStore-method-getResourcesForEvent'>    /**
+</span>     * Returns all resources assigned to an event.
+     *
+     * @param {Sch.model.Range/Mixed} event
+     * @return {Sch.model.Resource[]}
+     */
+    getResourcesForEvent : function(event) {
+        var me = this,
+            result;
+
+        if (me.eventResourceCache) {
+            result = me.eventResourceCache.get(event);
+        }
+        else {
+            result = me.mapAssignmentsForEvent(
+                event,
+                function mapper(assignment) {
+                    return assignment.getResource();
+                },
+                function filter(resource) {
+                    return !!resource;
+                }
+            );
+        }
+
+        return result;
+    },
+
+<span id='Sch-data-AssignmentStore-method-getEventsForResource'>    /**
+</span>     * Returns all events assigned to a resource
+     *
+     * @param {Sch.model.Resource/Mixed} resource
+     * @return {Sch.model.Range[]}
+     */
+    getEventsForResource : function(resource) {
+        var me = this,
+            result;
+
+        if (me.resourceEventsCache) {
+            result = me.resourceEventsCache.get(resource);
+        }
+        else {
+            result = me.mapAssignmentsForResource(
+                resource,
+                function mapper(assignment) {
+                    return assignment.getEvent();
+                },
+                function filter(event) {
+                    return !!event;
+                }
+            );
+        }
+
+        return result;
+    },
+
+<span id='Sch-data-AssignmentStore-method-assignEventToResource'>    /**
+</span>     * Creates and adds assignment record for a given event and a resource.
+     *
+     * @param {Sch.model.Range/Mixed} event
+     * @param {Sch.model.Resource/Mixed/Array} resource The resource(s) to assign to the event
+     * @privateparam {Function} [assignmentSetupFn=Ext.identityFn]
+     * @return {Sch.model.Assignment[]} An array with the created assignment(s)
+     */
+    assignEventToResource : function(event, resource, assignmentSetupFn) {
+        var me = this,
+            assignments = [];
+
+        assignmentSetupFn = assignmentSetupFn || Ext.identityFn;
+
+        var resources = Ext.isArray(resource) ? resource : [resource];
+
+        Ext.Array.forEach(resources, function(resource) {
+            if (!me.isEventAssignedToResource(event, resource)) {
+                var assignment = new me.model();
+                assignment.setEventId(event instanceof Ext.data.Model &amp;&amp; event.getId() || event);
+                assignment.setResourceId(resource instanceof Ext.data.Model &amp;&amp; resource.getId() || resource);
+                assignment = assignmentSetupFn(assignment);
+
+                assignments.push(assignment);
+            }
+        });
+
+        me.add(assignments);
+
+        return assignments;
+    },
+
+<span id='Sch-data-AssignmentStore-method-unassignEventFromResource'>    /**
+</span>     * Removes assignment record for a given event and a resource.
+     *
+     * @param {Sch.model.Range/Mixed} event
+     * @param {Sch.model.Resource/Mixed} [resource] The resource to unassign the event from. If omitted, all resources of the events will be unassigned
+     * @return {Sch.model.Assignment}
+     */
+    unassignEventFromResource : function(event, resource) {
+        var me = this,
+            assignment;
+
+        if (!resource) {
+            this.removeAssignmentsForEvent(event);
+        } else if (me.isEventAssignedToResource(event, resource)) {
+            assignment = me.getAssignmentForEventAndResource(event, resource);
+            me.remove(assignment);
+        }
+
+        return assignment;
+    },
+
+<span id='Sch-data-AssignmentStore-method-isEventAssignedToResource'>    /**
+</span>     * Checks whether an event is assigned to a resource.
+     *
+     * @param {Sch.model.Range/Mixed} event
+     * @param {Sch.model.Resource/Mixed} resource
+     * @return {Boolean}
+     */
+    isEventAssignedToResource : function(event, resource) {
+        var me = this,
+            records = me.getResourcesForEvent(event),
+            result = false,
+            i, len;
+
+        resource = resource instanceof Ext.data.Model &amp;&amp; resource.getId() || resource;
+
+        for (i = 0, len = records.length; !result &amp;&amp; i &lt; len; i++) {
+            result = records[i];
+            result = result.getId() == resource;
+        }
+
+        return result;
+    },
+
+<span id='Sch-data-AssignmentStore-method-getAssignmentForEventAndResource'>    /**
+</span>     * Returns assignment record for given event and resource
+     *
+     * @param {Sch.model.Range} event
+     * @param {Sch.model.Resource} resource
+     * @return {Sch.model.Assignment}
+     */
+    getAssignmentForEventAndResource : function(event, resource) {
+        var me = this,
+            records = me.getAssignmentsForEvent(event),
+            result = null,
+            i, len;
+
+        resource = resource instanceof Ext.data.Model &amp;&amp; resource.getId() || resource;
+
+        for (i = 0, len = records.length; !result &amp;&amp; i &lt; len; i++) {
+            result = records[i];
+            result = result.getResourceId() == resource &amp;&amp; result || null;
+        }
+
+        return result;
+    }
+});
+</pre>
+</body>
+</html>

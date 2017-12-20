@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-Percent'>/**
+</span>
+A specialized field to enter percent values.
+This class inherits from the standard Ext JS &quot;number&quot; field, so any usual `Ext.form.field.Number` configs can be used.
+
+@class Gnt.field.Percent
+@extends Ext.form.field.Number
+
+*/
+Ext.define('Gnt.field.Percent', {
+    extend              : 'Ext.form.field.Number',
+
+    alias               : 'widget.percentfield',
+
+    mixins              : ['Gnt.mixin.Localizable'],
+
+    alternateClassName  : 'Gnt.widget.PercentField',
+
+<span id='Gnt-field-Percent-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+     - invalidText : 'Invalid value'
+     */
+
+    disableKeyFilter    : false,
+
+<span id='Gnt-field-Percent-property-minValue'>    minValue            : 0,
+</span><span id='Gnt-field-Percent-property-maxValue'>    maxValue            : 100,
+</span><span id='Gnt-field-Percent-property-allowExponential'>    allowExponential    : false,
+</span>
+<span id='Gnt-field-Percent-property-baseChars'>    baseChars           : '0123456789%',
+</span>
+<span id='Gnt-field-Percent-method-constructor'>    constructor : function () {
+</span>        this.callParent(arguments);
+
+        this.invalidText = this.L('invalidText');
+    },
+
+<span id='Gnt-field-Percent-method-valueToRaw'>    valueToRaw: function (value) {
+</span>        if (Ext.isNumber(value)) {
+            return parseFloat(Ext.Number.toFixed(value, this.decimalPrecision)) + '%';
+        }
+        return '';
+    },
+
+<span id='Gnt-field-Percent-method-getErrors'>    getErrors: function (value) {
+</span>        var percent = this.parseValue(value);
+
+        if (percent === null) {
+            if (value !== null &amp;&amp; value !== '') {
+                return [this.invalidText];
+            } else {
+                percent = '';
+            }
+        }
+        return this.callParent([percent]);
+    }
+});
+</pre>
+</body>
+</html>

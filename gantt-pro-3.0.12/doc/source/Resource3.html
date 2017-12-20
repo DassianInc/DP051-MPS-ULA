@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-model-Resource'>/**
+</span>@class Sch.model.Resource
+@extends Sch.model.Customizable
+
+This class represent a single Resource in the scheduler chart. It's a subclass of the {@link Sch.model.Customizable}, which is in turn subclass of {@link Ext.data.Model}.
+Please refer to documentation of those classes to become familar with the base interface of the resource.
+
+A Resource has only 2 mandatory fields - `Id` and `Name`. If you want to add more fields with meta data describing your resources then you should subclass this class:
+
+    Ext.define('MyProject.model.Resource', {
+        extend      : 'Sch.model.Resource',
+
+        fields      : [
+            // `Id` and `Name` fields are already provided by the superclass
+            { name: 'Company',          type : 'string' }
+        ],
+
+        getCompany : function () {
+            return this.get('Company');
+        },
+        ...
+    });
+
+If you want to use other names for the Id and Name fields you can configure them as seen below:
+
+    Ext.define('MyProject.model.Resource', {
+        extend      : 'Sch.model.Resource',
+
+        nameField   : 'UserName',
+        ...
+    });
+
+Please refer to {@link Sch.model.Customizable} for details.
+*/
+
+// Don't redefine the class, which will screw up instanceof checks etc
+if (!Ext.ClassManager.get('Sch.model.Resource')) Ext.define('Sch.model.Resource', {
+    extend : 'Sch.model.Customizable',
+
+    idProperty : 'Id',
+    config     : Ext.versions.touch ? { idProperty : 'Id' } : null,
+
+<span id='Sch-model-Resource-cfg-nameField'>    /**
+</span>     * @cfg {String} nameField The name of the field that holds the resource name. Defaults to &quot;Name&quot;.
+     */
+    nameField : 'Name',
+
+    customizableFields : [
+<span id='Sch-model-Resource-method-getName'>        /**
+</span>         * @method getName
+         *
+         * Returns the resource name
+         *
+         * @return {String} The name of the resource
+         */
+<span id='Sch-model-Resource-method-setName'>        /**
+</span>         * @method setName
+         *
+         * Sets the resource name
+         *
+         * @param {String} The new name of the resource
+         */
+        { name : 'Name', type : 'string' }
+    ],
+
+    getInternalId : function() {
+        return this.internalId;
+    },
+
+<span id='Sch-model-Resource-method-getResourceStore'>    /**
+</span>     * Returns a resource store this resource is part of. Resource must be part
+     * of a resource store to be able to retrieve resource store.
+     *
+     * @return {Sch.data.ResourceStore|null}
+     */
+    getResourceStore : function() {
+        return this.joined &amp;&amp; this.joined[ 0 ];
+    },
+
+<span id='Sch-model-Resource-method-getEventStore'>    /**
+</span>     * Returns an event store this resource uses as default. Resource must be part
+     * of a resource store to be able to retrieve event store.
+     *
+     * @return {Sch.data.EventStore|null}
+     */
+    getEventStore : function () {
+        var resourceStore = this.getResourceStore();
+        return resourceStore &amp;&amp; resourceStore.getEventStore() || this.parentNode &amp;&amp; this.parentNode.getEventStore();
+    },
+
+<span id='Sch-model-Resource-method-getAssignmentStore'>    /**
+</span>     * Returns as assignment store this resources uses as default. Resource must be part
+     * of a resource store to be able to retrieve default assignment store.
+     *
+     * @return {Sch.data.AssignmentStore|null}
+     */
+    getAssignmentStore : function() {
+        var eventStore = this.getEventStore();
+        return eventStore &amp;&amp; eventStore.getAssignmentStore();
+    },
+
+<span id='Sch-model-Resource-method-getEvents'>    /**
+</span>     * Returns an array of events, associated with this resource
+     *
+     * @param {Sch.data.EventStore} eventStore (optional) The event store to get events for (if a resource is bound to multiple stores)
+     * @return {Sch.model.Range[]}
+     */
+    getEvents : function (eventStore) {
+        var me = this;
+        eventStore = eventStore || me.getEventStore();
+        return eventStore &amp;&amp; eventStore.getEventsForResource(me) || [];
+    },
+
+<span id='Sch-model-Resource-method-getAssignments'>    /**
+</span>     * Returns all assignments for the resource. Resource must be part of the store for this method to work.
+     *
+     * @return {[Sch.model.Assignment]}
+     */
+    getAssignments : function() {
+        var me = this,
+            eventStore = me.getEventStore();
+
+        return eventStore &amp;&amp; eventStore.getAssignmentsForResource(me);
+    },
+
+<span id='Sch-model-Resource-method-isPersistable'>    /**
+</span>     * Returns true if the Resource can be persisted.
+     * In a flat store resource is always considered to be persistable, in a tree store resource is considered to
+     * be persitable if it's parent node is persistable.
+     *
+     * @return {Boolean} true if this model can be persisted to server.
+     */
+    isPersistable : function() {
+        var parent = this.parentNode;
+        return !parent || !parent.phantom || (parent.isRoot &amp;&amp; parent.isRoot());
+    }
+});
+</pre>
+</body>
+</html>

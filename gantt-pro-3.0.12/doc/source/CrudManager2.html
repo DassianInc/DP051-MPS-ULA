@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-data-CrudManager'>/**
+</span>@class Sch.data.CrudManager
+
+The Crud Manager (or &quot;CM&quot;) is a class implementing centralized loading and saving of data in multiple stores.
+Loading the stores and saving all changes is done using one ajax request. This class uses AJAX as a transport mechanism and JSON as the data encoding format.
+
+For usage details please see [this guide](#!/guide/scheduler_crud_manager).
+
+# Scheduler stores
+
+The class supports Ext Scheduler specific stores (namely: resource, event and assignment stores).
+For these stores, the CM has separate configs ({@link #resourceStore}, {@link #eventStore}, {@link #assignmentStore})
+to register them. The class can also grab them from the task store (this behavior can be changed using
+{@link #addRelatedStores} config).
+
+    var crudManager = Ext.create('Sch.data.CrudManager', {
+        autoLoad        : true,
+        resourceStore   : resourceStore,
+        eventStore      : eventStore,
+        assignmentStore : assignmentStore,
+        transport       : {
+            load    : {
+                url     : 'php/read.php'
+            },
+            sync    : {
+                url     : 'php/save.php'
+            }
+        }
+    });
+
+# AJAX request configuration
+
+To configure AJAX request parameters please take a look at the {@link #transport} config.
+
+    var crudManager = Ext.create('Sch.data.CrudManager', {
+        autoLoad        : true,
+        resourceStore   : resourceStore,
+        eventStore      : eventStore,
+        assignmentStore : assignmentStore,
+        transport       : {
+            load    : {
+                url         : 'php/read.php',
+                // use GET request
+                method      : 'GET',
+                // pass request JSON in &quot;rq&quot; parameter
+                paramName   : 'rq',
+                // extra HTTP request parameters
+                params      : {
+                    foo     : 'bar'
+                }
+            },
+            sync    : {
+                url     : 'php/save.php'
+            }
+        }
+    });
+
+
+# Load order
+
+The CM is aware of the proper load order for Scheduler specific stores so you don't need to worry about it.
+If you provide any extra stores (using {@link #stores} config) they will be added to the start of collection before
+ the Scheduler specific stores.
+If you a different load order, you should use {@link #addStore} method to register your store:
+
+    var crudManager = Ext.create('Sch.data.CrudManager', {
+        resourceStore   : resourceStore,
+        eventStore      : eventStore,
+        assignmentStore : assignmentStore,
+        // extra user defined stores will get to the start of collection
+        // so they will be loaded first
+        stores          : [ store1, store2 ],
+        transport       : {
+            load    : {
+                url     : 'php/read.php'
+            },
+            sync    : {
+                url     : 'php/save.php'
+            }
+        }
+    });
+
+    // append store3 to the end so it will be loaded last
+    crudManager.addStore(store3);
+
+    // now when we registered all the stores let's load them
+    crudManager.load();
+
+*/
+Ext.define('Sch.data.CrudManager', {
+    extend          : 'Sch.crud.AbstractManager',
+
+    mixins          : ['Sch.crud.encoder.Json', 'Sch.crud.transport.Ajax'],
+
+<span id='Sch-data-CrudManager-cfg-resourceStore'>    /**
+</span>     * @cfg {Sch.data.ResourceStore/Object} resourceStore A store with resources (or its descriptor).
+     */
+<span id='Sch-data-CrudManager-property-resourceStore'>    /**
+</span>     * @property {Object} resourceStore The resource store descriptor.
+     */
+    resourceStore   : null,
+<span id='Sch-data-CrudManager-cfg-eventStore'>    /**
+</span>     * @cfg {Sch.data.EventStore/Object} eventStore A store with events (or its descriptor).
+     */
+<span id='Sch-data-CrudManager-property-eventStore'>    /**
+</span>     * @property {Object} eventStore The event store descriptor.
+     */
+    eventStore      : null,
+<span id='Sch-data-CrudManager-cfg-assignmentStore'>    /**
+</span>     * @cfg {Sch.data.AssignmentStore/Object} assignmentStore A store with assignments (or its descriptor).
+     */
+<span id='Sch-data-CrudManager-property-assignmentStore'>    /**
+</span>     * @property {Object} assignmentStore The assignment store descriptor.
+     */
+    assignmentStore : null,
+
+<span id='Sch-data-CrudManager-cfg-addRelatedStores'>    /**
+</span>     * @cfg {Boolean} addRelatedStores
+     * When set to `true` this class will try to get the {@link #resourceStore} and {@link #assignmentStore} stores from
+     * the specified {@link #eventStore} instance.
+     */
+    addRelatedStores    : true,
+
+<span id='Sch-data-CrudManager-method-constructor'>    constructor : function (config) {
+</span>        config  = config || {};
+
+        var resourceStore   = config.resourceStore   || this.resourceStore,
+            eventStore      = config.eventStore      || this.eventStore,
+            assignmentStore = config.assignmentStore || this.assignmentStore,
+            // list of stores to add
+            stores          = [];
+
+        // retrieve stores registered on the provided taskStore
+        if (eventStore &amp;&amp; config.addRelatedStores !== false) {
+            var extracted   = this.getEventStoreInfo(eventStore, config);
+
+            assignmentStore = assignmentStore || extracted.assignmentStore;
+            resourceStore   = resourceStore   || extracted.resourceStore;
+        }
+
+        // event store
+        eventStore &amp;&amp; stores.push(eventStore);
+        // resource store
+        resourceStore &amp;&amp; stores.push(resourceStore);
+        // assignment store
+        assignmentStore &amp;&amp; stores.push(assignmentStore);
+
+        // all the Scheduler related stores will go after the user defined stores from the config.stores
+        if (stores.length) {
+            var syncSequence   = [];
+
+            // For applying sync results we have a different order:
+            // resources -&gt; events -&gt; assignments
+            resourceStore &amp;&amp; syncSequence.push(resourceStore);
+            eventStore &amp;&amp; syncSequence.push(eventStore);
+            assignmentStore &amp;&amp; syncSequence.push(assignmentStore);
+
+            if (syncSequence.length) {
+                config.syncApplySequence    = (config.syncApplySequence || config.stores || []).concat(syncSequence);
+            }
+
+            var _stores      = config.stores || this.stores;
+
+            if (_stores &amp;&amp; !Ext.isArray(_stores)) _stores = [_stores];
+
+            config.stores   = (_stores || []).concat(stores);
+        }
+
+        this.callParent([ config ]);
+
+        this.eventStore      = this.getStoreDescriptor(eventStore);
+        this.resourceStore   = this.getStoreDescriptor(resourceStore);
+        this.assignmentStore = this.getStoreDescriptor(assignmentStore);
+    },
+
+<span id='Sch-data-CrudManager-method-getEventStoreInfo'>    getEventStoreInfo : function (eventStore, config) {
+</span>        if (!(eventStore instanceof Ext.data.AbstractStore)) {
+            if (typeof eventStore == 'string') {
+                eventStore   = Ext.data.StoreManager.get(eventStore);
+            } else {
+                eventStore   = eventStore.store;
+            }
+        }
+        var result          = {},
+            assignmentStore = config.assignmentStore,
+            resourceStore   = config.resourceStore;
+
+        !assignmentStore &amp;&amp; (result.assignmentStore = eventStore.getAssignmentStore());
+        !resourceStore   &amp;&amp; (result.resourceStore   = eventStore.getResourceStore());
+
+        return result;
+    },
+
+<span id='Sch-data-CrudManager-method-getResourceStore'>    /**
+</span>     * Returns the resource store bound to the CRUD manager.
+     * @return {Sch.data.ResourceStore} The resource store.
+     */
+    getResourceStore : function () {
+        return this.resourceStore &amp;&amp; this.resourceStore.store;
+    },
+
+<span id='Sch-data-CrudManager-method-getEventStore'>    /**
+</span>     * Returns the event store bound to the CRUD manager.
+     * @return {Sch.data.EventStore} The event store.
+     */
+    getEventStore : function () {
+        return this.eventStore &amp;&amp; this.eventStore.store;
+    },
+
+<span id='Sch-data-CrudManager-method-getAssignmentStore'>    /**
+</span>     * Returns the assignment store bound to the CRUD mananger.
+     * @return {Sch.data.AssignmentStore} The assignment store
+     */
+    getAssignmentStore : function() {
+        return this.assignmentStore &amp;&amp; this.assignmentStore.store;
+    }
+});
+</pre>
+</body>
+</html>

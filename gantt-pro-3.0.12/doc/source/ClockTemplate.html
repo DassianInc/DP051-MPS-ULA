@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-tooltip-ClockTemplate-method-constructor'><span id='Sch-tooltip-ClockTemplate'>/**
+</span></span> * @class Sch.tooltip.ClockTemplate
+ * @extends Ext.XTemplate
+ * @private
+ * A template showing a clock. It accepts an object containing a 'date' and a 'text' property to its apply method.
+ * @constructor
+ * @param {Object} config The object containing the configuration of this model.
+ **/
+Ext.define(&quot;Sch.tooltip.ClockTemplate&quot;, {
+    extend : 'Ext.XTemplate',
+
+<span id='Sch-tooltip-ClockTemplate-property-minuteHeight'>    minuteHeight : 8,
+</span><span id='Sch-tooltip-ClockTemplate-property-minuteTop'>    minuteTop    : 2,
+</span><span id='Sch-tooltip-ClockTemplate-property-hourHeight'>    hourHeight   : 8,
+</span><span id='Sch-tooltip-ClockTemplate-property-hourTop'>    hourTop      : 2,
+</span><span id='Sch-tooltip-ClockTemplate-property-handLeft'>    handLeft     : 10,
+</span>
+<span id='Sch-tooltip-ClockTemplate-method-getRotateStyle'>    getRotateStyle : function (degrees) {
+</span>        return &quot;transform:rotate(Ddeg);-ms-transform:rotate(Ddeg);-moz-transform: rotate(Ddeg);-webkit-transform: rotate(Ddeg);-o-transform:rotate(Ddeg);&quot;.replace(/D/g, degrees);
+    },
+
+<span id='Sch-tooltip-ClockTemplate-property-getRotateStyleIE'>    getRotateStyleIE : (function () {
+</span>        var toRad = Math.PI / 180,
+            cos = Math.cos,
+            sin = Math.sin;
+
+        return function (degrees, top, height) {
+            var me = this,
+                rad = degrees * toRad,
+                cosV = cos(rad),
+                sinV = sin(rad),
+                y = height * sin((90 - degrees) * toRad),
+                x = height * cos((90 - degrees) * toRad),
+                topAdjust = Math.min(height, height - y),
+                leftAdjust = degrees &gt; 180 ? x : 0,
+                matrixString = &quot;progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand', M11 = &quot; + cosV + &quot;, M12 = &quot; + (-sinV) + &quot;, M21 = &quot; + sinV + &quot;, M22 = &quot; + cosV + &quot;)&quot;;
+
+            return Ext.String.format(&quot;filter:{0};-ms-filter:{0};top:{1}px;left:{2}px;&quot;, matrixString, topAdjust + top, leftAdjust + me.handLeft);
+        };
+    })(),
+
+    constructor : function () {
+        var isLegacyIE = Ext.isIE &amp;&amp; Ext.isIE8m;
+
+        this.callParent([
+            '&lt;div class=&quot;sch-clockwrap ' + (isLegacyIE ? '' : 'sch-supports-border-radius') + ' {cls}&quot;&gt;' +
+                '&lt;div class=&quot;sch-clock&quot;&gt;' +
+                    '&lt;div class=&quot;sch-hourIndicator&quot; style=&quot;{[this.getHourStyle((values.date.getHours() % 12) * 30,' + this.hourTop + ', + ' + this.hourHeight + ')]}&quot;&gt;{[Ext.Date.monthNames[values.date.getMonth()].substr(0,3)]}&lt;/div&gt;' +
+                    '&lt;div class=&quot;sch-minuteIndicator&quot; style=&quot;{[this.getMinuteStyle(values.date.getMinutes() * 6,' + this.minuteTop + ', + ' + this.minuteHeight + ')]}&quot;&gt;{[values.date.getDate()]}&lt;/div&gt;' +
+                    (isLegacyIE ? '' : '&lt;div class=&quot;sch-clock-dot&quot;&gt;&lt;/div&gt;') +
+                '&lt;/div&gt;' +
+                '&lt;span class=&quot;sch-clock-text&quot;&gt;{text}&lt;/span&gt;' +
+            '&lt;/div&gt;',
+            {
+                disableFormats : true,
+
+                getMinuteStyle : isLegacyIE ? this.getRotateStyleIE : this.getRotateStyle,
+                getHourStyle   : isLegacyIE ? this.getRotateStyleIE : this.getRotateStyle
+            }
+        ]);
+    }
+})
+;
+</pre>
+</body>
+</html>

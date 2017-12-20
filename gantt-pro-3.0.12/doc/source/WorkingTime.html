@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-feature-WorkingTime'>/**
+</span>@class Gnt.feature.WorkingTime
+@extends Sch.plugin.Zones
+
+A simple subclass of the {@link Sch.plugin.Zones} which highlights holidays/weekends on the gantt chart. 
+Generally, there's no need to instantiate it manually, it can be activated with the {@link Gnt.panel.Gantt#highlightWeekends} configuration option.
+
+{@img gantt/images/plugin-working-time.png}
+
+Note, that the holidays/weekends will only be shown when the resolution of the time axis is weeks or less.
+
+*/
+Ext.define(&quot;Gnt.feature.WorkingTime&quot;, {
+    extend : 'Sch.plugin.Zones',
+    
+    requires : [
+        'Ext.data.Store',
+        'Sch.model.Range'
+    ],
+    
+<span id='Gnt-feature-WorkingTime-property-expandToFitView'>    expandToFitView : true,
+</span>
+<span id='Gnt-feature-WorkingTime-cfg-calendar'>    /**
+</span>     * @cfg {Gnt.data.Calendar} calendar The calendar to extract the holidays from
+     */
+    calendar : null,
+    
+
+<span id='Gnt-feature-WorkingTime-method-init'>    init : function (ganttPanel) {
+</span>        if (!this.calendar) {
+            Ext.Error.raise(&quot;Required attribute 'calendar' missed during initialization of 'Gnt.feature.WorkingTime'&quot;);
+        }
+
+        this.bindCalendar(this.calendar);
+        
+        Ext.apply(this, {
+            store : new Ext.data.Store({
+                model       : 'Sch.model.Range'
+            })
+        });
+        
+        this.callParent(arguments);
+        
+        ganttPanel.on('viewchange', this.onViewChange, this);
+        
+        // timeAxis should be already fully initialized at this point
+        this.onViewChange();
+    },
+
+<span id='Gnt-feature-WorkingTime-method-bindCalendar'>    bindCalendar : function(calendar) {
+</span>        var listeners = {
+            datachanged     : this.refresh,
+            update          : this.refresh,
+
+            scope           : this,
+            delay           : 1
+        };
+        
+        if (this.calendar) {
+            this.calendar.un(listeners);
+        }
+
+        if (calendar) {
+            calendar.on(listeners);
+        }
+
+        this.calendar = calendar;
+    },
+    
+<span id='Gnt-feature-WorkingTime-method-onViewChange'>    onViewChange : function () {
+</span>        var DATE    = Sch.util.Date;
+        
+        if (DATE.compareUnits(this.timeAxis.unit, DATE.WEEK) &gt; 0) {
+            this.setDisabled(true);
+        } else {
+            this.setDisabled(false);
+            
+            this.refresh();
+        }
+    },
+
+    
+<span id='Gnt-feature-WorkingTime-method-refresh'>    refresh : function() {
+</span>        var view        = this.schedulerView;
+        
+        this.store.removeAll(true);
+        
+        this.store.add(this.calendar.getHolidaysRanges(view.timeAxis.getStart(), view.timeAxis.getEnd(), true));
+    },
+
+<span id='Gnt-feature-WorkingTime-method-destroy'>    destroy : function() {
+</span>        this.bindCalendar(null);
+
+        this.callParent(arguments);
+    }
+});</pre>
+</body>
+</html>

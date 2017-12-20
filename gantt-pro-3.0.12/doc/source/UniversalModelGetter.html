@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='global-property-'>/**
+</span> * This mixin eliminates differences between flat/tree store in get by [internal] id functionality and it should be
+ * mixed into data model stores.
+ *
+ * It adds two methods {@link #getModelById getModelById()} and {@link #getModelByInternalId getModelByInternalId()}
+ * which should be used everywhere in the code instead of native getById() / getByInternalId() methods.
+ *
+ * @private
+ */
+if (!Ext.ClassManager.get(&quot;Sch.data.mixin.UniversalModelGetter&quot;)) Ext.define('Sch.data.mixin.UniversalModelGetter', {
+
+    getModelById : function(id) {
+        var me = this;
+        return me.getNodeById ? me.getNodeById(id) : me.getById(id);
+    },
+
+    getModelByInternalId : function(id) {
+        var me = this;
+        return me.byInternalIdMap ? me.byInternalIdMap[id] : me.getByInternalId(id);
+    }
+
+});
+</pre>
+</body>
+</html>

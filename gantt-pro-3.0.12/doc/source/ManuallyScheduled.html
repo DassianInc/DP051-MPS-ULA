@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-ManuallyScheduled'>/**
+</span>
+ A specialized field, allowing a user to also specify task manually scheduled value.
+ This class inherits from the standard Ext JS &quot;checkbox&quot; field, so any usual `Ext.form.field.Checkbox` configs can be used.
+
+ @class Gnt.field.ManuallyScheduled
+ @extends Ext.form.field.Checkbox
+
+ */
+Ext.define('Gnt.field.ManuallyScheduled', {
+    extend                  : 'Ext.form.field.Checkbox',
+
+    mixins                  : ['Gnt.field.mixin.TaskField', 'Gnt.mixin.Localizable'],
+
+    alias                   : 'widget.manuallyscheduledfield',
+
+    alternateClassName      : ['Gnt.widget.ManuallyScheduledField'],
+
+<span id='Gnt-field-ManuallyScheduled-property-taskField'>    taskField               : 'manuallyScheduledField',
+</span><span id='Gnt-field-ManuallyScheduled-property-setTaskValueMethod'>    setTaskValueMethod      : 'setManuallyScheduled',
+</span><span id='Gnt-field-ManuallyScheduled-property-getTaskValueMethod'>    getTaskValueMethod      : 'isManuallyScheduled',
+</span>
+<span id='Gnt-field-ManuallyScheduled-method-valueToVisible'>    valueToVisible : function (value) {
+</span>        return value ? this.L('yes') : this.L('no');
+    },
+
+<span id='Gnt-field-ManuallyScheduled-method-getValue'>    getValue : function () {
+</span>        return this.value;
+    },
+
+<span id='Gnt-field-ManuallyScheduled-method-setValue'>    setValue : function (value) {
+</span>        this.callParent([ value ]);
+
+        if (this.instantUpdate &amp;&amp; !this.getSuppressTaskUpdate() &amp;&amp; this.task) {
+            // apply changes to task
+            this.applyChanges();
+        }
+    }
+});
+</pre>
+</body>
+</html>

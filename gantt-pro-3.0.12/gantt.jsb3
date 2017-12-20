@@ -1,0 +1,313 @@
+{
+    "name"          : "Ext Gantt",
+    "licenseText"   : "",
+
+    "builds"          : [
+        {
+            "name"      : "Ext Gantt",
+            "id"        : "ext-gantt",
+
+            "target"    : "gnt-all-debug.js",
+
+            "files"     : [
+                { "path"  : "../ExtScheduler3.x/sch-base-debug.js" },
+
+                { "path"  : "js/Gnt/patches/TreeColumn.js" },
+                { "path"  : "js/Gnt/patches/TaskStore.js" },
+
+                { "path"  : "js/Gnt/locale/En.js" },
+                { "path"  : "js/Gnt/mixin/Localizable.js" },
+
+                { "path"  : "js/Gnt/constraint/Base.js" },
+                { "path"  : "js/Gnt/constraint/StartNoEarlierThan.js" },
+                { "path"  : "js/Gnt/constraint/StartNoLaterThan.js" },
+                { "path"  : "js/Gnt/constraint/FinishNoEarlierThan.js" },
+                { "path"  : "js/Gnt/constraint/FinishNoLaterThan.js" },
+                { "path"  : "js/Gnt/constraint/MustStartOn.js" },
+                { "path"  : "js/Gnt/constraint/MustFinishOn.js" },
+
+                { "path"  : "js/Gnt/model/mixin/ProjectableModel.js" },
+                { "path"  : "js/Gnt/data/mixin/ProjectableStore.js" },
+
+                { "path"  : "js/Gnt/model/Calendar.js" },
+                { "path"  : "js/Gnt/model/CalendarDay.js" },
+                { "path"  : "js/Gnt/model/Week.js" },
+                { "path"  : "js/Gnt/model/Assignment.js" },
+                { "path"  : "js/Gnt/model/AssignmentEditing.js" },
+                { "path"  : "js/Gnt/model/Dependency.js" },
+                { "path"  : "js/Gnt/model/Resource.js" },
+                { "path"  : "js/Gnt/model/task/More.js" },
+                { "path"  : "js/Gnt/model/task/Constraints.js" },
+                { "path"  : "js/Gnt/model/task/Splittable.js" },
+                { "path"  : "js/Gnt/model/Task.js" },
+                { "path"  : "js/Gnt/model/TaskSegment.js" },
+                { "path"  : "js/Gnt/model/ProjectLine.js"},
+                { "path"  : "js/Gnt/model/Project.js"},
+
+                { "path"  : "js/Gnt/util/DurationParser.js" },
+                { "path"  : "js/Gnt/util/DependencyParser.js" },
+                { "path"  : "js/Gnt/util/Data.js" },
+
+                { "path"  : "js/Gnt/data/linearizator/CycleResolvers.js" },
+                { "path"  : "js/Gnt/data/Linearizator.js" },
+
+                { "path"  : "js/Gnt/widget/ConstraintResolutionForm.js" },
+                { "path"  : "js/Gnt/widget/ConstraintResolutionWindow.js" },
+                { "path"  : "js/Gnt/plugin/ConstraintResolutionGui.js" },
+
+                { "path"  : "js/Gnt/data/util/IdConsistencyManager.js" },
+                { "path"  : "js/Gnt/data/util/ModelPersistencyManager.js" },
+                { "path"  : "js/Gnt/data/Calendar.js" },
+                { "path"  : "js/Gnt/data/CalendarManager.js" },
+                { "path"  : "js/Gnt/data/calendar/BusinessTime.js" },
+                { "path"  : "js/Gnt/data/DependencyStore.js" },
+                { "path"  : "js/Gnt/data/ResourceStore.js" },
+                { "path"  : "js/Gnt/data/AssignmentStore.js" },
+                { "path"  : "js/Gnt/data/TaskStore.js" },
+                { "path"  : "js/Gnt/data/CrudManager.js" },
+
+                { "path"  : "js/Gnt/template/Template.js" },
+                { "path"  : "js/Gnt/template/Task.js" },
+                { "path"  : "js/Gnt/template/Milestone.js" },
+                { "path"  : "js/Gnt/template/ParentTask.js" },
+                { "path"  : "js/Gnt/template/RollupTask.js" },
+
+                { "path"  : "js/Gnt/Tooltip.js" },
+
+                { "path"  : "js/Gnt/feature/TaskDragDrop.js" },
+                { "path"  : "js/Gnt/feature/DependencyDragZone.js" },
+                { "path"  : "js/Gnt/feature/DependencyDropZone.js" },
+                { "path"  : "js/Gnt/feature/DependencyDragDrop.js" },
+                { "path"  : "js/Gnt/feature/DragCreator.js" },
+                { "path"  : "js/Gnt/feature/LabelEditor.js" },
+                { "path"  : "js/Gnt/feature/ProgressBarResize.js" },
+                { "path"  : "js/Gnt/feature/TaskResize.js" },
+                { "path"  : "js/Gnt/feature/WorkingTime.js" },
+
+                { "path"  : "js/Gnt/plugin/ProjectLines.js" },
+                { "path"  : "js/Gnt/plugin/DependencyEditor.js" },
+                { "path"  : "js/Gnt/plugin/TaskContextMenu.js" },
+                { "path"  : "js/Gnt/plugin/exporter/mixin/DependencyPainter.js" },
+                { "path"  : "js/Gnt/plugin/exporter/MultiPage.js" },
+                { "path"  : "js/Gnt/plugin/exporter/MultiPageVertical.js" },
+                { "path"  : "js/Gnt/plugin/exporter/SinglePage.js" },
+                { "path"  : "js/Gnt/plugin/Export.js" },
+                { "path"  : "js/Gnt/plugin/Printable.js" },
+
+                { "path"  : "js/Gnt/view/DependencyPainter.js" },
+                { "path"  : "js/Gnt/view/Dependency.js" },
+                { "path"  : "js/Gnt/view/Gantt.js" },
+                { "path"  : "js/Gnt/view/ResourceHistogram.js" },
+
+                { "path"  : "js/Gnt/column/Scale.js" },
+
+                { "path"  : "js/Gnt/field/mixin/TaskField.js" },
+                { "path"  : "js/Gnt/field/Date.js" },
+                { "path"  : "js/Gnt/field/EndDate.js" },
+                { "path"  : "js/Gnt/field/StartDate.js" },
+                { "path"  : "js/Gnt/field/Duration.js" },
+                { "path"  : "js/Gnt/field/Effort.js" },
+
+                { "path"  : "js/Gnt/field/ManuallyScheduled.js" },
+                { "path"  : "js/Gnt/field/ReadOnly.js" },
+                { "path"  : "js/Gnt/field/SchedulingMode.js" },
+
+                { "path"  : "js/Gnt/field/Calendar.js" },
+                { "path"  : "js/Gnt/field/Percent.js" },
+                { "path"  : "js/Gnt/field/Dependency.js" },
+                { "path"  : "js/Gnt/field/Milestone.js" },
+                { "path"  : "js/Gnt/field/ConstraintType.js" },
+                { "path"  : "js/Gnt/field/ConstraintDate.js" },
+                { "path"  : "js/Gnt/field/BaselineStartDate.js" },
+                { "path"  : "js/Gnt/field/BaselineEndDate.js" },
+
+                { "path"  : "js/Gnt/column/ResourceName.js" },
+                { "path"  : "js/Gnt/column/AssignmentUnits.js" },
+                { "path"  : "js/Gnt/widget/AssignmentGrid.js" },
+                { "path"  : "js/Gnt/field/Assignment.js" },
+                { "path"  : "js/Gnt/field/Note.js" },
+
+                { "path"  : "js/Gnt/column/ResourceAssignment.js" },
+
+                { "path"  : "js/Gnt/column/mixin/TaskFieldColumn.js" },
+                { "path"  : "js/Gnt/column/Name.js" },
+                { "path"  : "js/Gnt/column/Note.js" },
+                { "path"  : "js/Gnt/column/EndDate.js" },
+                { "path"  : "js/Gnt/column/PercentDone.js" },
+                { "path"  : "js/Gnt/column/StartDate.js" },
+                { "path"  : "js/Gnt/column/WBS.js" },
+                { "path"  : "js/Gnt/column/Sequence.js" },
+                { "path"  : "js/Gnt/column/ManuallyScheduled.js" },
+                { "path"  : "js/Gnt/column/SchedulingMode.js" },
+                { "path"  : "js/Gnt/column/AddNew.js" },
+                { "path"  : "js/Gnt/column/EarlyStartDate.js" },
+                { "path"  : "js/Gnt/column/EarlyEndDate.js" },
+                { "path"  : "js/Gnt/column/LateStartDate.js" },
+                { "path"  : "js/Gnt/column/LateEndDate.js" },
+                { "path"  : "js/Gnt/column/Slack.js" },
+                { "path"  : "js/Gnt/column/BaselineStartDate.js" },
+                { "path"  : "js/Gnt/column/BaselineEndDate.js" },
+                { "path"  : "js/Gnt/column/Milestone.js" },
+                { "path"  : "js/Gnt/column/Rollup.js" },
+                { "path"  : "js/Gnt/column/Calendar.js" },
+                { "path"  : "js/Gnt/column/ReadOnly.js" },
+
+                { "path"  : "js/Gnt/widget/AssignmentEditGrid.js" },
+                { "path"  : "js/Gnt/widget/DependencyGrid.js" },
+
+                { "path"  : "js/Gnt/widget/taskeditor/BaseForm.js" },
+                { "path"  : "js/Gnt/widget/taskeditor/TaskForm.js" },
+                { "path"  : "js/Gnt/widget/taskeditor/BaseEditor.js" },
+                { "path"  : "js/Gnt/widget/taskeditor/TaskEditor.js" },
+                { "path"  : "js/Gnt/widget/taskeditor/ProjectForm.js" },
+                { "path"  : "js/Gnt/widget/taskeditor/ProjectEditor.js" },
+
+                { "path"  : "js/Gnt/plugin/taskeditor/BaseEditor.js" },
+                { "path"  : "js/Gnt/plugin/taskeditor/TaskEditor.js" },
+                { "path"  : "js/Gnt/plugin/taskeditor/ProjectEditor.js" },
+
+                { "path"  : "js/Gnt/column/Dependency.js" },
+                { "path"  : "js/Gnt/column/Successor.js" },
+                { "path"  : "js/Gnt/column/Predecessor.js" },
+                { "path"  : "js/Gnt/column/Duration.js" },
+                { "path"  : "js/Gnt/column/Effort.js" },
+                { "path"  : "js/Gnt/column/ConstraintType.js" },
+                { "path"  : "js/Gnt/column/ConstraintDate.js" },
+
+                { "path"  : "js/Gnt/patches/ComboBox.js" },
+                { "path"  : "js/Gnt/widget/Calendar.js" },
+
+                { "path"  : "js/Gnt/widget/calendar/ResourceCalendarGrid.js" },
+                { "path"  : "js/Gnt/widget/calendar/AvailabilityGrid.js" },
+                { "path"  : "js/Gnt/widget/calendar/DayEditor.js" },
+                { "path"  : "js/Gnt/widget/calendar/WeekEditor.js" },
+                { "path"  : "js/Gnt/widget/calendar/DatePicker.js" },
+                { "path"  : "js/Gnt/widget/calendar/Calendar.js" },
+                { "path"  : "js/Gnt/widget/calendar/CalendarWindow.js" },
+                { "path"  : "js/Gnt/widget/calendar/CalendarManager.js" },
+                { "path"  : "js/Gnt/widget/calendar/CalendarManagerWindow.js" },
+
+                { "path"  : "js/Gnt/patches/IETreeStore.js" },
+                { "path"  : "js/Gnt/patches/CellEditor.js" },
+                { "path"  : "js/Gnt/patches/CellEditing.js" },
+                { "path"  : "js/Gnt/patches/Tooltip.js" },
+                { "path"  : "js/Gnt/patches/RightClick.js" },
+
+                { "path"  : "js/Gnt/panel/Gantt.js" },
+                { "path"  : "js/Gnt/panel/ResourceHistogram.js" }
+            ]
+        },
+
+        {
+            "name"      : "Ext Gantt Styles",
+            "id"        : "ext-gantt-styles",
+            "target"    : "resources/css/sch-gantt-all-debug.css",
+            "files"     : [
+                { "path"  : "../ExtScheduler3.x/resources/css/sch-base-debug.css" },
+
+                { "path"  : "resources/css/sch.gantt-classic.css" },
+                { "path"  : "resources/css/sch.gantt.tooltip.css" },
+                { "path"  : "resources/css/sch.gantt.assignmentgrid.css" },
+                { "path"  : "resources/css/sch.gantt.dependencyview.css" },
+                { "path"  : "resources/css/sch.gantt.dragcreator.css" },
+                { "path"  : "resources/css/sch.gantt.dragdrop.css" },
+                { "path"  : "resources/css/sch.gantt.task.css" },
+                { "path"  : "resources/css/sch.gantt.task-classic.css" },
+                { "path"  : "resources/css/sch.gantt.milestone.css" },
+                { "path"  : "resources/css/sch.gantt.milestone-classic.css" },
+                { "path"  : "resources/css/sch.gantt.parenttask.css" },
+                { "path"  : "resources/css/sch.gantt.parenttask-classic.css" },
+                { "path"  : "resources/css/sch.gantt.projecttask.css"},
+                { "path"  : "resources/css/sch.gantt.ganttpanel.css" },
+                { "path"  : "resources/css/sch.gantt.ganttview.css" },
+                { "path"  : "resources/css/sch.gantt.plugin.dependencyeditor.css" },
+                { "path"  : "resources/css/sch.gantt.plugin.printable.css" },
+                { "path"  : "resources/css/sch.gantt.progressbarresize.css" },
+                { "path"  : "resources/css/sch.gantt.resize.css" },
+                { "path"  : "resources/css/sch.gantt.column.duration.css" },
+                { "path"  : "resources/css/sch.gantt.column.addnew.css" },
+                { "path"  : "resources/css/sch.gantt.column.name.css" },
+                { "path"  : "resources/css/sch.gantt.widget.calendar.css" },
+                { "path"  : "resources/css/sch.gantt.widget.dependencygrid.css" },
+                { "path"  : "resources/css/sch.gantt.widget.taskeditor.taskform.css" },
+                { "path"  : "resources/css/sch.gantt.column.scale.css" },
+                { "path"  : "resources/css/sch.gantt.resourcehistogram.css" }
+            ]
+        },
+
+        {
+            "name"      : "Ext Gantt Crisp Styles",
+            "id"        : "ext-gantt-crisp-styles",
+            "target"    : "resources/css/sch-gantt-crisp-all-debug.css",
+            "files"     : [
+                { "path"  : "../ExtScheduler3.x/resources/css/sch-base-crisp-debug.css" },
+
+                { "path"  : "resources/css/sch.gantt-crisp.css" },
+                { "path"  : "resources/css/sch.gantt.tooltip.css" },
+                { "path"  : "resources/css/sch.gantt.assignmentgrid.css" },
+                { "path"  : "resources/css/sch.gantt.dependencyview.css" },
+                { "path"  : "resources/css/sch.gantt.dragcreator.css" },
+                { "path"  : "resources/css/sch.gantt.dragdrop.css" },
+                { "path"  : "resources/css/sch.gantt.task.css" },
+                { "path"  : "resources/css/sch.gantt.task-crisp.css" },
+                { "path"  : "resources/css/sch.gantt.milestone.css" },
+                { "path"  : "resources/css/sch.gantt.milestone-crisp.css" },
+                { "path"  : "resources/css/sch.gantt.parenttask.css" },
+                { "path"  : "resources/css/sch.gantt.parenttask-crisp.css" },
+                { "path"  : "resources/css/sch.gantt.projecttask.css"},
+                { "path"  : "resources/css/sch.gantt.ganttpanel.css" },
+                { "path"  : "resources/css/sch.gantt.ganttview.css" },
+                { "path"  : "resources/css/sch.gantt.plugin.dependencyeditor.css" },
+                { "path"  : "resources/css/sch.gantt.plugin.printable.css" },
+                { "path"  : "resources/css/sch.gantt.progressbarresize.css" },
+                { "path"  : "resources/css/sch.gantt.resize.css" },
+                { "path"  : "resources/css/sch.gantt.column.duration.css" },
+                { "path"  : "resources/css/sch.gantt.column.addnew.css" },
+                { "path"  : "resources/css/sch.gantt.widget.calendar.css" },
+                { "path"  : "resources/css/sch.gantt.widget.dependencygrid.css" },
+                { "path"  : "resources/css/sch.gantt.widget.taskeditor.taskform.css" },
+                { "path"  : "resources/css/sch.gantt.column.scale.css" },
+                { "path"  : "resources/css/sch.gantt.resourcehistogram.css" }
+            ]
+        },
+        {
+            "name"      : "Ext Gantt Neptune Styles",
+            "id"        : "ext-gantt-neptune-styles",
+            "target"    : "resources/css/sch-gantt-neptune-all-debug.css",
+            "files"     : [
+                { "path"  : "../ExtScheduler3.x/resources/css/sch-base-neptune-debug.css" },
+
+                { "path"  : "resources/css/sch.gantt-neptune.css" },
+                { "path"  : "resources/css/sch.gantt.tooltip.css" },
+                { "path"  : "resources/css/sch.gantt.assignmentgrid.css" },
+                { "path"  : "resources/css/sch.gantt.dependencyview.css" },
+                { "path"  : "resources/css/sch.gantt.dragcreator.css" },
+                { "path"  : "resources/css/sch.gantt.dragdrop.css" },
+                { "path"  : "resources/css/sch.gantt.task.css" },
+                { "path"  : "resources/css/sch.gantt.task-neptune.css" },
+                { "path"  : "resources/css/sch.gantt.milestone.css" },
+                { "path"  : "resources/css/sch.gantt.milestone-neptune.css" },
+                { "path"  : "resources/css/sch.gantt.parenttask.css" },
+                { "path"  : "resources/css/sch.gantt.parenttask-neptune.css" },
+                { "path"  : "resources/css/sch.gantt.projecttask.css"},
+                { "path"  : "resources/css/sch.gantt.ganttpanel.css" },
+                { "path"  : "resources/css/sch.gantt.ganttview.css" },
+                { "path"  : "resources/css/sch.gantt.plugin.dependencyeditor.css" },
+                { "path"  : "resources/css/sch.gantt.plugin.printable.css" },
+                { "path"  : "resources/css/sch.gantt.progressbarresize.css" },
+                { "path"  : "resources/css/sch.gantt.resize.css" },
+                { "path"  : "resources/css/sch.gantt.column.duration.css" },
+                { "path"  : "resources/css/sch.gantt.column.addnew.css" },
+                { "path"  : "resources/css/sch.gantt.widget.calendar.css" },
+                { "path"  : "resources/css/sch.gantt.widget.dependencygrid.css" },
+                { "path"  : "resources/css/sch.gantt.widget.taskeditor.taskform.css" },
+                { "path"  : "resources/css/sch.gantt.column.scale.css" },
+                { "path"  : "resources/css/sch.gantt.resourcehistogram.css" }
+            ]
+        }
+    ],
+
+
+    "resources"     : [
+    ]
+}

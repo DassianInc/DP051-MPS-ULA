@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">// https://www.sencha.com/forum/showthread.php?301772-Wrong-value-selected-in-combobox-editor
+Ext.define('Gnt.patches.CellEditing', {
+    extend : 'Sch.util.Patch',
+
+    requires   : ['Ext.grid.plugin.CellEditing'],
+    target     : 'Ext.grid.plugin.CellEditing',
+    minVersion : '5.1.1',
+
+    overrides : {
+        showEditor: function(ed, context, value) {
+            // clean lastSelectedRecords cache for combobox if record was changed
+            if (ed.context &amp;&amp; ed.context.record !== context.record &amp;&amp; 
+                ed.field instanceof Ext.form.field.ComboBox) {
+                ed.field.lastSelectedRecords = null;
+            }
+            this.callParent(arguments);
+        }
+    }
+});</pre>
+</body>
+</html>

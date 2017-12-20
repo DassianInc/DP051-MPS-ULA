@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-feature-ProgressBarResize'>/**
+</span>* @class Gnt.feature.ProgressBarResize
+*
+* Internal plugin enabling resizing of a task progress bar, configure this feature using the {@link Gnt.panel.Gantt#progressBarResizeConfig} config setting.
+*/
+Ext.define(&quot;Gnt.feature.ProgressBarResize&quot;, {
+    requires    : [
+        'Ext.ToolTip',
+        'Ext.resizer.Resizer'
+    ],
+
+<span id='Gnt-feature-ProgressBarResize-cfg-useTooltip'>    /**
+</span>    * @cfg {Boolean} useTooltip false to not show a tooltip while resizing. Defaults to true.
+    */
+    useTooltip  : true,
+
+<span id='Gnt-feature-ProgressBarResize-cfg-increment'>    /**
+</span>    * @cfg {Number} increment
+    * The increment in percent to use during a progress element resize
+    */
+    increment   : 10,
+
+<span id='Gnt-feature-ProgressBarResize-property-tip'>    tip         : null,
+</span><span id='Gnt-feature-ProgressBarResize-property-resizable'>    resizable   : null,
+</span><span id='Gnt-feature-ProgressBarResize-property-ganttView'>    ganttView   : null,
+</span>
+<span id='Gnt-feature-ProgressBarResize-method-constructor'>    constructor : function(config) {
+</span>        Ext.apply(this, config || {});
+        var g = this.ganttView;
+
+        g.on({
+            destroy : this.cleanUp,
+            scope   : this
+        });
+
+        g.el.on('mousedown', this.onMouseDown, this, { delegate: '.sch-gantt-progressbar-handle' });
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-feature-ProgressBarResize-method-onMouseDown'>    onMouseDown: function (e, t) {
+</span>        var g   = this.ganttView,
+            rec = g.resolveTaskRecord(t);
+
+        if (g.fireEvent('beforeprogressbarresize', g, rec) !== false) {
+            var progBar = Ext.fly(t).prev('.sch-gantt-progress-bar');
+
+            e.stopEvent();
+
+            progBar.addCls('active');
+
+            this.resizable = this.createResizable(progBar, rec, e);
+            g.fireEvent('progressbarresizestart', g, rec);
+
+            // If the mouse isn't moved after mousedown, no resize event will be fired by the Ext.Resizable. Handle this case manually
+            Ext.getBody().on('mouseup', this.onBodyMouseUp, this, { single : true, delay : 1 });
+        }
+    },
+
+<span id='Gnt-feature-ProgressBarResize-method-createResizable'>    // private
+</span>    createResizable: function (el, taskRecord, e) {
+        var rtl            = this.ganttView.rtl,
+            taskEl         = el.up(this.ganttView.eventSelector),
+            taskWidth      = taskEl.getWidth() - 2*this.ganttView.eventBorderWidth,
+            widthIncrement = taskWidth * this.increment / 100;
+
+        var rz = Ext.create('Ext.resizer.Resizer', {
+            target          : el,
+            taskRecord      : taskRecord,
+            handles         : rtl ? 'w' : 'e',
+            minWidth        : 0,
+            maxWidth        : taskWidth,
+            minHeight       : 1,
+            widthIncrement  : widthIncrement,
+            listeners       : {
+                resizedrag  : this.partialResize,
+                resize      : this.afterResize,
+                scope       : this
+            }
+        });
+        rz.resizeTracker.onMouseDown(e, rz[rtl ? 'west' : 'east'].dom);
+
+        taskEl.addCls('sch-gantt-resizing');
+
+        if (this.useTooltip) {
+            this.tip = Ext.create(&quot;Ext.ToolTip&quot;, {
+                autoHide    : false,
+                anchor      : 'b',
+                html        : '%'
+            });
+
+            this.tip.setTarget(el);
+            this.tip.update(taskRecord.getPercentDone() + '%');
+
+            this.tip.show();
+        }
+
+        return rz;
+    },
+
+<span id='Gnt-feature-ProgressBarResize-method-partialResize'>    // private
+</span>    partialResize: function (rz, newWidth) {
+        var percent = Math.round(newWidth * 100 / (rz.maxWidth * this.increment)) * this.increment;
+
+        if (this.tip) {
+            this.tip.body.update(percent + '%');
+        }
+    },
+
+<span id='Gnt-feature-ProgressBarResize-method-afterResize'>    // private
+</span>    afterResize: function (rz, w, h, e) {
+        var rec = rz.taskRecord;
+
+        if (this.tip) {
+            this.tip.destroy();
+            this.tip = null;
+        }
+
+        var old = rz.taskRecord.getPercentDone();
+
+        if (Ext.isNumber(w)) {
+            var percent = Math.round(w * 100 / (rz.maxWidth * this.increment)) * this.increment;
+
+            // Constrain between 0-100
+            percent = Math.min(100, Math.max(0, percent));
+
+            rz.taskRecord.setPercentDone(percent);
+        }
+
+        if (old === rz.taskRecord.getPercentDone()) {
+            // Value didn't change, manually refresh the row
+            this.ganttView.refreshNode(this.ganttView.indexOf(rz.taskRecord));
+        }
+
+        // Destroy resizable
+        rz.destroy();
+        this.resizable = null;
+
+        this.ganttView.fireEvent('afterprogressbarresize', this.ganttView, rec);
+    },
+
+<span id='Gnt-feature-ProgressBarResize-method-onBodyMouseUp'>    // If the new percent done is the same as the old, no resize event will be fired by the Ext.Resizable. Handle this case manually
+</span>    onBodyMouseUp : function() {
+        if (this.resizable) {
+            this.afterResize(this.resizable);
+        }
+    },
+
+<span id='Gnt-feature-ProgressBarResize-method-cleanUp'>    cleanUp: function () {
+</span>        if (this.tip) {
+            this.tip.destroy();
+        }
+    }
+});
+</pre>
+</body>
+</html>

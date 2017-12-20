@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bryntum 3.x API documentation</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="fragment" content="!">
+
+  
+
+  <link rel="shortcut icon" type="image/ico" href="favicon.ico" />
+  <link rel="stylesheet" href="resources/css/app-4689d2a5522dcd3c9e9923ca59c33f27.css" type="text/css" />
+  <link rel="stylesheet" href="styles-3eba09980fa05ead185cb17d9c0deb0f.css" type="text/css" />
+
+  <script type="text/javascript" src="extjs/ext-all.js"></script>
+  <script type="text/javascript" src="data-c8a37252169afe4c4cb8e7a0c372bbc1.js"></script>
+
+  <script type="text/javascript" src="app-0c945a27f43452df695771ddb60b3d14.js"></script>
+
+  <link rel='stylesheet' href='doc-resources/scheduler/css/bryntum.css' type='text/css' /> <script type="text/javascript">
+    var replacer = function (div) {
+        var baseURL = 'http://docs.sencha.com/extjs/5.1/5.1.0-apidocs/#!/api/';
+        div.innerHTML = div.innerHTML.replace(/(Ext\.\w+(?:\.\w+)*(?:#[\w-]+)?)/g, '<a href="' + baseURL + '$1" target="extdocs">$1</a>');
+        // jsduck adds "eOpts" param to all documented events with link to Ext.util.Observable.addListener
+        // this regexp replaces such links to correct ones
+        div.innerHTML = div.innerHTML.replace(/href="[^"]*Ext\.util\.Observable\.addListener"/g, 'href="' + baseURL + 'Ext.util.Observable-method-addListener"');
+        div.innerHTML = div.innerHTML.replace(/href="[^"]*Ext\.Ajax\.request"/g, 'href="' + baseURL + 'Ext.Ajax-method-request"');
+        div.innerHTML = div.innerHTML.replace(/href="[^"]*Ext\.data\.field\.Field\.persist"/g, 'href="' + baseURL + 'Ext.data.field.Field-cfg-persist"');
+        div.innerHTML = div.innerHTML.replace(/href="[^"]*Ext\.data\.field\.Field\.critical"/g, 'href="' + baseURL + 'Ext.data.field.Field-cfg-critical"');
+    };
+    Ext.override(Docs.view.cls.Overview, {
+        listeners  : {
+            'afterload' : function () {
+                Ext.each(this.el.query('div.title'), replacer);
+                Ext.each(this.el.query('div.subclass'), replacer);
+                Ext.each(this.el.query('div.dependency'), replacer);
+                Ext.each(this.el.query('div.doc-contents'), replacer);
+                Ext.each(this.el.query('div.long'), replacer);
+            }
+        }
+    });
+  </script>
+
+</head>
+<body id="ext-body">
+
+  <div id="loading"><span class="title">Bryntum 3.x API documentation</span><span class="logo"></span></div>
+
+  <div id="header-content">Bryntum 3.x API documentation</div>
+  
+            <div id='categories-content' style='display:none'>
+            <div class='section'>
+<h1>Gantt</h1>
+<div class='left-column'>
+<h3>Model</h3>
+<ul class='links'>
+<li><a href="#!/api/Gnt.model.Task" rel="Gnt.model.Task" class="docClass">Gnt.model.Task</a></li>
+<li><a href="#!/api/Gnt.model.Resource" rel="Gnt.model.Resource" class="docClass">Gnt.model.Resource</a></li>
+<li><a href="#!/api/Gnt.model.Dependency" rel="Gnt.model.Dependency" class="docClass">Gnt.model.Dependency</a></li>
+<li><a href="#!/api/Gnt.model.Assignment" rel="Gnt.model.Assignment" class="docClass">Gnt.model.Assignment</a></li>
+<li><a href="#!/api/Gnt.model.CalendarDay" rel="Gnt.model.CalendarDay" class="docClass">Gnt.model.CalendarDay</a></li>
+</ul>
+</div>
+<div class='middle-column'>
+<h3>Store</h3>
+<ul class='links'>
+<li><a href="#!/api/Gnt.data.TaskStore" rel="Gnt.data.TaskStore" class="docClass">Gnt.data.TaskStore</a></li>
+<li><a href="#!/api/Gnt.data.ResourceStore" rel="Gnt.data.ResourceStore" class="docClass">Gnt.data.ResourceStore</a></li>
+<li><a href="#!/api/Gnt.data.DependencyStore" rel="Gnt.data.DependencyStore" class="docClass">Gnt.data.DependencyStore</a></li>
+<li><a href="#!/api/Gnt.data.AssignmentStore" rel="Gnt.data.AssignmentStore" class="docClass">Gnt.data.AssignmentStore</a></li>
+<li><a href="#!/api/Gnt.data.Calendar" rel="Gnt.data.Calendar" class="docClass">Gnt.data.Calendar</a></li>
+</ul>
+<h3>Components</h3>
+<ul class='links'>
+<li><a href="#!/api/Gnt.panel.Gantt" rel="Gnt.panel.Gantt" class="docClass">Gnt.panel.Gantt</a></li>
+</ul>
+</div>
+<div class='right-column'>
+<h3>Plugins</h3>
+<ul class='links'>
+<li><a href="#!/api/Gnt.plugin.DependencyEditor" rel="Gnt.plugin.DependencyEditor" class="docClass">Gnt.plugin.DependencyEditor</a></li>
+<li><a href="#!/api/Gnt.plugin.Printable" rel="Gnt.plugin.Printable" class="docClass">Gnt.plugin.Printable</a></li>
+<li><a href="#!/api/Gnt.plugin.TaskContextMenu" rel="Gnt.plugin.TaskContextMenu" class="docClass">Gnt.plugin.TaskContextMenu</a></li>
+<li><a href="#!/api/Gnt.plugin.Export" rel="Gnt.plugin.Export" class="docClass">Gnt.plugin.Export</a></li>
+</ul>
+<h3>Columns</h3>
+<ul class='links'>
+<li><a href="#!/api/Gnt.column.StartDate" rel="Gnt.column.StartDate" class="docClass">Gnt.column.StartDate</a></li>
+<li><a href="#!/api/Gnt.column.EndDate" rel="Gnt.column.EndDate" class="docClass">Gnt.column.EndDate</a></li>
+<li><a href="#!/api/Gnt.column.Duration" rel="Gnt.column.Duration" class="docClass">Gnt.column.Duration</a></li>
+<li><a href="#!/api/Gnt.column.ResourceAssignment" rel="Gnt.column.ResourceAssignment" class="docClass">Gnt.column.ResourceAssignment</a></li>
+<li><a href="#!/api/Gnt.column.PercentDone" rel="Gnt.column.PercentDone" class="docClass">Gnt.column.PercentDone</a></li>
+</ul>
+</div>
+<div style='clear:both'></div>
+</div>
+<div class='section'>
+<h1>Scheduler</h1>
+<div class='left-column'>
+<h3>Model</h3>
+<ul class='links'>
+<li><a href="#!/api/Sch.model.Event" rel="Sch.model.Event" class="docClass">Sch.model.Event</a></li>
+<li><a href="#!/api/Sch.model.Resource" rel="Sch.model.Resource" class="docClass">Sch.model.Resource</a></li>
+<li><a href="#!/api/Sch.model.Range" rel="Sch.model.Range" class="docClass">Sch.model.Range</a></li>
+<li><a href="#!/api/Sch.model.Customizable" rel="Sch.model.Customizable" class="docClass">Sch.model.Customizable</a></li>
+</ul>
+</div>
+<div class='middle-column'>
+<h3>Store</h3>
+<ul class='links'>
+<li><a href="#!/api/Sch.data.EventStore" rel="Sch.data.EventStore" class="docClass">Sch.data.EventStore</a></li>
+<li><a href="#!/api/Sch.data.ResourceStore" rel="Sch.data.ResourceStore" class="docClass">Sch.data.ResourceStore</a></li>
+<li><a href="#!/api/Sch.data.ResourceTreeStore" rel="Sch.data.ResourceTreeStore" class="docClass">Sch.data.ResourceTreeStore</a></li>
+<li><a href="#!/api/Sch.data.TimeAxis" rel="Sch.data.TimeAxis" class="docClass">Sch.data.TimeAxis</a></li>
+</ul>
+<h3>Components</h3>
+<ul class='links'>
+<li><a href="#!/api/Sch.panel.SchedulerGrid" rel="Sch.panel.SchedulerGrid" class="docClass">Sch.panel.SchedulerGrid</a></li>
+<li><a href="#!/api/Sch.panel.SchedulerTree" rel="Sch.panel.SchedulerTree" class="docClass">Sch.panel.SchedulerTree</a></li>
+<li><a href="#!/api/Sch.preset.Manager" rel="Sch.preset.Manager" class="docClass">Sch.preset.Manager</a></li>
+</ul>
+</div>
+<div class='right-column'>
+<h3>Plugins</h3>
+<ul class='links'>
+<li><a href="#!/api/Sch.plugin.Printable" rel="Sch.plugin.Printable" class="docClass">Sch.plugin.Printable</a></li>
+<li><a href="#!/api/Sch.plugin.Lines" rel="Sch.plugin.Lines" class="docClass">Sch.plugin.Lines</a></li>
+<li><a href="#!/api/Sch.plugin.CurrentTimeLine" rel="Sch.plugin.CurrentTimeLine" class="docClass">Sch.plugin.CurrentTimeLine</a></li>
+<li><a href="#!/api/Sch.plugin.DragSelector" rel="Sch.plugin.DragSelector" class="docClass">Sch.plugin.DragSelector</a></li>
+<li><a href="#!/api/Sch.plugin.EventEditor" rel="Sch.plugin.EventEditor" class="docClass">Sch.plugin.EventEditor</a></li>
+<li><a href="#!/api/Sch.plugin.Pan" rel="Sch.plugin.Pan" class="docClass">Sch.plugin.Pan</a></li>
+<li><a href="#!/api/Sch.plugin.SimpleEditor" rel="Sch.plugin.SimpleEditor" class="docClass">Sch.plugin.SimpleEditor</a></li>
+<li><a href="#!/api/Sch.plugin.Zones" rel="Sch.plugin.Zones" class="docClass">Sch.plugin.Zones</a></li>
+<li><a href="#!/api/Sch.plugin.TimeGap" rel="Sch.plugin.TimeGap" class="docClass">Sch.plugin.TimeGap</a></li>
+<li><a href="#!/api/Sch.plugin.Export" rel="Sch.plugin.Export" class="docClass">Sch.plugin.Export</a></li>
+</ul>
+<h3>Utility</h3>
+<ul class='links'>
+<li><a href="#!/api/Sch.util.Date" rel="Sch.util.Date" class="docClass">Sch.util.Date</a></li>
+</ul>
+</div>
+<div style='clear:both'></div>
+</div>
+          </div>
+
+  
+          <div id='guides-content' style='display:none'>
+            <h3>Ext Gantt 3.0 Guides</h3>
+<ul>
+<li><a href='#!/guide/gantt_getting_started'>Getting Started with Ext Gantt 3</a></li>
+<li><a href='#!/guide/gantt_styling_guide'>Styling and customizing Ext Gantt 3</a></li>
+<li><a href='#!/guide/gantt_ext_styling_guide'>Using Ext functionality for styling and customizing Ext Gantt 3</a></li>
+<li><a href='#!/guide/gantt_data_integration'>Data integration guide</a></li>
+<li><a href='#!/guide/gantt_calendars'>Using calendars</a></li>
+<li><a href='#!/guide/gantt_scheduler_localization'>Localizing Scheduler and Gantt</a></li>
+<li><a href='#!/guide/gantt_split_task'>Splitting tasks</a></li>
+<li><a href='#!/guide/crud_manager'>CRUD manager general information</a></li>
+<li><a href='#!/guide/gantt_crud_manager'>Using CRUD manager with Ext Gantt</a></li>
+<li><a href='#!/guide/gantt_constraints'>Using task constraints in Ext Gantt 3</a></li>
+</ul>
+<h3>Ext Scheduler 3.0 Guides</h3>
+<ul>
+<li><a href='#!/guide/scheduler_getting_started'>Getting Started with Ext Scheduler 3.</a></li>
+<li><a href='#!/guide/scheduler_extension'>Sencha Architect 3 extension</a></li>
+</ul>
+        </div>
+
+  <div id='footer-content' style='display: none'>Generated on Mon 04 Apr 2016 08:04:11 by <a href='https://github.com/senchalabs/jsduck'>JSDuck</a> 5.3.4.</div>
+
+  <div id="notice-text" style="display : none">
+    <p>Links to other resources:</p>
+    <ul>
+        <li>
+            <a href="http://www.bryntum.com/docs/scheduling/1.x">1.x API documentation</a>
+        </li>
+        <li>
+            <a href="http://www.bryntum.com/docs/scheduling/2.x">2.x API documentation</a>
+        </li>
+        <li>
+            <a href="http://www.bryntum.com/forum/index.php">Community forum</a>
+        </li>
+        <li>
+            <a href="https://www.assembla.com/spaces/bryntum/support/tickets">Issues tracker</a>
+        </li>
+    </ul>
+</div>
+
+  <script type="text/javascript">
+  (function(){
+    var protocol = (document.location.protocol === "https:") ? "https:" : "http:";
+    document.write("<link href='"+protocol+"//fonts.googleapis.com/css?family=Exo' rel='stylesheet' type='text/css' />");
+  })();
+  </script>
+
+</body>
+</html>

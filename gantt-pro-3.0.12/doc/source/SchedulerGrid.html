@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-panel-SchedulerGrid'>/** 
+</span>
+@class Sch.panel.SchedulerGrid
+@extends Sch.panel.TimelineGridPanel
+@mixin Sch.mixin.SchedulerPanel
+
+@alternateClassName Sch.SchedulerPanel
+
+A scheduler panel based on the {@link Ext.grid.Panel} class which allows you to visualize and manage &quot;resources&quot; and their scheduled &quot;events&quot;.
+
+Please refer to the &lt;a href=&quot;#!/guide/scheduler_getting_started&quot;&gt;getting started guide&lt;/a&gt; for a detailed introduction.
+
+{@img scheduler/images/ext-scheduler.png}
+
+*/
+Ext.define(&quot;Sch.panel.SchedulerGrid&quot;, {
+    extend                  : &quot;Sch.panel.TimelineGridPanel&quot;,
+    mixins                  : [ 
+        'Sch.mixin.SchedulerPanel'
+    ],
+    alias                   : [ 'widget.schedulergrid', 'widget.schedulerpanel'],
+    alternateClassName      : 'Sch.SchedulerPanel',
+<span id='Sch-panel-SchedulerGrid-property-viewType'>    viewType                : 'schedulergridview',
+</span>
+<span id='Sch-panel-SchedulerGrid-method-initComponent'>    initComponent : function() {
+</span>        this.callParent(arguments);
+        this.getSchedulingView()._initializeSchedulerView();
+    }
+
+}, function() {
+    this.override(Sch.mixin.SchedulerPanel.prototype.inheritables() || {});
+});</pre>
+</body>
+</html>

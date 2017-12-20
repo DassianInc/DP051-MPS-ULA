@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">/*
+@class Gnt.Tooltip
+@extends Ext.ToolTip
+@private
+
+Internal plugin showing task start/end/duration information for a single task.
+*/
+Ext.define(&quot;Gnt.Tooltip&quot;, {
+    extend      : 'Ext.ToolTip',
+    alias       : 'widget.gantt_task_tooltip',
+
+    requires    : ['Ext.Template'],
+
+    mixins      : ['Gnt.mixin.Localizable'],
+
+    /*
+     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - startText       : 'Starts: ',
+            - endText         : 'Ends: ',
+            - durationText    : 'Duration:'
+     */
+
+    /*
+     * @cfg {String} mode Either &quot;startend&quot; - showing start date and end date, or &quot;duration&quot; to show start date and duration
+     */
+    mode            : 'startend',
+
+    autoHide        : false,
+    anchor          : 'b-tl',
+    maskOnDisable   : false,
+
+    /*
+     * @cfg {Ext.Template} template An HTML snippet used for the tooltip display.
+     * In &quot;startend&quot; mode, it will receive a data object containing &quot;startText&quot;, &quot;endText&quot; and &quot;task&quot; (the entire task) properties.
+     * In &quot;duration&quot; mode, it will receive a data object containing &quot;startText&quot;, &quot;duration&quot;, &quot;unit&quot; and &quot;task&quot; (the entire task) properties.
+     */
+    template : null,
+
+    initComponent : function() {
+        this.rtl = this.gantt.rtl;
+
+        if (this.mode === 'startend' &amp;&amp; !this.template) {
+            this.template = new Ext.Template(
+                '&lt;div class=&quot;sch-timetipwrap {cls}&quot;&gt;' +
+                    '&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot;&gt;' +
+                        '&lt;tr&gt;&lt;td class=&quot;sch-gantt-tip-desc&quot;&gt;' + this.L('startText') + '&lt;/td&gt;&lt;td class=&quot;sch-gantt-tip-value&quot;&gt;{startText}&lt;/td&gt;&lt;/tr&gt;' +
+                        '&lt;tr&gt;&lt;td class=&quot;sch-gantt-tip-desc&quot;&gt;' + this.L('endText') + '&lt;/td&gt;&lt;td class=&quot;sch-gantt-tip-value&quot;&gt;{endText}&lt;/td&gt;&lt;/tr&gt;' +
+                    '&lt;/table&gt;' +
+                '&lt;/div&gt;'
+            ).compile();
+        }
+
+        if (this.mode === 'duration' &amp;&amp; !this.template) {
+            this.template = new Ext.Template(
+                '&lt;div class=&quot;sch-timetipwrap {cls}&quot;&gt;',
+                '&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot;&gt;' +
+                    '&lt;tr&gt;&lt;td class=&quot;sch-gantt-tip-desc&quot;&gt;' + this.L('startText') + '&lt;/td&gt;&lt;td class=&quot;sch-gantt-tip-value&quot;&gt; {startText}&lt;/td&gt;&lt;/tr&gt;',
+                    '&lt;tr&gt;&lt;td class=&quot;sch-gantt-tip-desc&quot;&gt;' + this.L('durationText') + '&lt;/td&gt;&lt;td class=&quot;sch-gantt-tip-value&quot;&gt; {duration} {unit}' + '&lt;/td&gt;&lt;/tr&gt;',
+                '&lt;/table&gt;' +
+                '&lt;/div&gt;'
+            ).compile();
+        }
+
+        this.callParent(arguments);
+
+        this.update(this.template.apply({}));
+        this.addCls('gnt-tooltip');
+    },
+
+
+
+    updateContent : function (start, end, valid, taskRecord) {
+        var content;
+
+        if (this.mode === 'duration') {
+            content = this.getDurationContent(start, end, valid, taskRecord);
+        } else {
+            content = this.getStartEndContent(start, end, valid, taskRecord);
+        }
+
+        this.update(content);
+    },
+
+
+    // private
+    getStartEndContent : function(start, end, valid, taskRecord) {
+        var gantt       = this.gantt,
+            startText   = gantt.getFormattedDate(start),
+            endText     = startText;
+
+        if (end - start &gt; 0) {
+            endText = gantt.getFormattedEndDate(end, start);
+        }
+
+        var retVal = {
+            cls         : valid ? 'sch-tip-ok' : 'sch-tip-notok',
+            startText   : startText,
+            endText     : endText,
+            task        : taskRecord
+        };
+
+        return this.template.apply(retVal);
+    },
+
+
+    getDurationContent : function(start, end, valid, taskRecord) {
+        var unit        = taskRecord.getDurationUnit() || Sch.util.Date.DAY;
+        var duration    = taskRecord.calculateDuration(start, end, unit);
+
+        return this.template.apply({
+            cls         : valid ? 'sch-tip-ok' : 'sch-tip-notok',
+            startText   : this.gantt.getFormattedDate(start),
+            duration    : parseFloat(Ext.Number.toFixed(duration, 1)),
+            unit        : Sch.util.Date.getReadableNameOfUnit(unit, duration &gt; 1),
+            task        : taskRecord
+        });
+    },
+
+
+    show : function(el, xPos) {
+        if (el &amp;&amp; (el.dom || el.className)) {
+            this.setTarget(el);
+        }
+
+        this.callParent([]);
+
+        // Must do this after callParent where rendering takes place
+        if (xPos !== undefined) {
+            this.setX(xPos);
+        }
+    }
+});
+</pre>
+</body>
+</html>

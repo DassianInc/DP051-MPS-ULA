@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-ReadOnly'>/**
+</span>
+ @class Gnt.column.ReadOnly
+ @extends Ext.grid.Column
+
+ A Column which displays if the task is readonly.
+ */
+
+
+
+Ext.define(&quot;Gnt.column.ReadOnly&quot;, {
+    extend              : &quot;Ext.grid.Column&quot;,
+    alias               : [
+        &quot;widget.readonlycolumn&quot;,
+        &quot;widget.ganttcolumn.readonly&quot;
+    ],
+
+    mixins              : ['Gnt.column.mixin.TaskFieldColumn'],
+
+<span id='Gnt-column-ReadOnly-property-fieldProperty'>    fieldProperty       : 'readOnlyField',
+</span>
+<span id='Gnt-column-ReadOnly-property-defaultEditor'>    defaultEditor       : 'readonlyfield',
+</span>
+<span id='Gnt-column-ReadOnly-property-editor'>    editor              : 'readonlyfield',
+</span>
+<span id='Gnt-column-ReadOnly-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn();
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-ReadOnly-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        return this.field.valueToVisible(value);
+    }
+
+});
+</pre>
+</body>
+</html>

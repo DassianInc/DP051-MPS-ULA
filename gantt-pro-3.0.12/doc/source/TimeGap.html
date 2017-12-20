@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-TimeGap'>/**
+</span> @class Sch.plugin.TimeGap
+ @extends Sch.plugin.Zones
+
+ Plugin (ptype = 'scheduler_timegap') for highlighting unallocated slots of time for all resources. You can use the {@link #getZoneCls} method to customize the CSS class of the &quot;gaps&quot;.
+
+ {@img scheduler/images/plugin-timegap.png}
+
+ To add this plugin to scheduler:
+
+        var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+            ...
+
+            resourceStore   : resourceStore,
+            eventStore      : eventStore,
+
+            plugins         : [
+                Ext.create('Sch.plugin.TimeGap', {
+
+                    getZoneCls : function (startDate, endDate) {
+                        return 'myGapCls'
+                    }
+                })
+            ]
+        });
+
+ */
+Ext.define(&quot;Sch.plugin.TimeGap&quot;, {
+    extend   : &quot;Sch.plugin.Zones&quot;,
+    alias    : &quot;plugin.scheduler_timegap&quot;,
+
+    requires : [
+        'Ext.data.JsonStore',
+        'Sch.model.Range'
+    ],
+
+<span id='Sch-plugin-TimeGap-cfg-store'>    /**
+</span>     * @cfg {Ext.data.Store} store
+     * @hide
+     */
+
+<span id='Sch-plugin-TimeGap-method-getZoneCls'>    /**
+</span>     * @template
+     * An empty function by default, but provided so that you can return a custom CSS class for each unallocated zone area
+     * @param {Date} start The start date of the unallocated time slot
+     * @param {Date} end The end date of the unallocated time slot
+     * @return {String} The CSS class to be applied to the zone element
+     */
+    getZoneCls : Ext.emptyFn,
+
+<span id='Sch-plugin-TimeGap-method-init'>    init : function (scheduler) {
+</span>
+        this.store = new Ext.data.JsonStore({
+            model : 'Sch.model.Range'
+        });
+
+        this.scheduler = scheduler;
+
+        scheduler.mon(scheduler.eventStore, {
+            load        : this.populateStore,
+            update      : this.populateStore,
+            remove      : this.populateStore,
+            add         : this.populateStore,
+            datachanged : this.populateStore,
+            scope       : this
+        });
+
+        scheduler.on('afterrender', this.populateStore, this);
+
+        this.schedulerView = scheduler.getSchedulingView();
+
+        this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-TimeGap-method-populateStore'>    populateStore : function (eventStore) {
+</span>        var eventsInView = this.schedulerView.getEventsInView(),
+            timeGaps     = [],
+            viewStart    = this.scheduler.getStart(),
+            viewEnd      = this.scheduler.getEnd(),
+            l            = eventsInView.getCount(),
+            cursor       = viewStart,
+            index        = 0,
+            eventStart,
+            r;
+
+        // Sort by start time
+        eventsInView.sortBy(function (r1, r2) {
+            return r1.getStartDate() - r2.getStartDate();
+        });
+
+        r = eventsInView.getAt(0);
+
+        while (cursor &lt; viewEnd &amp;&amp; index &lt; l) {
+            eventStart = r.getStartDate();
+
+            if (!Sch.util.Date.betweenLesser(cursor, eventStart, r.getEndDate()) &amp;&amp; cursor &lt; eventStart) {
+                timeGaps.push(new this.store.model({
+                    StartDate : cursor,
+                    EndDate   : eventStart,
+                    Cls       : this.getZoneCls(cursor, eventStart) || ''
+                }));
+            }
+            cursor = Sch.util.Date.max(r.getEndDate(), cursor);
+            index++;
+            r = eventsInView.getAt(index);
+        }
+
+        // Check if there's a gap between last cursor and view end time
+        if (cursor &lt; viewEnd) {
+            timeGaps.push(new this.store.model({
+                StartDate : cursor,
+                EndDate   : viewEnd,
+                Cls       : this.getZoneCls(cursor, viewEnd) || ''
+            }));
+        }
+
+        // Don't refresh twice, the add will cause the zones to redraw
+        this.store.removeAll(timeGaps.length &gt; 0);
+        this.store.add(timeGaps);
+    }
+});
+</pre>
+</body>
+</html>

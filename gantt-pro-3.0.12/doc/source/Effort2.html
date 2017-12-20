@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Effort'>/**
+</span>
+@class Gnt.column.Effort
+@extends Gnt.column.Duration
+
+{@img gantt/images/duration-field.png}
+
+A Column representing a `Effort` field of a task. The column is editable, however to enable the editing you will need to add a
+`Sch.plugin.TreeCellEditing` plugin to your gantt panel. The overall setup will look like this:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        // Setup your grid columns
+        columns         : [
+            ...
+            {
+                xtype       : 'effortcolumn',
+                width       : 70
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+This column uses a field - {@link Gnt.field.Effort} which allows the
+user to specify not only the duration value, but also the duration units.
+
+When rendering the name of the duration unit, the {@link Sch.util.Date#getReadableNameOfUnit}
+method will be used to retrieve the name of the unit.
+
+*/
+Ext.define('Gnt.column.Effort', {
+    extend                  : 'Gnt.column.Duration',
+
+    alias                   : [
+        'widget.effortcolumn',
+        'widget.ganttcolumn.effort'
+    ],
+
+    requires                : ['Gnt.field.Effort'],
+
+<span id='Gnt-column-Effort-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+        - text : 'Effort'
+     */
+
+<span id='Gnt-column-Effort-cfg-decimalPrecision'>    /**
+</span>     * @cfg {Number} decimalPrecision A number of digits to show after the dot when rendering the value of the field or when editing it.
+     * When set to 0, the effort values containing decimals part (like &quot;6.5 days&quot;) will be considered invalid.
+     */
+
+    fieldProperty           : 'effortField',
+
+<span id='Gnt-column-Effort-property-editor'>    editor                  : 'effortfield',
+</span>
+<span id='Gnt-column-Effort-property-defaultEditor'>    defaultEditor           : 'effortfield',
+</span>
+<span id='Gnt-column-Effort-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        if (!Ext.isNumber(value)) return '';
+
+        return this.field.valueToVisible(value, task.getEffortUnit());
+    }
+
+});
+</pre>
+</body>
+</html>

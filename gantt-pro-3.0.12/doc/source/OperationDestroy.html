@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">Ext.define('Sch.patches.OperationDestroy', {
+    extend      : 'Sch.util.Patch',
+
+    requires    : ['Ext.data.operation.Destroy'],
+    target      : 'Ext.data.operation.Destroy',
+
+    minVersion  : '5.1.1',
+
+    maxVersion  : '5.1.2',
+
+    overrides   : {
+        doProcess   : function () {
+            // clientRecords record size gets down on each clientRecords[i].setErased() call
+            // so we make a copy by slicing this.getRecords()
+            var clientRecords = Ext.Array.slice(this.getRecords()),
+                clientLen = clientRecords.length,
+                i;
+            for (i = 0; i &lt; clientLen; ++i) {
+                clientRecords[i].setErased();
+            }
+        }
+    }
+});</pre>
+</body>
+</html>

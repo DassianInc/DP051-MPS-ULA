@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-crud-encoder-Xml'>/**
+</span>@class Sch.crud.encoder.Xml
+Implements data encoding functional that should be mixed to a {@link Sch.crud.AbstractManager} sub-class.
+Uses _XML_ as an encoding system.
+
+    // let's make new CrudManager using AJAX as a transport system and XML for encoding
+    Ext.define('MyCrudManager', {
+        extend  : 'Sch.crud.AbstractManager',
+
+        mixins  : ['Sch.crud.encoder.Xml', 'Sch.crud.transport.Ajax']
+    });
+
+# Request structure
+
+Load request example:
+
+    &lt;load requestId=&quot;123890&quot;&gt;
+        &lt;store id=&quot;store1&quot; page=&quot;1&quot; pageSize=&quot;10&quot;/&gt;
+        &lt;store id=&quot;store2&quot;/&gt;
+        &lt;store id=&quot;store3&quot;/&gt;
+    &lt;/load&gt;
+
+Sync request:
+
+    &lt;sync requestId=&quot;123890&quot; revision=&quot;123&quot;&gt;
+        &lt;store id=&quot;store1&quot;&gt;
+            &lt;added&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;$PhantomId&quot;&gt;q1w2e3r4t5&lt;/field&gt;
+                    &lt;field id=&quot;SomeField&quot;&gt;smth&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+                ...
+            &lt;/added&gt;
+            &lt;updated&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;123&lt;/field&gt;
+                    &lt;field id=&quot;SomeField&quot;&gt;new value&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+                ...
+            &lt;/updated&gt;
+            &lt;removed&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;345&lt;/field&gt;
+                &lt;/record&gt;
+                ...
+            &lt;/removed&gt;
+        &lt;/store&gt;
+
+        &lt;store id=&quot;store2&quot;&gt;
+            &lt;added&gt;...&lt;/added&gt;
+            &lt;updated&gt;...&lt;/updated&gt;
+            &lt;removed&gt;...&lt;/removed&gt;
+        &lt;/store&gt;
+    &lt;/sync&gt;
+
+# Response structure
+
+Load response example:
+
+    &lt;data requestId=&quot;123890&quot; revision=&quot;123&quot; success=&quot;true&quot;&gt;
+
+        &lt;store id=&quot;store1&quot;&gt;
+            &lt;rows total=&quot;5&quot;&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;9000&lt;/field&gt;
+                    &lt;field id=&quot;SomeField&quot;&gt;xxxx&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;123&lt;/field&gt;
+                    &lt;field id=&quot;SomeField&quot;&gt;yyyy&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+            &lt;/rows&gt;
+        &lt;/store&gt;
+
+        &lt;store id=&quot;store2&quot;&gt;
+            &lt;rows total=&quot;2&quot;&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;1&lt;/field&gt;
+                    &lt;field id=&quot;Field1&quot;&gt;aaa&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;2&lt;/field&gt;
+                    &lt;field id=&quot;Field1&quot;&gt;bbb&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+            &lt;/rows&gt;
+        &lt;/store&gt;
+
+        &lt;store id=&quot;store3&quot;&gt;
+            &lt;rows total=&quot;2&quot;&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;1&lt;/field&gt;
+                    &lt;field id=&quot;Field2&quot;&gt;aaa&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;2&lt;/field&gt;
+                    &lt;field id=&quot;Field2&quot;&gt;bbb&lt;/field&gt;
+                    ...
+                &lt;/record&gt;
+            &lt;/rows&gt;
+        &lt;/store&gt;
+    &lt;/data&gt;
+
+Sync response:
+
+    &lt;data requestId=&quot;123890&quot; success=&quot;true&quot; revision=&quot;124&quot;&gt;
+        &lt;store id=&quot;store1&quot;&gt;
+            &lt;rows&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;$PhantomId&quot;&gt;q1w2e3r4t5&lt;/field&gt;
+                    &lt;field id=&quot;Id&quot;&gt;9000&lt;/field&gt;
+                &lt;/record&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;123&lt;/field&gt;
+                    &lt;field id=&quot;SomeField2&quot;&gt;2013-08-01&lt;/field&gt;
+                &lt;/record&gt;
+            &lt;/rows&gt;
+            &lt;removed&gt;
+                &lt;record&gt;
+                    &lt;field id=&quot;Id&quot;&gt;345&lt;/field&gt;
+                &lt;/record&gt;
+                ...
+            &lt;/removed&gt;
+        &lt;/store&gt;
+
+        &lt;store id=&quot;store2&quot;&gt;
+            &lt;rows&gt;...&lt;/rows&gt;
+            &lt;removed&gt;...&lt;/removed&gt;
+        &lt;/store&gt;
+    &lt;/data&gt;
+
+# Error response
+
+    &lt;data requestId=&quot;123890&quot; success=&quot;true&quot; code=&quot;13&quot;&gt;
+        &lt;message&gt;Error description goes here&lt;/message&gt;
+    &lt;/data&gt;
+
+*/
+Ext.define(&quot;Sch.crud.encoder.Xml&quot;, {
+
+    requires        : ['Ext.XTemplate'],
+
+<span id='Sch-crud-encoder-Xml-property-format'>    format          : 'xml',
+</span>
+<span id='Sch-crud-encoder-Xml-property-stringReplaces'>    stringReplaces  : [
+</span>        [ /&amp;/g, '&amp;amp;' ],
+        [ /&lt;/g, '&amp;lt;' ],
+        [ /&gt;/g, '&amp;gt;' ],
+        [ /&quot;/g, '&amp;quot;' ]
+    ],
+
+<span id='Sch-crud-encoder-Xml-method-encodeString'>    // Translates a string characters to XML safe ones
+</span>    encodeString : function (text) {
+        if (!text) return text;
+
+        var result      = text.toString(),
+            replaces    = this.stringReplaces;
+        for (var i = 0, l = replaces.length; i &lt; l; i++) {
+            result  = result.replace(replaces[i][0], replaces[i][1]);
+        }
+
+        return result;
+    },
+
+<span id='Sch-crud-encoder-Xml-method-encodeRecords'>    encodeRecords : function (records) {
+</span>        var result = '';
+        for (var i = 0, l = records.length; i &lt; l; i++) {
+            result += this.encodeRecord(records[i]);
+        }
+        return result;
+    },
+
+<span id='Sch-crud-encoder-Xml-method-encodeRecord'>    encodeRecord : function (record) {
+</span>        var result = '&lt;record&gt;';
+
+        for (var i in record) {
+            var field   = record[i];
+
+            result  += '&lt;field id=&quot;' + this.encodeString(i) + '&quot;&gt;' +
+                (field &amp;&amp; field.$store ? this.encodeStoreChanges({ storeId : i }, field) : this.encodeString(field)) +
+                '&lt;/field&gt;';
+        }
+
+        result += '&lt;/record&gt;';
+
+        return result;
+    },
+
+<span id='Sch-crud-encoder-Xml-method-encodeStoreChanges'>    encodeStoreChanges : function (store, changes) {
+</span>        var result = '&lt;store id=&quot;' + this.encodeString(store.storeId) + '&quot;&gt;';
+
+        if (changes.added) {
+            result += '&lt;added&gt;' + this.encodeRecords(changes.added) + '&lt;/added&gt;';
+        }
+        if (changes.updated) {
+            result += '&lt;updated&gt;' + this.encodeRecords(changes.updated) + '&lt;/updated&gt;';
+        }
+        if (changes.removed) {
+            result += '&lt;removed&gt;' + this.encodeRecords(changes.removed) + '&lt;/removed&gt;';
+        }
+
+        result += '&lt;/store&gt;';
+
+        return result;
+    },
+
+<span id='Sch-crud-encoder-Xml-method-encode'>    /**
+</span>     * Encodes an request object to _XML_ encoded string. The formats of requests are displayed in an intro.
+     * @param {Object} request The request to encode.
+     */
+    encode : function (packet) {
+        var result, i, l, store;
+
+        switch (packet.type) {
+            case 'load':
+                result = '&lt;load requestId=&quot;' + this.encodeString(packet.requestId) + '&quot;&gt;';
+
+                for (i = 0, l = packet.stores.length; i &lt; l; i ++) {
+                    store   = packet.stores[i];
+
+                    if (typeof store === 'string') {
+                        result += '&lt;store id=&quot;' + this.encodeString(store) + '&quot;/&gt;';
+                    } else {
+                        result += '&lt;store id=&quot;' + this.encodeString(store.storeId) + '&quot; page=&quot;' +
+                            this.encodeString(store.page) + '&quot; pageSize=&quot;' + this.encodeString(store.pageSize) + '&quot;/&gt;';
+                    }
+                }
+
+                result += '&lt;/load&gt;';
+
+                return result;
+
+            case 'sync':
+                result = '&lt;sync requestId=&quot;' + this.encodeString(packet.requestId) + '&quot; revision=&quot;' + this.encodeString(packet.revision) + '&quot;&gt;';
+                for (i in packet) {
+                    if (packet.hasOwnProperty(i)) {
+                        store   = this.getStore(i);
+
+                        if (store) {
+                            result += this.encodeStoreChanges(store, packet[i]);
+                        }
+                    }
+                }
+                result += '&lt;/sync&gt;';
+                break;
+        }
+
+        return result;
+    },
+
+
+<span id='Sch-crud-encoder-Xml-method-stringToXML'>    stringToXML : function (text) {
+</span>        if (!text) return;
+
+        var document;
+
+        /*global DOMParser: false, ActiveXObject: false */
+
+        if (window.DOMParser) {
+            document    = (new DOMParser()).parseFromString(text, 'text/xml');
+        } else if (window.ActiveXObject) {
+            document        = new ActiveXObject('Microsoft.XMLDOM');
+            document.async  = false;
+            document.loadXML(text);
+        }
+
+        return document;
+    },
+
+
+<span id='Sch-crud-encoder-Xml-method-decodeRecords'>    decodeRecords : function (rows) {
+</span>        var result   = [];
+
+        for (var j = 0, m = rows.length; j &lt; m; j++) {
+            result.push( this.decodeRecord(rows[j]) );
+        }
+
+        return result;
+    },
+
+
+<span id='Sch-crud-encoder-Xml-method-decodeRecord'>    decodeRecord : function (node) {
+</span>        var fields  = node.childNodes,
+            result  = {},
+            value;
+
+        for (var i = 0, l = fields.length; i &lt; l; i++) {
+            var field   = fields[i];
+
+            if (field.nodeName == 'field') {
+
+                value       = '';
+
+                if (field.firstChild) {
+                    var store   = this.getElementByTagName(field, 'store');
+
+                    value       = store ? this.decodeStore(store) : field.firstChild.nodeValue;
+                }
+
+                result[field.getAttribute('id')]    = value;
+            }
+        }
+
+        return result;
+    },
+
+<span id='Sch-crud-encoder-Xml-method-getElementsByTagName'>    // search specified nodes only in a first level of children
+</span>    getElementsByTagName : function (node, name) {
+        var children    = node.childNodes,
+            records     = [];
+
+        for (var i = 0, l = children.length; i &lt; l; i++) {
+            if (children[i].nodeName == name) records.push(children[i]);
+        }
+
+        return records;
+    },
+
+<span id='Sch-crud-encoder-Xml-method-getElementByTagName'>    getElementByTagName : function (node, name) {
+</span>        var children    = node.childNodes;
+
+        for (var i = 0, l = children.length; i &lt; l; i++) {
+            if (children[i].nodeName == name) return children[i];
+        }
+    },
+
+<span id='Sch-crud-encoder-Xml-method-decodeStore'>    decodeStore : function (store) {
+</span>        var data    = {},
+            rows    = this.getElementsByTagName(store, 'rows');
+
+        if (rows.length) {
+            data.rows   = this.decodeRecords(this.getElementsByTagName(rows[0], 'record'));
+
+            var total   = parseInt(rows[0].getAttribute('total'), 10);
+            if (isNaN(total) || total &lt; data.rows.length) total = data.rows.length;
+
+            data.total  = total;
+        }
+
+        var removed = this.getElementByTagName(store, 'removed');
+        if (removed) {
+            data.removed    = this.decodeRecords(this.getElementsByTagName(removed, 'record'));
+        }
+
+        return data;
+    },
+
+<span id='Sch-crud-encoder-Xml-method-decode'>    /**
+</span>     * Decodes (parses) a _XML_ response string to an object. The formats of processable server responses are displayed in an intro.
+     * @param {Object} response The response to decode.
+     */
+    decode : function (packet) {
+        var xml = typeof packet == 'string' ? this.stringToXML(packet) : packet;
+
+        if (!xml) return;
+
+        var result  = {},
+            root    = xml.documentElement,
+            stores  = root.getElementsByTagName('store'),
+            store, storeId;
+
+        result.requestId    = root.getAttribute('requestId');
+        result.revision     = root.getAttribute('revision');
+        result.success      = root.getAttribute('success') || 'false';
+        result.success      = result.success.toLowerCase() == 'true';
+
+        if (!result.success) {
+            // extract error code
+            result.code     = root.getAttribute('code');
+
+            var message     = root.getElementsByTagName('message')[0];
+            result.message  = message &amp;&amp; message.firstChild &amp;&amp; message.firstChild.nodeValue;
+        }
+
+        for (var i = 0, l = stores.length; i &lt; l; i++) {
+            store   = stores[i];
+            storeId = store.getAttribute('id');
+
+            if (this.getStore(storeId)) {
+                result[storeId]     = this.decodeStore(store);
+            }
+        }
+
+        return result;
+    }
+
+});
+</pre>
+</body>
+</html>

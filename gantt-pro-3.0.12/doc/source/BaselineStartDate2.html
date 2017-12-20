@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-BaselineStartDate'>/**
+</span>
+@class Gnt.column.BaselineStartDate
+@extends Ext.grid.column.Date
+
+A Column displaying the baseline start date of a task.
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        columns         : [
+            ...
+            {
+                xtype       : 'baselinestartdatecolumn',
+                width       : 80
+            }
+            ...
+        ],
+        ...
+    })
+
+Note, that this class inherit from [Ext.grid.column.Date](http://docs.sencha.com/ext-js/4-2/#!/api/Ext.grid.column.Date) and supports its configuration options, notably the &quot;format&quot; option.
+*/
+Ext.define('Gnt.column.BaselineStartDate', {
+    extend              : 'Gnt.column.StartDate',
+
+    requires            : ['Gnt.field.BaselineStartDate'],
+
+    alias               : [
+        'widget.baselinestartdatecolumn',
+        'widget.ganttcolumn.baselinestartdate'
+    ],
+
+<span id='Gnt-column-BaselineStartDate-property-width'>    width               : 100,
+</span>
+<span id='Gnt-column-BaselineStartDate-property-fieldProperty'>    fieldProperty       : 'baselineStartDateField',
+</span>
+<span id='Gnt-column-BaselineStartDate-property-fieldConfigs'>    fieldConfigs        : [ 'instantUpdate', 'adjustMilestones', 'fieldProperty' ],
+</span>
+<span id='Gnt-column-BaselineStartDate-property-editor'>    editor              : 'baselinestartdatefield',
+</span>
+<span id='Gnt-column-BaselineStartDate-property-defaultEditor'>    defaultEditor       : 'baselinestartdatefield'
+</span>});
+</pre>
+</body>
+</html>

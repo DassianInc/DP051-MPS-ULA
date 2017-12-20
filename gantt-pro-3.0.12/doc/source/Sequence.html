@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Sequence'>/**
+</span>
+@class Gnt.column.Sequence
+@extends Ext.grid.column.Column
+
+A &quot;calculated&quot; column which displays the sequential position of the task in the project. 
+See {@link Gnt.model.Task#getSequenceNumber} for details.
+
+
+*/
+Ext.define(&quot;Gnt.column.Sequence&quot;, {
+    extend      : &quot;Ext.grid.column.Column&quot;,
+    alias       : [
+        &quot;widget.sequencecolumn&quot;,
+        &quot;widget.ganttcolumn.sequence&quot;
+    ],
+
+    mixins      : ['Gnt.mixin.Localizable'],
+
+<span id='Gnt-column-Sequence-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - text : '#'
+     */
+
+<span id='Gnt-column-Sequence-cfg-width'>    /**
+</span>     * @cfg {Number} width The width of the column.
+     */
+    width       : 40,
+
+<span id='Gnt-column-Sequence-cfg-align'>    /**
+</span>     * @cfg {String} align The alignment of the text in the column.
+     */
+    align       : 'right',
+
+<span id='Gnt-column-Sequence-property-sortable'>    sortable    : false,
+</span><span id='Gnt-column-Sequence-property-dataIndex'>    dataIndex   : 'index',
+</span>
+<span id='Gnt-column-Sequence-method-constructor'>    constructor : function (config) {
+</span>        config = config || {};
+
+        this.text   = config.text || this.L('text');
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-Sequence-method-renderer'>    renderer    : function (value, meta, task) {
+</span>        return task.getSequenceNumber();
+    }
+});
+</pre>
+</body>
+</html>

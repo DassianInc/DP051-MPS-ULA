@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">//@PATCH to fix https://www.assembla.com/spaces/bryntum/tickets/869#/activity/ticket
+// When resizing columns with fixed locked grid width, columns become smaller due to the default Ext header resizing logic
+Ext.define('Sch.patches.ColumnResizeTree', {
+    override      : 'Sch.panel.TimelineTreePanel',
+
+    afterRender : function() {
+        this.callParent(arguments);
+
+        var resizer = this.lockedGrid.headerCt.findPlugin('gridheaderresizer');
+
+        if (resizer) {
+            // Implementation from Ext 4.2.0
+            resizer.getConstrainRegion = function() {
+                var me       = this,
+                    dragHdEl = me.dragHd.el,
+                    nextHd;
+
+
+
+                if (me.headerCt.forceFit) {
+                    nextHd = me.dragHd.nextNode('gridcolumn:not([hidden]):not([isGroupHeader])');
+                    if (!me.headerInSameGrid(nextHd)) {
+                        nextHd = null;
+                    }
+                }
+
+                return me.adjustConstrainRegion(
+                    Ext.util.Region.getRegion(dragHdEl),
+                    0,
+                    me.headerCt.forceFit ? (nextHd ? nextHd.getWidth() - me.minColWidth : 0) : me.maxColWidth - dragHdEl.getWidth(),
+                    0,
+                    me.minColWidth
+                );
+            };
+        }
+    }
+});
+</pre>
+</body>
+</html>

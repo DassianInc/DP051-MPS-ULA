@@ -1,0 +1,8 @@
+{
+  "name": "MSP ULA",
+  "version": "2.0",
+  "scripts": {
+    "build": "sencha app build testing",
+    "publish": "sencha app build production"
+  }
+}

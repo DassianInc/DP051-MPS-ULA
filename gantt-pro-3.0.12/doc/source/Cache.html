@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-util-Cache'>/**
+</span> * Simple caching utility.
+ *
+ * Internaly obtains a key value suitable to be used as object property name via {@link Sch.util.Cache#key key()}
+ * method and caches a value provided under the key obtained, values with the same key are groupped
+ * into single array. Cached values are obtained via {@link Sch.util.Cache#get get()} method and are managed via
+ * {@link Sch.util.Cache#add add()}, {@link Sch.util.Cache#remove remove()}, {@link Sch.util.Cache#move move()},
+ * {@link Sch.util.Cache#clear clear()}
+ * methods.
+ */
+Ext.define('Sch.util.Cache', {
+
+<span id='Sch-util-Cache-property-cache'>    cache : null,
+</span>
+<span id='Sch-util-Cache-method-constructor'>    /**
+</span>     * @constructor
+     */
+    constructor : function() {
+        this.cache = {};
+    },
+
+<span id='Sch-util-Cache-method-key'>    /**
+</span>     * A function returning a key for given value.
+     *
+     * @param  {Mixed} v
+     * @return {String}
+     * @template
+     */
+    key : function(v) {
+        var result;
+
+        if (v instanceof Ext.data.Model) {
+            result = v.getId().toString();
+        }
+        else if (v === undefined || v === null) {
+            result = &quot;[ undefined / null ]&quot;;
+        }
+        else {
+            result = (v).toString();
+        }
+
+        return result;
+    },
+
+<span id='Sch-util-Cache-method-get'>    /**
+</span>     * Returns all values cached with a given key, or if key isn't present executes a given function, caches
+     * it's result (which should be array) after it's mapped over {@link #map} and returns it.
+     *
+     * *Warning*: the array returned must not be modified otherwise cache integrity will be violated.
+     *
+     * @param {Mixed} k
+     * @param {Function} [fn]
+     * @param {[Mixed]}  [fn.return]
+     * @return {[Mixed]}
+     */
+    get : function(k, fn) {
+        var me = this,
+            result;
+
+        k = me.key(k);
+
+        result = me.cache.hasOwnProperty(k) &amp;&amp; me.cache[k];
+
+        if (!result &amp;&amp; fn) {
+            result = fn();
+        }
+        else if (!result) {
+            result = [];
+        }
+
+        me.cache[k] = result;
+
+        return result;
+    },
+
+<span id='Sch-util-Cache-method-add'>    /**
+</span>     * Caches a value using either a key provided or a key obtained from {@link #key key()} method.
+     *
+     * @param {Mixed} k
+     * @param {Mixed} v
+     * @chainable
+     */
+    add : function(k, v) {
+        var me = this,
+            kAdopted = me.key(k);
+
+        if (!me.cache.hasOwnProperty(kAdopted)) {
+            me.cache[kAdopted] = me.get(k); // initial key cache filling
+        }
+
+        Ext.Array.include(me.cache[kAdopted], v);
+
+        return me;
+    },
+
+<span id='Sch-util-Cache-method-remove'>    /**
+</span>     * Removes cached value from cache under a given key or under a key obtained from {@link #key key()} method.
+     *
+     * @param {Mixed} k
+     * @param {Mixed} v
+     * @chainable
+     */
+    remove : function(k, v) {
+        var me = this;
+
+        k = me.key(k);
+
+        if (me.cache.hasOwnProperty(k)) {
+            Ext.Array.remove(me.cache[k], v);
+        }
+
+        return me;
+    },
+
+<span id='Sch-util-Cache-method-move'>    /**
+</span>     * Moves all items or a single item under old key to new key
+     *
+     * @param {Mixed} oldKey
+     * @param {Mixed} newKey
+     */
+    move : function(oldKey, newKey, v) {
+        var me = this;
+
+        oldKey = me.key(oldKey);
+        newKey = me.key(newKey);
+
+        if (oldKey != newKey &amp;&amp; arguments.length &gt;= 3) {
+            me.remove(oldKey, v);
+            me.add(newKey, v);
+        }
+        else if (oldKey != newKey &amp;&amp; me.cache.hasOwnProperty(oldKey) &amp;&amp; me.cache.hasOwnProperty(newKey)) {
+            me.cache[newKey] = Ext.Array.union(me.cache[newKey], me.cache[oldKey]);
+            me.cache[oldKey] = [];
+        }
+        else if (oldKey != newKey &amp;&amp; me.cache.hasOwnProperty(oldKey)) {
+            me.cache[newKey] = me.cache[oldKey];
+            me.cache[oldKey] = [];
+        }
+    },
+
+<span id='Sch-util-Cache-method-clear'>    /**
+</span>     * Clears entire cache, or clears cache for a given key.
+     *
+     * @param {Mixed} [k]
+     * @chainable
+     */
+    clear : function(k) {
+        var me = this;
+
+        if (!arguments.length) {
+            me.cache = {};
+        }
+        else {
+            k = me.key(k);
+            if (me.cache.hasOwnProperty(k)) {
+                delete me.cache[k];
+            }
+        }
+
+        return me;
+    },
+
+<span id='Sch-util-Cache-method-uncache'>    /**
+</span>     * Removes value from entire cache (from every key it exists under).
+     *
+     * @param {Mixed} v
+     * @chanable
+     */
+    uncache : function(v) {
+        var me = this,
+            k;
+
+        for (k in me.cache) {
+            if (me.cache.hasOwnProperty(k)) {
+                me.cache[k] = Ext.Array.remove(me.cache[k], v);
+            }
+        }
+
+        return me;
+    }
+});
+</pre>
+</body>
+</html>

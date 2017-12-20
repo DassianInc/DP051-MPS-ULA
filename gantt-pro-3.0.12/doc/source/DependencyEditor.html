@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-plugin-DependencyEditor'>/**
+</span>
+ @class Gnt.plugin.DependencyEditor
+ @extends Ext.form.Panel
+
+ {@img gantt/images/dependency-editor.png}
+
+ A plugin (ptype = 'gantt_dependencyeditor') which shows the dependency editor panel, when a user double-clicks a dependency line or arrow.
+
+ To customize the fields created by this plugin, override the `buildFields` method.
+
+ You can add it to your gantt chart like this:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+
+        plugins             : [
+            Ext.create(&quot;Gnt.plugin.DependencyEditor&quot;, {
+                // default value
+                hideOnBlur      : true
+            })
+        ],
+        ...
+    })
+
+
+ */
+Ext.define(&quot;Gnt.plugin.DependencyEditor&quot;, {
+    extend        : &quot;Ext.form.Panel&quot;,
+    alias         : 'plugin.gantt_dependencyeditor',
+<span id='Gnt-plugin-DependencyEditor-property-ptype'>    // ptype isn't filled automatically, because we do not extend AbstractPlugin
+</span>    ptype           : 'gantt_dependencyeditor',
+    mixins        : ['Ext.AbstractPlugin', 'Gnt.mixin.Localizable'],
+<span id='Gnt-plugin-DependencyEditor-property-lockableScope'>    lockableScope : 'top',
+</span>
+<span id='Gnt-plugin-DependencyEditor-property-header'>    // 1. We don't use header at all, 2. IE8 takes the use of a header personal and dies in Ext 4.2.1. http://www.sencha.com/forum/showthread.php?271770-4.2.1-getFramingInfoCls-broken-in-IE8
+</span>    header        : false,
+
+    requires : [
+        'Ext.util.Filter',
+        'Ext.form.field.Display',
+        'Ext.form.field.ComboBox',
+        'Ext.form.field.Number',
+        'Gnt.model.Dependency',
+        'Ext.data.ArrayStore'
+    ],
+
+<span id='Gnt-plugin-DependencyEditor-cfg-hideOnBlur'>    /**
+</span>     * @cfg {Boolean} hideOnBlur True to hide this panel if a click is detected outside the panel (defaults to true)
+     */
+    hideOnBlur : true,
+
+<span id='Gnt-plugin-DependencyEditor-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+     - fromText            : 'From',
+     - toText              : 'To',
+     - typeText            : 'Type',
+     - lagText             : 'Lag',
+     - endToStartText      : 'Finish-To-Start',
+     - startToStartText    : 'Start-To-Start',
+     - endToEndText        : 'Finish-To-Finish',
+     - startToEndText      : 'Start-To-Finish'
+     */
+
+<span id='Gnt-plugin-DependencyEditor-cfg-showLag'>    /**
+</span>     * @cfg {Boolean} showLag True to show the lag editor
+     */
+    showLag : false,
+
+<span id='Gnt-plugin-DependencyEditor-property-border'>    border     : false,
+</span><span id='Gnt-plugin-DependencyEditor-property-width'>    width      : 260,
+</span><span id='Gnt-plugin-DependencyEditor-property-frame'>    frame      : true,
+</span><span id='Gnt-plugin-DependencyEditor-property-labelWidth'>    labelWidth : 60,
+</span>
+<span id='Gnt-plugin-DependencyEditor-cfg-triggerEvent'>    /**
+</span>     * @cfg {String} triggerEvent
+     * The event upon which the editor shall be shown. Defaults to 'dependencydblclick'.
+     */
+    triggerEvent : 'dependencydblclick',
+
+<span id='Gnt-plugin-DependencyEditor-cfg-constrain'>    /**
+</span>     * @cfg {Boolean} constrain Pass `true` to enable the constraining - ie editor panel will not exceed the document edges. This option will disable the animation
+     * during the expansion. Default value is `false`.
+     */
+    constrain : false,
+
+<span id='Gnt-plugin-DependencyEditor-method-initComponent'>    initComponent : function () {
+</span>        Ext.apply(this, {
+            defaults : {
+                width : 240
+            },
+
+            floating : true,
+            hideMode : 'offsets'
+        });
+
+        this.callParent(arguments);
+
+        this.addCls('sch-gantt-dependencyeditor');
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-getState'>    getState    : function () {
+</span>        if (this.rendered) {
+            return this.callParent(arguments);
+        }
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-init'>    init : function (cmp) {
+</span>        cmp.on(this.triggerEvent, this.onDependencyDblClick, this);
+        cmp.on('afterrender', this.onGanttRender, this, { delay : 50 });
+
+        this.gantt = cmp;
+        this.taskStore = cmp.getTaskStore();
+
+        // Add fields late, when we have access to taskStore
+        this.add(this.buildFields());
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-onGanttRender'>    onGanttRender : function () {
+</span>        this.render(Ext.getBody());
+
+        // Collapse after render, otherwise rendering is messed up
+        this.collapse(Ext.Component.DIRECTION_TOP, true);
+        this.hide();
+
+        if (this.hideOnBlur) {
+            // Hide when clicking outside panel
+            this.on({
+                show : function () {
+                    this.mon(Ext.getBody(), {
+                        click : this.onMouseClick,
+                        scope : this
+                    });
+                },
+
+                hide : function () {
+                    this.mun(Ext.getBody(), {
+                        click : this.onMouseClick,
+                        scope : this
+                    });
+                },
+
+                delay : 50
+            });
+        }
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-show'>    /**
+</span>     * Expands the editor
+     * @param {Gnt.model.Dependency} dependencyRecord The record to show in the editor panel
+     * @param {Array} xy the coordinates where the window should be shown
+     */
+    show : function (dependencyRecord, xy) {
+        this.dependencyRecord   = dependencyRecord;
+
+        // Load form panel fields
+        this.getForm().loadRecord(dependencyRecord);
+        this.fromLabel.setValue(Ext.String.htmlEncode(this.dependencyRecord.getSourceTask().getName()));
+        this.toLabel.setValue(Ext.String.htmlEncode(this.dependencyRecord.getTargetTask().getName()));
+
+        if (this.typeField) {
+            var dependencyStore = this.taskStore &amp;&amp; this.taskStore.getDependencyStore(),
+                allowedTypes    = dependencyStore &amp;&amp; dependencyStore.allowedDependencyTypes;
+
+            // filter out disabled dependency types
+            this.typeField.store.filter();
+
+            // if number of allowed dependency types is less 2 we won't allow to edit this field
+            this.typeField.setReadOnly(allowedTypes &amp;&amp; allowedTypes.length &lt; 2);
+        }
+
+        this.callParent([]);
+        this.el.setXY(xy);
+
+        this.expand(!this.constrain);
+
+        if (this.constrain) {
+            this.doConstrain(Ext.util.Region.getRegion(Ext.getBody()));
+        }
+    },
+
+
+<span id='Gnt-plugin-DependencyEditor-method-buildFields'>    /**
+</span>     * This method is being called during form initialization. It should return an array of fields, which will be assigned to the `items` property.
+     * @return {Array}
+     */
+    buildFields : function () {
+        var me              = this,
+            dependencyStore = this.taskStore &amp;&amp; this.taskStore.getDependencyStore(),
+            depClass        = Gnt.model.Dependency;
+
+        var fields = [
+            this.fromLabel  = new Ext.form.DisplayField({
+                fieldLabel : this.L('fromText')
+            }),
+
+            this.toLabel    = new Ext.form.DisplayField({
+                fieldLabel : this.L('toText')
+            }),
+
+            this.typeField  = this.buildTypeField()
+        ];
+
+        if (this.showLag) {
+            fields.push(
+                this.lagField = new Ext.form.NumberField({
+                    name       : dependencyStore ? dependencyStore.model.prototype.lagField : depClass.prototype.lagField,
+                    fieldLabel : this.L('lagText')
+                })
+            );
+        }
+
+        return fields;
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-onDependencyDblClick'>    onDependencyDblClick : function (depView, record, e, t) {
+</span>        if (record != this.dependencyRecord) {
+            this.show(record, e.getXY());
+        }
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-filterAllowedTypes'>    filterAllowedTypes : function (record) {
+</span>        var dependencyStore     = this.taskStore &amp;&amp; this.taskStore.getDependencyStore();
+
+        if (!dependencyStore || !dependencyStore.allowedDependencyTypes) return true;
+
+        var allowed     = dependencyStore.allowedDependencyTypes;
+        var depType     = dependencyStore.model.Type;
+
+        for (var i = 0, l = allowed.length; i &lt; l; i++) {
+            var type    = depType[allowed[i]];
+            if (record.getId() == type) return true;
+        }
+
+        return false;
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-buildTypeField'>    buildTypeField : function () {
+</span>        var depClass        = this.taskStore ? this.taskStore.getDependencyStore().model : Gnt.model.Dependency;
+        var depType         = depClass.Type;
+
+        this.typesFilter    = new Ext.util.Filter({
+            filterFn    : this.filterAllowedTypes,
+            scope       : this
+        });
+
+        var store           = new Ext.data.ArrayStore({
+            fields      : [
+               { name : 'id', type : 'int' },
+               'text'
+            ],
+            data        : [
+                [   depType.EndToStart,     this.L('endToStartText')     ],
+                [   depType.StartToStart,   this.L('startToStartText')   ],
+                [   depType.EndToEnd,       this.L('endToEndText')       ],
+                [   depType.StartToEnd,     this.L('startToEndText')     ]
+            ]
+        });
+
+        store.filter(this.typesFilter);
+
+        return new Ext.form.field.ComboBox({
+            name            : depClass.prototype.typeField,
+            fieldLabel      : this.L('typeText'),
+            triggerAction   : 'all',
+            queryMode       : 'local',
+            editable        : false,
+            valueField      : 'id',
+            displayField    : 'text',
+            store           : store
+        });
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-onMouseClick'>    onMouseClick  : function (e) {
+</span>        if (
+            this.collapsed || e.within(this.getEl()) ||
+                // ignore the click on the menus and combo-boxes (which usually floats as the direct child of &lt;body&gt; and
+                // leaks through the `e.within(this.getEl())` check
+                e.getTarget('.' + Ext.baseCSSPrefix + 'layer') ||
+
+                // if clicks should be ignored for any other element - it should have this class
+                e.getTarget('.sch-ignore-click')
+            ) {
+            return;
+        }
+
+        this.collapse();
+    },
+
+<span id='Gnt-plugin-DependencyEditor-method-afterCollapse'>    // Always hide drag proxy on collapse
+</span>    afterCollapse : function () {
+        delete this.dependencyRecord;
+
+        // Currently the header is kept even after collapse, so need to hide the form completely
+        this.hide();
+
+        this.callParent(arguments);
+
+        if (this.hideOnBlur) {
+            // Hide when clicking outside panel
+            this.mun(Ext.getBody(), 'click', this.onMouseClick, this);
+        }
+    }
+});
+</pre>
+</body>
+</html>

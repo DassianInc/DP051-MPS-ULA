@@ -1,0 +1,285 @@
+.sch-dd-dependency-from-name, .sch-dd-dependency-to-name {
+    font-weight : bold;
+}
+
+.sch-dependencyview-ct {
+    position : absolute;
+    z-index  : 2;
+    top      : 0;
+}
+
+.sch-ltr .sch-dependencyview-ct {
+    left : 0;
+}
+
+.x-rtl .sch-dependencyview-ct {
+    right : 0;
+}
+
+.sch-dependency-line {
+    position        : absolute;
+    border-style    : solid;
+    overflow        : hidden;
+    -moz-box-sizing : content-box;
+}
+
+div.sch-dependency-line-h {
+    border-width : 1px 0;
+    height       : 0 !important;
+}
+
+div.sch-dependency-line-v {
+    border-width : 0 1px;
+    width        : 0 !important;
+}
+
+.sch-export .sch-dependency-line {
+    -webkit-box-sizing : content-box;
+}
+
+.sch-export.x-chrome .sch-dependency-line,
+.sch-export.x-safari .sch-dependency-line,
+.sch-export.sch-ie-export .sch-dependency-line {
+    -webkit-box-sizing : border-box;
+}
+
+.sch-dependency-arrow,
+.sch-dependency-arrow-ct {
+    position     : absolute;
+    height       : 0px;
+    width        : 0px;
+    border-style : solid;
+    line-height  : 0; /* Required for IE in quirks mode */
+    z-index      : 1; /* Should be above dependency lines */
+}
+
+.sch-dependency-arrow-ct {
+    background : transparent;
+    border     : 0 none;
+}
+
+/* .sch-dependency-arrow-ct is added to override the ext-scoped rules */
+/* The extra 0.5 offset makes the alignment better in Firefox (no effect in Chrome) */
+.sch-dependency-arrow-ct .sch-dependency-arrow-left {
+    margin-top          : -3.5px;
+    margin-left         : -8px;
+    border-top-color    : transparent !important;
+    border-bottom-color : transparent !important;
+    border-left-color   : transparent !important;
+    border-width        : 4px 8px 4px 0;
+    border-style        : solid;
+}
+
+.sch-dependency-arrow-ct .sch-dependency-arrow-right {
+    margin-top          : -3.5px;
+    border-width        : 4px 0 4px 8px;
+    border-style        : solid;
+    border-top-color    : transparent !important;
+    border-bottom-color : transparent !important;
+    border-right-color  : transparent !important;
+}
+
+.sch-dependency-arrow-ct .sch-dependency-arrow-down {
+    margin-left        : -3.5px;
+    border-right-color : transparent !important;
+    border-left-color  : transparent !important;
+    border-width       : 8px 4px 0;
+    border-style       : solid;
+}
+
+.x-rtl .sch-dependency-arrow-down {
+    margin-left  : 0;
+    margin-right : -3.5px;
+}
+
+.x-rtl .sch-dependency-arrow-right {
+    left : -1px;
+}
+
+.sch-gantt-terminal {
+    display       : none;
+    height        : 10px;
+    width         : 10px;
+    position      : absolute;
+    margin-top    : -5px;
+    top           : 50%;
+    z-index       : 1000;
+    overflow      : hidden;
+    background    : #fff;
+    border        : 1px double #aaa;
+    border-radius : 9px;
+    box-shadow    : 1px 1px 2px rgba(150, 150, 150, 0.5);
+    cursor        : pointer;
+}
+
+.sch-gantt-terminal-start {
+    left : -9px;
+}
+
+.sch-gantt-terminal-end {
+    right : -9px;
+}
+
+.x-rtl .sch-gantt-terminal-start {
+    left  : auto;
+    right : -9px;
+}
+
+.x-rtl .sch-gantt-terminal-end {
+    left  : -9px;
+    right : auto;
+}
+
+.sch-gantt-task-readonly .sch-gantt-terminal {
+    display: none !important;
+}
+
+.sch-gantt-project-task .sch-gantt-terminal {
+    display: none !important;
+}
+
+.sch-gantt-terminal-allow-source-start .sch-event-hover .sch-gantt-terminal-start,
+.sch-gantt-terminal-allow-source-end .sch-event-hover .sch-gantt-terminal-end {
+    display : block;
+}
+
+.sch-gantt-terminal:hover {
+    background-color : #eee;
+    border-color     : #7971E2;
+    border-style     : solid;
+}
+
+div.sch-gantt-terminal-drophover {
+    background   : #90ee90;
+    border-color : green;
+    cursor       : pointer;
+}
+
+.x-dd-drag-proxy .sch-gantt-terminal,
+.x-dd-drag-proxy .sch-dependency,
+.sch-ganttview-readonly .sch-gantt-terminal,
+.x-resizable-over .sch-gantt-terminal {
+    display : none !important;
+}
+
+.sch-gantt-dep-dd-dragging.sch-gantt-terminal-allow-target-start div.sch-gantt-terminal-start,
+.sch-gantt-dep-dd-dragging.sch-gantt-terminal-allow-target-end div.sch-gantt-terminal-end {
+    display : block;
+}
+
+.sch-gantt-dep-dd-dragging .x-resizable-handle {
+    display : none !important;
+}
+
+.sch-gantt-connector-proxy {
+    position                 : absolute;
+    width                    : 2px;
+    border-left              : 2px dashed gray;
+    z-index                  : 20;
+    transform-origin         : 0 0;
+    -ms-transform-origin     : 0 0;
+    -o-transform-origin      : 0 0;
+    -moz-transform-origin    : 0 0;
+    -webkit-transform-origin : 0 0;
+}
+
+/* CRITICAL CHAIN STYLING */
+.sch-gantt-critical-chain .sch-dependency {
+    display : none;
+}
+
+.sch-dependency-selected {
+    z-index : 4;
+}
+
+.sch-gantt-critical-chain .sch-dependency-selected {
+    display : block;
+}
+
+div.sch-dependency-line.sch-dependency-selected {
+    border-color : red;
+}
+
+img.sch-dependency-arrow-down.sch-dependency-selected {
+    border-top-color    : red;
+    border-bottom-color : red;
+}
+
+img.sch-dependency-arrow-left.sch-dependency-selected {
+    border-right-color : red;
+}
+
+img.sch-dependency-arrow-right.sch-dependency-selected {
+    border-left-color : red;
+}
+
+.x-border-box .sch-dependency-selected .sch-dependency-arrow-left {
+    border-right-color : red;
+}
+
+.x-border-box .sch-dependency-selected .sch-dependency-arrow-down {
+    border-top-color    : red;
+    border-bottom-color : red;
+}
+
+.x-border-box .sch-dependency-selected .sch-dependency-arrow-right {
+    border-left-color : red;
+}
+
+/* EOF CRITICAL CHAIN STYLING */
+
+/* THIN LINE STYLING - 1px */
+div.sch-dependencyview-thin .sch-dependency-line-h {
+    border-bottom-color : transparent;
+}
+
+.sch-ltr .sch-dependencyview-thin .sch-dependency-line-v {
+    border-right-color : transparent;
+}
+
+.x-rtl .sch-dependencyview-thin .sch-dependency-line-v {
+    border-left-color : transparent;
+}
+
+/* EOF THIN LINE STYLING - 1px */
+
+/* TOUCH ADAPTIONS */
+
+/* Make the touchable area for task edges larger to make it easy to create dependencies with the finger */
+.sch-ganttview-touch-only .sch-gantt-terminal {
+    display    : block;
+    height     : 25px;
+    width      : 25px;
+    margin-top : -12px;
+    border     : 0 none;
+    background : transparent;
+    box-shadow : none;
+}
+
+.sch-ganttview-touch-only .sch-gantt-terminal-start {
+    left : -25px;
+}
+
+.sch-ganttview-touch-only .sch-gantt-terminal-end {
+    right : -25px;
+}
+
+.sch-ganttview-touch-only.sch-gantt-dep-dd-dragging .sch-gantt-terminal-start {
+    width : 35px;
+    left  : -18px;
+}
+
+.sch-ganttview-touch-only.sch-gantt-dep-dd-dragging .sch-gantt-terminal-end {
+    width : 35px;
+    right : -18px;
+}
+
+/* EOF TOUCH ADAPTIONS*/
+
+/* IE HACKS, BEWARE! */
+/* Old IEs lack border radius, use an image */
+.x-ie8 .sch-gantt-terminal {
+    border     : 0 none;
+    background : transparent url(../images/dependencyterminal.png) no-repeat left top;
+}
+

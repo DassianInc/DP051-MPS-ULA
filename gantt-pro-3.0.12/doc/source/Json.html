@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-crud-encoder-Json'>/**
+</span>@class Sch.crud.encoder.Json
+Implements data encoding functional that should be mixed to a {@link Sch.crud.AbstractManager} sub-class.
+Uses _JSON_ as an encoding system.
+
+    // let's make new CrudManager using AJAX as a transport system and JSON for encoding
+    Ext.define('MyCrudManager', {
+        extend  : 'Sch.crud.AbstractManager',
+
+        mixins  : ['Sch.crud.encoder.Json', 'Sch.crud.transport.Ajax']
+    });
+
+*/
+Ext.define('Sch.crud.encoder.Json', {
+
+<span id='Sch-crud-encoder-Json-property-format'>    format  : 'json',
+</span>
+<span id='Sch-crud-encoder-Json-method-encode'>    /**
+</span>     * Encodes an request object to _JSON_ encoded string.
+     * @param {Object} request The request to encode.
+     */
+    encode : function (request) {
+        return Ext.JSON.encode(request);
+    },
+
+<span id='Sch-crud-encoder-Json-method-decode'>    /**
+</span>     * Decodes (parses) a _JSON_ response string to an object.
+     * @param {Object} response The response to decode.
+     */
+    decode : function (response) {
+        if (typeof response == 'object') return response;
+
+        return Ext.JSON.decode(response, true);
+    }
+
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-tooltip-Tooltip'>/**
+</span> @class Sch.tooltip.Tooltip
+ @extends Ext.ToolTip
+ @private
+
+ Internal plugin showing a tooltip with event start/end information.
+ */
+Ext.define(&quot;Sch.tooltip.Tooltip&quot;, {
+    extend : &quot;Ext.tip.ToolTip&quot;,
+
+    requires : [
+        'Sch.tooltip.ClockTemplate'
+    ],
+
+<span id='Sch-tooltip-Tooltip-property-autoHide'>    autoHide          : false,
+</span><span id='Sch-tooltip-Tooltip-property-anchor'>    anchor            : 'b',
+</span><span id='Sch-tooltip-Tooltip-property-padding'>    padding           : '0 3 0 0',
+</span><span id='Sch-tooltip-Tooltip-property-showDelay'>    showDelay         : 0,
+</span><span id='Sch-tooltip-Tooltip-property-hideDelay'>    hideDelay         : 0,
+</span><span id='Sch-tooltip-Tooltip-property-quickShowInterval'>    quickShowInterval : 0,
+</span><span id='Sch-tooltip-Tooltip-property-dismissDelay'>    dismissDelay      : 0,
+</span><span id='Sch-tooltip-Tooltip-property-trackMouse'>    trackMouse        : false,
+</span><span id='Sch-tooltip-Tooltip-property-anchorOffset'>    anchorOffset      : 5,
+</span><span id='Sch-tooltip-Tooltip-property-shadow'>    shadow            : false,
+</span><span id='Sch-tooltip-Tooltip-property-frame'>    frame             : false,
+</span>
+<span id='Sch-tooltip-Tooltip-property-schedulerView'>    schedulerView     : null,
+</span><span id='Sch-tooltip-Tooltip-property-message'>    message           : null,
+</span><span id='Sch-tooltip-Tooltip-property-startDate'>    startDate         : null,
+</span><span id='Sch-tooltip-Tooltip-property-endDate'>    endDate           : null,
+</span><span id='Sch-tooltip-Tooltip-property-template'>    template          : null,
+</span><span id='Sch-tooltip-Tooltip-property-valid'>    valid             : true,
+</span><span id='Sch-tooltip-Tooltip-property-mode'>    mode              : null,
+</span><span id='Sch-tooltip-Tooltip-property-offsetAdjust'>    offsetAdjust      : [18, 5],
+</span>
+<span id='Sch-tooltip-Tooltip-method-constructor'>    constructor : function (config) {
+</span>        var clockTpl = new Sch.tooltip.ClockTemplate();
+
+        this.startDate = this.endDate = new Date();
+
+        if (!this.template) {
+            this.template = Ext.create(&quot;Ext.XTemplate&quot;,
+                '&lt;div class=&quot;sch-tip-{[values.valid ? &quot;ok&quot; : &quot;notok&quot;]}&quot;&gt;' +
+                '{[this.renderClock(values.startDate, values.startText, &quot;sch-tooltip-startdate&quot;)]}' +
+                '{[this.renderClock(values.endDate, values.endText, &quot;sch-tooltip-enddate&quot;)]}' +
+                '&lt;div class=&quot;sch-tip-message&quot;&gt;{message}&lt;/div&gt;' +
+                '&lt;/div&gt;',
+                {
+                    disableFormats : true,
+
+                    renderClock : function (date, text, cls) {
+                        return clockTpl.apply({
+                            date : date,
+                            text : text,
+                            cls  : cls
+                        });
+                    }
+                }
+            );
+        }
+
+        this.callParent(arguments);
+    },
+
+<span id='Sch-tooltip-Tooltip-method-update'>    // set redraw to true if you want to force redraw of the tip
+</span>    // required to update drag tip after scroll
+    update      : function (startDate, endDate, valid, message) {
+
+        if (this.startDate - startDate !== 0 ||
+            this.endDate - endDate !== 0 ||
+            this.valid !== valid ||
+            this.message !== message) {
+
+            // Readjust position if message is removed or appears
+            var realignNeeded = (this.message &amp;&amp; !message) || (!this.message &amp;&amp; message);
+
+            // This will be called a lot so cache the values
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.valid = valid;
+            this.message = message;
+
+            var startText = this.schedulerView.getFormattedDate(startDate),
+                endText = this.schedulerView.getFormattedEndDate(endDate, startDate);
+
+            // If resolution is day or greater, and end date is greater then start date
+            if (this.mode === 'calendar' &amp;&amp; endDate.getHours() === 0 &amp;&amp; endDate.getMinutes() === 0 &amp;&amp; !(endDate.getYear() === startDate.getYear() &amp;&amp; endDate.getMonth() === startDate.getMonth() &amp;&amp; endDate.getDate() === startDate.getDate())) {
+                endDate = Sch.util.Date.add(endDate, Sch.util.Date.DAY, -1);
+            }
+
+            this.callParent([
+                this.template.apply({
+                    valid     : valid,
+                    startDate : startDate,
+                    endDate   : endDate,
+                    startText : startText,
+                    endText   : endText,
+                    message   : message
+                })
+            ]);
+
+            if (realignNeeded) {
+                this.realign();
+            }
+        }
+    },
+
+<span id='Sch-tooltip-Tooltip-method-show'>    show : function (el, xOffset) {
+</span>        // Ext internal tooltip code may call this method with an Array, ignore it
+        if (!el || Ext.isArray(el)) {
+            return;
+        }
+
+        //restore initial position
+        //https://www.assembla.com/spaces/bryntum/tickets/2134#/activity/ticket:
+        if(this.rendered === true) {
+            this.setPosition(0, 0);
+        }
+
+        if (Sch.util.Date.compareUnits(this.schedulerView.getTimeResolution().unit, Sch.util.Date.DAY) &gt;= 0) {
+            this.mode = 'calendar';
+
+            this.addCls('sch-day-resolution');
+            this.removeCls('sch-hour-resolution');
+        } else {
+            this.mode = 'clock';
+
+            this.removeCls('sch-day-resolution');
+            this.addCls('sch-hour-resolution');
+        }
+
+        // xOffset has to have default value
+        // when it's 18 tip is aligned to left border
+        xOffset = arguments.length &gt; 1 ? xOffset : this.offsetAdjust[0];
+
+        this.mouseOffsets = [xOffset - this.offsetAdjust[0], -this.offsetAdjust[1]];
+
+        this.setTarget(el);
+        this.callParent();
+
+        this.realign();
+    },
+
+<span id='Sch-tooltip-Tooltip-method-realign'>    realign : function () {
+</span>        this.el.alignTo(this.target, 'bl-tl', this.mouseOffsets);
+    },
+
+<span id='Sch-tooltip-Tooltip-method-afterRender'>    afterRender : function () {
+</span>        this.callParent(arguments);
+
+        // In slower browsers, the mouse pointer may end up over the tooltip interfering with drag drop etc
+        this.el.on('mouseenter', this.realign, this);
+    }
+});
+</pre>
+</body>
+</html>

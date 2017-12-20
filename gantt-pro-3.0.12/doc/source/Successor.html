@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Successor'>/**
+</span>
+@class Gnt.column.Successor
+@extends Gnt.column.Dependency
+
+A Column showing the successors of a task. The column is editable, however to enable the editing you will need to add a
+`Sch.plugin.TreeCellEditing` plugin to your gantt panel. The overall setup will look like this:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        // Setup your grid columns
+        columns         : [
+            ...
+            {
+                xtype       : 'successorcolumn',
+                width       : 70
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+This column uses a specialized field - {@link Gnt.field.Dependency} which allows the
+user to specify multiple successors including lag. Please refer to {@link Gnt.field.Dependency}
+documentation for the expected format when editing data in this column.
+
+*/
+Ext.define(&quot;Gnt.column.Successor&quot;, {
+    extend      : &quot;Gnt.column.Dependency&quot;,
+
+    mixins      : ['Gnt.mixin.Localizable'],
+
+    alias       : [
+        &quot;widget.successorcolumn&quot;,
+        &quot;widget.ganttcolumn.successor&quot;
+    ],
+
+<span id='Gnt-column-Successor-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - text : 'Successors'
+     */
+
+    type        : 'successors',
+
+<span id='Gnt-column-Successor-method-constructor'>    constructor : function (config) {
+</span>        config = config || {};        
+
+        this.text   = config.text || this.L('text');
+
+        this.callParent(arguments);
+    }
+});
+</pre>
+</body>
+</html>

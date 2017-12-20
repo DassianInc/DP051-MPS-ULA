@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-data-util-ModelPersistencyManager'>/**
+</span> * This class extends model persistency management inherited from Sch.data.util.ModelPersistencyManager to dependency
+ * store
+ *
+ * TODO: it should be merged with Sch.data.util.ModelPersistencyManager when dependency store will be moved to Scheduler
+ *       as well
+ *
+ * @private
+ */
+Ext.define('Gnt.data.util.ModelPersistencyManager', {
+
+    extend                  : 'Sch.data.util.ModelPersistencyManager',
+
+    config                  : {
+<span id='Gnt-data-util-ModelPersistencyManager-cfg-dependencyStore'>        dependencyStore     : null
+</span>    },
+
+<span id='Gnt-data-util-ModelPersistencyManager-property-dependencyStoreDetacher'>    dependencyStoreDetacher : null,
+</span>
+<span id='Gnt-data-util-ModelPersistencyManager-method-updateDependencyStore'>    // {{{ Event attachers
+</span>    updateDependencyStore : function(newDependencyStore, oldDependencyStore) {
+        var me = this;
+
+        Ext.destroyMembers(me, 'dependencyStoreDetacher');
+
+        if (newDependencyStore &amp;&amp; newDependencyStore.autoSync) {
+            me.dependencyStoreDetacher = newDependencyStore.on({
+                beforesync  : me.onDependencyStoreBeforeSync,
+                scope       : me,
+                destroyable : true,
+                // Just in case
+                priority    : 100
+            });
+        }
+    },
+    // }}}
+
+<span id='Gnt-data-util-ModelPersistencyManager-method-onDependencyStoreBeforeSync'>    // {{{ Event handlers
+</span>    onDependencyStoreBeforeSync : function(options) {
+        var me = this;
+        me.removeNonPersistableRecordsToCreate(options);
+        return me.shallContinueSync(options);
+    }
+    // }}}
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-view-TimelineGridView'>/**
+</span>
+@class Sch.view.TimelineGridView
+@extends Ext.grid.View
+@mixin Sch.mixin.TimelineView
+
+A grid view class, that consumes the {@link Sch.mixin.TimelineView} mixin. Used internally.
+
+*/
+
+Ext.define('Sch.view.TimelineGridView', {
+    extend                  : 'Ext.grid.View',
+    mixins                  : [ 'Sch.mixin.TimelineView' ],
+
+<span id='Sch-view-TimelineGridView-property-infiniteScroll'>    infiniteScroll          : false,
+</span>
+<span id='Sch-view-TimelineGridView-property-bufferCoef'>    bufferCoef              : 5,
+</span><span id='Sch-view-TimelineGridView-property-bufferThreshold'>    bufferThreshold         : 0.2,
+</span>
+<span id='Sch-view-TimelineGridView-property-cachedScrollLeftDate'>    // the scrolLeft position, as Date (not as pixels offset)
+</span>    cachedScrollLeftDate    : null,
+<span id='Sch-view-TimelineGridView-property-boxIsReady'>    boxIsReady              : false,
+</span>
+<span id='Sch-view-TimelineGridView-property-ignoreNextHorizontalScroll'>    ignoreNextHorizontalScroll      : false,
+</span>
+
+<span id='Sch-view-TimelineGridView-method-constructor'>    constructor : function (config) {
+</span>        this.callParent(arguments);
+
+        // setup has to happen in the &quot;afterrender&quot; event, because at that point, the view is not &quot;ready&quot; yet
+        // so we can freely change the start/end dates of the timeaxis and no refreshes will happen
+        if (this.infiniteScroll) {
+            this.on('boxready', this.setupInfiniteScroll, this);
+        }
+
+        if(this.timeAxisViewModel) {
+            this.relayEvents(this.timeAxisViewModel, ['columnwidthchange']);
+        }
+    },
+
+<span id='Sch-view-TimelineGridView-method-setupInfiniteScroll'>    setupInfiniteScroll : function () {
+</span>        var planner                 = this.panel.ownerCt;
+        this.cachedScrollLeftDate   = planner.startDate || this.timeAxis.getStart();
+
+        // check if it's touch microsoft
+        if (Ext.supports.Touch &amp;&amp; Ext.os.is.Windows) {
+            var headerScroll    = this.panel.headerCt.scrollable;
+            var viewScroll      = this.scrollable;
+
+            // When scroll is done, Ext throws special event called 'idle'
+            // Touch scroller handles that event and performs scroll to [0, 0]
+            // Our 'scroll' event handler remembers new view start date and keeps it in memory
+            // Disabling this handler seemingly doesn't break anything in case of infinite scroll enabled
+
+            // Try unsubscribing from event. If there's an exception, do nothing
+            try {
+                Ext.GlobalEvents.un('idle', headerScroll.onIdle, headerScroll);
+                Ext.GlobalEvents.un('idle', viewScroll.onIdle, viewScroll);
+            }
+            catch (e) {
+                Ext.log('Cannot unsubscribe required listener, zooming may be broken');
+            }
+        }
+
+        var me                      = this;
+
+        planner.calculateOptimalDateRange = function (centerDate, panelSize, nextZoomLevel, span) {
+            if (span) {
+                return span;
+            }
+
+            var preset      = Sch.preset.Manager.getPreset(nextZoomLevel.preset);
+
+            return me.calculateInfiniteScrollingDateRange(
+                // me.ol.dom.scrollLeft can differ for obvious reasons thus method can return different result for same arguments
+                // better user centerDate
+                //me.getDateFromCoordinate(me.el.dom.scrollLeft, null, true),
+                centerDate,
+                preset.getBottomHeader().unit,
+                nextZoomLevel.increment,
+                nextZoomLevel.width
+            );
+        };
+
+        // setup scroll/resize listeners
+        this.enableInfiniteScroll();
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-enableInfiniteScroll'>    enableInfiniteScroll : function () {
+</span>        if (this.scrollManager) {
+            this.scrollManager.scroller.on('scroll', this.onHorizontalScroll, this);
+        } else {
+            this.el.on('scroll', this.onHorizontalScroll, this);
+        }
+
+        this.infiniteScroll = true;
+        // this event is fired immediately after `afterrender`
+        //this.on('resize', this.onSelfResize, this);
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-disableInfiniteScroll'>    disableInfiniteScroll : function () {
+</span>        if (this.scrollManager) {
+            this.scrollManager.scroller.un('scroll', this.onHorizontalScroll, this);
+        } else {
+            this.el.un('scroll', this.onHorizontalScroll, this);
+        }
+
+        this.infiniteScroll = false;
+        //this.un('resize', this.onSelfResize, this);
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-onHorizontalScroll'>    onHorizontalScroll : function () {
+</span>        if (this.ignoreNextHorizontalScroll || this.cachedScrollLeftDate) {
+            this.ignoreNextHorizontalScroll = false;
+            return;
+        }
+
+        var dom         = this.el.dom,
+            width       = this.getWidth(),
+            left        = this.getScroll().left,
+            scrollWidth = this.scrollManager ? this.scrollManager.scroller.getMaxPosition().x : dom.scrollWidth,
+            limit       = width * this.bufferThreshold * this.bufferCoef;
+
+        // if scroll violates limits let's shift timespan
+        if ((scrollWidth - left - width &lt; limit) || left &lt; limit) {
+            this.shiftToDate(this.getDateFromCoordinate(left, null, true));
+
+            // Make sure any scrolling which could have been triggered by the Bryntum ScrollManager (drag drop of task),
+            // is cancelled
+            this.el.stopAnimation();
+        }
+    },
+
+<span id='Sch-view-TimelineGridView-method-refresh'>    // TODO: investigate if we need this method now when we use refreshView instead
+</span>    refresh : function () {
+        this.callParent(arguments);
+
+        // `scrollStateSaved` will mean that refresh happens as part of `refreshKeepingScroll`,
+        // which already does `restoreScrollState`, which includes `restoreScrollLeftDate`
+        if (this.infiniteScroll &amp;&amp; !this.scrollStateSaved &amp;&amp; this.boxIsReady) {
+            this.restoreScrollLeftDate();
+        }
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-onResize'>    onResize : function (width, height, oldWidth, oldHeight) {
+</span>        this.boxIsReady = true;
+
+        this.callParent(arguments);
+
+        // TODO this should be optimized to not perform any operations as long as view size doesn't increase
+        // enough to pass the buffer limits
+        if (this.infiniteScroll &amp;&amp; width !== oldWidth) {
+            // When size increases - we should maintain the left visible date in the component to not confuse the user
+            this.shiftToDate(this.cachedScrollLeftDate || this.getVisibleDateRange().startDate, this.cachedScrollCentered);
+        }
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-restoreScrollLeftDate'>    restoreScrollLeftDate : function () {
+</span>        if (this.cachedScrollLeftDate &amp;&amp; this.boxIsReady) {
+            this.ignoreNextHorizontalScroll     = true;
+
+            this.scrollToDate(this.cachedScrollLeftDate);
+
+            this.cachedScrollLeftDate           = null;
+        }
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-scrollToDate'>    scrollToDate : function (toDate) {
+</span>        this.cachedScrollLeftDate           = toDate;
+
+        if (this.cachedScrollCentered){
+            this.panel.ownerCt.scrollToDateCentered(toDate);
+        } else {
+            this.panel.ownerCt.scrollToDate(toDate);
+        }
+
+        var scrollLeft                      = this.getScroll().left;
+
+        // the `onRestoreHorzScroll` method in Ext.panel.Table is called during Ext.resumeLayouts(true) (in the `refreshKeepingScroll`)
+        // and messes up the scrolling position (in the called `syncHorizontalScroll` method).
+        // Overwrite the property `syncHorizontalScroll` is using to read the scroll position, so that no actual change will happen
+        this.panel.scrollLeftPos            = scrollLeft;
+
+        // the previous line however, breaks the header sync, doing that manually
+        this.headerCt.el.dom.scrollLeft     = scrollLeft;
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-saveScrollState'>    saveScrollState : function () {
+</span>        this.scrollStateSaved       = this.boxIsReady;
+
+        this.callParent(arguments);
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-restoreScrollState'>    restoreScrollState : function () {
+</span>        this.scrollStateSaved       = false;
+
+        // if we have scroll date then let's calculate left-coordinate by this date
+        // and top-coordinate we'll get from the last saved scroll state
+        if (this.infiniteScroll &amp;&amp; this.cachedScrollLeftDate) {
+            this.restoreScrollLeftDate();
+
+            this.el.dom.scrollTop = this.scrollState.top;
+
+            return;
+        }
+
+        this.callParent(arguments);
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-calculateInfiniteScrollingDateRange'>    // `calculateOptimalDateRange` already exists in Zoomable plugin
+</span>    calculateInfiniteScrollingDateRange : function (srollLeftDate, unit, increment, tickWidth) {
+        var timeAxis            = this.timeAxis;
+        var viewWidth           = this.getWidth();
+
+        tickWidth               = tickWidth || this.timeAxisViewModel.getTickWidth();
+        increment               = increment || timeAxis.increment || 1;
+        unit                    = unit || timeAxis.unit;
+
+        var DATE                = Sch.util.Date;
+
+        var bufferedTicks       = Math.ceil(viewWidth * this.bufferCoef / tickWidth);
+
+        return {
+            start   : timeAxis.floorDate(DATE.add(srollLeftDate, unit, -bufferedTicks * increment), false, unit, increment),
+            end     : timeAxis.ceilDate(DATE.add(srollLeftDate, unit, Math.ceil((viewWidth / tickWidth + bufferedTicks) * increment)), false, unit, increment)
+        };
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-shiftToDate'>    shiftToDate : function (scrollLeftDate, scrollCentered) {
+</span>        var newRange            = this.calculateInfiniteScrollingDateRange(scrollLeftDate);
+
+        // we set scroll date here since it will be required during timeAxis.setTimeSpan() call
+        this.cachedScrollLeftDate   = scrollLeftDate;
+        this.cachedScrollCentered   = scrollCentered;
+
+        // this will trigger a refresh (`refreshKeepingScroll`) which will perform `restoreScrollState` and sync the scrolling position
+        this.timeAxis.setTimeSpan(newRange.start, newRange.end);
+    },
+
+
+<span id='Sch-view-TimelineGridView-method-destroy'>    destroy : function () {
+</span>        if (this.infiniteScroll &amp;&amp; this.rendered) this.disableInfiniteScroll();
+
+        this.callParent(arguments);
+    }
+
+});
+</pre>
+</body>
+</html>

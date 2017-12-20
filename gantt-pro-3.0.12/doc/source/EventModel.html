@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-selection-EventModel'>/**
+</span>@class Sch.selection.EventModel
+@extends Ext.selection.Model
+
+This class provides the basic implementation event selection in a grid.
+
+*/
+Ext.define(&quot;Sch.selection.EventModel&quot;, {
+    extend      : 'Ext.selection.Model',
+
+    alias       : 'selection.eventmodel',
+
+    requires    : [ 'Ext.util.KeyNav' ],
+
+<span id='Sch-selection-EventModel-cfg-deselectOnContainerClick'>    /**
+</span>     * @cfg {Boolean} deselectOnContainerClick `True` to deselect all events when user clicks on the underlying space in scheduler. Defaults to `true`.
+     */
+    deselectOnContainerClick : true,
+
+<span id='Sch-selection-EventModel-property-selectedOnMouseDown'>    // Stores selected record on mousedown event to avoid
+</span>    // unselecting record on click
+    selectedOnMouseDown : false,
+
+<span id='Sch-selection-EventModel-event-beforedeselect'>    /**
+</span>     * @event beforedeselect
+     * Fired before a record is deselected. If any listener returns false, the
+     * deselection is cancelled.
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Event} record The selected event
+     */
+
+<span id='Sch-selection-EventModel-event-beforeselect'>    /**
+</span>     * @event beforeselect
+     * Fired before a record is selected. If any listener returns false, the
+     * selection is cancelled.
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Event} record The selected event
+     */
+
+<span id='Sch-selection-EventModel-event-deselect'>    /**
+</span>     * @event deselect
+     * Fired after a record is deselected
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Event} record The selected event
+     */
+
+<span id='Sch-selection-EventModel-event-select'>    /**
+</span>     * @event select
+     * Fired after a record is selected
+     * @param {Sch.selection.EventModel} this
+     * @param {Sch.model.Event} record The selected event
+     */
+
+<span id='Sch-selection-EventModel-method-bindToView'>    /**
+</span>     */
+    bindToView : function(view) {
+
+        var me = this;
+
+        me.view = view;
+
+        var eventStore = view.eventStore;
+        var resourceStore = view.resourceStore;
+
+        me.bindStore(eventStore);
+
+        // events are redrawn on 'refresh' event, so we have to clear selection at this point
+        view.mon(resourceStore, 'beforeload', me.clearSelectionOnRefresh, me);
+        view.mon(eventStore, 'beforeload', me.clearSelectionOnRefresh, me);
+
+        view.on({
+            eventclick     : me.onEventClick,
+            eventmousedown : me.onEventMouseDown,
+            itemmousedown  : me.onItemMouseDown,
+            refresh        : function() {
+                me.refresh();
+            },
+            destroy        : function() {
+                me.bindStore(null);
+            },
+            scope          : me
+        });
+    },
+
+<span id='Sch-selection-EventModel-method-clearSelectionOnRefresh'>    // TODO: remove this code after testing, it's not neccessary anymore in ExtJS 5.x probably
+</span>    // #1555 - Drag&amp;drop of multiple events works incorrectly at second time
+    // There is a bug in extjs version 4.2.2 and less - when store is loaded, selection model contains unbound records.
+    // We decided to clear selection after store is loaded.
+    // http://www.sencha.com/forum/showthread.php?290474-Selected-records-are-unbound-of-store-after-store-is-refreshed&amp;p=1061396
+    clearSelectionOnRefresh    : function () {
+        this.clearSelections();
+    },
+
+
+<span id='Sch-selection-EventModel-method-onEventMouseDown'>    onEventMouseDown: function(view, record, e) {
+</span>        // Reset previously stored records
+        this.selectedOnMouseDown = null;
+
+        // Change selection before dragging to avoid moving of unselected events
+        if (!this.isSelected(record)) {
+            this.selectedOnMouseDown = record;
+            this.selectWithEvent(record, e);
+        }
+    },
+
+<span id='Sch-selection-EventModel-method-onEventClick'>    onEventClick: function(view, record, e) {
+</span>        // Don't change selection if record been already selected on mousedown
+        if (!this.selectedOnMouseDown) {
+            this.selectWithEvent(record, e);
+        }
+    },
+
+<span id='Sch-selection-EventModel-method-onItemMouseDown'>    onItemMouseDown: function(a, b, c, d, eventObj) {
+</span>        if (this.deselectOnContainerClick &amp;&amp; !eventObj.getTarget(this.view.eventSelector)) {
+            this.deselectAll();
+        }
+    },
+
+<span id='Sch-selection-EventModel-method-onSelectChange'>    onSelectChange: function(record, isSelected, suppressEvent, commitFn) {
+</span>         var me      = this,
+            view   = me.view,
+            store   = me.store,
+            eventName = isSelected ? 'select' : 'deselect',
+            i = 0;
+
+        if ((suppressEvent || me.fireEvent('before' + eventName, me, record)) !== false &amp;&amp; commitFn() !== false) {
+
+            if (isSelected) {
+                view.onEventBarSelect(record, suppressEvent);
+            } else {
+                view.onEventBarDeselect(record, suppressEvent);
+            }
+
+            if (!suppressEvent) {
+                me.fireEvent(eventName, me, record);
+            }
+        }
+    },
+
+<span id='Sch-selection-EventModel-method-selectRange'>    // Not supported.
+</span>    selectRange : Ext.emptyFn,
+
+<span id='Sch-selection-EventModel-method-selectNode'>    selectNode: function(node, keepExisting, suppressEvent) {
+</span>        var r = this.view.resolveEventRecord(node);
+        if (r) {
+            this.select(r, keepExisting, suppressEvent);
+        }
+    },
+
+<span id='Sch-selection-EventModel-method-deselectNode'>    deselectNode: function(node, keepExisting, suppressEvent) {
+</span>        var r = this.view.resolveEventRecord(node);
+        if (r) {
+            this.deselect(r, suppressEvent);
+        }
+    },
+
+<span id='Sch-selection-EventModel-method-getFirstSelectedEventForResource'>    /**
+</span>     * Returns first selected event record for the given resource record or null if the resource has no assigned
+     * events which are selected.
+     *
+     * @param {Sch.model.Resource} resource
+     * @return {Sch.model.Event}
+     */
+    getFirstSelectedEventForResource : function(resource) {
+        var selections = this.getSelection(),
+            event = null,
+            i, len, r;
+
+        for (i = 0, len = selections.length; !event &amp;&amp; i &lt; len; ++i) {
+            r = selections[i];
+            if (r.isAssignedTo(resource)) {
+                event = r;
+            }
+        }
+
+        return event;
+    },
+
+<span id='Sch-selection-EventModel-method-getDraggableSelections'>    getDraggableSelections : function() {
+</span>        return Ext.Array.filter(
+            this.getSelection(),
+            function(record) {
+                return record.isDraggable();
+            }
+        );
+    },
+
+<span id='Sch-selection-EventModel-method-forEachEventRelatedSelection'>    forEachEventRelatedSelection : function(eventRecord, fn) {
+</span>        this.isSelected(eventRecord) &amp;&amp; fn(eventRecord);
+    }
+});
+</pre>
+</body>
+</html>

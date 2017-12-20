@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-DragSelector'>/**
+</span>@class Sch.plugin.DragSelector
+@extends Ext.util.Observable
+
+Plugin (ptype = 'scheduler_dragselector') for selecting multiple events by &quot;dragging&quot; an area in the scheduler chart. Currently only enabled **when CTRL is pressed**
+
+{@img scheduler/images/drag-selector.png}
+
+To add this plugin to scheduler:
+
+    var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+        ...
+    
+        resourceStore   : resourceStore,
+        eventStore      : eventStore,
+    
+        plugins         : [
+            Ext.create('Sch.plugin.DragSelector')
+        ]
+    });
+
+*/
+Ext.define(&quot;Sch.plugin.DragSelector&quot;, {
+    extend        : &quot;Sch.util.DragTracker&quot;,
+    alias         : 'plugin.scheduler_dragselector',
+    mixins        : ['Ext.AbstractPlugin'],
+
+    requires      : [
+        'Sch.util.ScrollManager'
+    ],
+
+<span id='Sch-plugin-DragSelector-property-lockableScope'>    lockableScope : 'top',
+</span>
+<span id='Sch-plugin-DragSelector-property-schedulerView'>    schedulerView : null,
+</span><span id='Sch-plugin-DragSelector-property-eventData'>    eventData     : null,
+</span><span id='Sch-plugin-DragSelector-property-sm'>    sm            : null,
+</span><span id='Sch-plugin-DragSelector-property-proxy'>    proxy         : null,
+</span><span id='Sch-plugin-DragSelector-property-bodyRegion'>    bodyRegion    : null,
+</span>
+<span id='Sch-plugin-DragSelector-method-constructor'>    constructor : function (cfg) {
+</span>        cfg = cfg || {};
+
+        Ext.applyIf(cfg, {
+            onBeforeStart : this.onBeforeStart,
+            onStart       : this.onStart,
+            onDrag        : this.onDrag,
+            onEnd         : this.onEnd
+        });
+
+        this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-DragSelector-method-init'>    init : function (scheduler) {
+</span>
+        var view = this.schedulerView = scheduler.getSchedulingView();
+
+        view.on({
+            afterrender : this.onSchedulingViewRender,
+            scope       : this
+        });
+    },
+
+<span id='Sch-plugin-DragSelector-method-onBeforeStart'>    onBeforeStart : function (e) {
+</span>        // Only react when not clicking event nodes and when CTRL is pressed
+        return !e.getTarget('.sch-event') &amp;&amp; e.ctrlKey;
+    },
+
+<span id='Sch-plugin-DragSelector-method-onStart'>    onStart : function (e) {
+</span>        var schedulerView = this.schedulerView;
+
+        this.proxy.show();
+
+        this.bodyRegion = schedulerView.getScheduleRegion();
+
+        var eventData = [];
+
+        schedulerView.getEventNodes().each(function (el) {
+            eventData[ eventData.length ] = {
+                region : el.getRegion(),
+                node   : el.dom
+            };
+        });
+
+        this.eventData = eventData;
+
+        this.sm.deselectAll();
+
+        Sch.util.ScrollManager.activate(schedulerView);
+    },
+
+<span id='Sch-plugin-DragSelector-method-onDrag'>    onDrag : function (e) {
+</span>        var sm              = this.sm,
+            eventData       = this.eventData,
+            dragRegion      = this.getRegion().constrainTo(this.bodyRegion),
+            i, ev, len, sel;
+
+        this.proxy.setBox(dragRegion);
+
+        for (i = 0, len = eventData.length; i &lt; len; i++) {
+            ev = eventData[i];
+            sel = dragRegion.intersect(ev.region);
+
+            if (sel &amp;&amp; !ev.selected) {
+                ev.selected = true;
+                sm.selectNode(ev.node, true);
+            } else if (!sel &amp;&amp; ev.selected) {
+                ev.selected = false;
+                sm.deselectNode(ev.node);
+            }
+        }
+    },
+
+<span id='Sch-plugin-DragSelector-method-onEnd'>    onEnd : function (e) {
+</span>        if (this.proxy) {
+            this.proxy.setDisplayed(false);
+        }
+
+        Sch.util.ScrollManager.deactivate();
+    },
+
+<span id='Sch-plugin-DragSelector-method-onSchedulingViewRender'>    onSchedulingViewRender : function (view) {
+</span>        this.sm = view.getEventSelectionModel();
+
+        this.initEl(this.schedulerView.el);
+
+        // the proxy has to be set up immediately after rendering the view, so it will be included in the
+        // &quot;fixedNodes&quot; of the grid view and won't be overwritten after refresh
+        this.proxy = view.el.createChild({ cls : 'sch-drag-selector' });
+    },
+
+<span id='Sch-plugin-DragSelector-method-destroy'>    destroy : function () {
+</span>        if (this.proxy) Ext.destroy(this.proxy);
+
+        this.callParent(arguments);
+    }
+});
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-model-TaskSegment'>/**
+</span>@class Gnt.model.TaskSegment
+@extends Gnt.model.Task
+
+This class represents a segment of a split task in your Gantt chart.
+
+*/
+Ext.define('Gnt.model.TaskSegment', {
+    extend                  : 'Gnt.model.Task',
+
+<span id='Gnt-model-TaskSegment-method-setName'>    /**
+</span>     * @hide
+     * @method setName
+     */
+<span id='Gnt-model-TaskSegment-method-getName'>    /**
+</span>     * @hide
+     * @method getName
+     */
+<span id='Gnt-model-TaskSegment-cfg-autoCalculateEffortForParentTask'>    /**
+</span>     * @hide
+     * @cfg autoCalculateEffortForParentTask
+     */
+<span id='Gnt-model-TaskSegment-cfg-autoCalculatePercentDoneForParentTask'>    /**
+</span>     * @hide
+     * @cfg autoCalculatePercentDoneForParentTask
+     */
+<span id='Gnt-model-TaskSegment-cfg-baselineEndDateField'>    /**
+</span>     * @hide
+     * @cfg baselineEndDateField
+     */
+<span id='Gnt-model-TaskSegment-cfg-baselinePercentDoneField'>    /**
+</span>     * @hide
+     * @cfg baselinePercentDoneField
+     */
+<span id='Gnt-model-TaskSegment-cfg-baselineStartDateField'>    /**
+</span>     * @hide
+     * @cfg baselineStartDateField
+     */
+<span id='Gnt-model-TaskSegment-cfg-calendar'>    /**
+</span>     * @hide
+     * @cfg calendar
+     */
+<span id='Gnt-model-TaskSegment-cfg-calendarIdField'>    /**
+</span>     * @hide
+     * @cfg calendarIdField
+     */
+<span id='Gnt-model-TaskSegment-cfg-constraintDateField'>    /**
+</span>     * @hide
+     * @cfg constraintDateField
+     */
+<span id='Gnt-model-TaskSegment-cfg-constraintTypeField'>    /**
+</span>     * @hide
+     * @cfg constraintTypeField
+     */
+<span id='Gnt-model-TaskSegment-cfg-convertEmptyParentToLeaf'>    /**
+</span>     * @hide
+     * @cfg convertEmptyParentToLeaf
+     */
+<span id='Gnt-model-TaskSegment-cfg-draggableField'>    /**
+</span>     * @hide
+     * @cfg draggableField
+     */
+<span id='Gnt-model-TaskSegment-cfg-effortField'>    /**
+</span>     * @hide
+     * @cfg effortField
+     */
+<span id='Gnt-model-TaskSegment-cfg-effortUnitField'>    /**
+</span>     * @hide
+     * @cfg effortUnitField
+     */
+<span id='Gnt-model-TaskSegment-cfg-manuallyScheduledField'>    /**
+</span>     * @hide
+     * @cfg manuallyScheduledField
+     */
+<span id='Gnt-model-TaskSegment-cfg-percentDoneField'>    /**
+</span>     * @hide
+     * @cfg percentDoneField
+     */
+<span id='Gnt-model-TaskSegment-cfg-phantomParentIdField'>    /**
+</span>     * @hide
+     * @cfg phantomParentIdField
+     */
+<span id='Gnt-model-TaskSegment-cfg-resizableField'>    /**
+</span>     * @hide
+     * @cfg resizableField
+     */
+<span id='Gnt-model-TaskSegment-cfg-rollupField'>    /**
+</span>     * @hide
+     * @cfg rollupField
+     */
+<span id='Gnt-model-TaskSegment-cfg-schedulingModeField'>    /**
+</span>     * @hide
+     * @cfg schedulingModeField
+     */
+<span id='Gnt-model-TaskSegment-cfg-taskStore'>    /**
+</span>     * @hide
+     * @cfg taskStore
+     */
+<span id='Gnt-model-TaskSegment-cfg-dependencyStore'>    /**
+</span>     * @hide
+     * @cfg dependencyStore
+     */
+<span id='Gnt-model-TaskSegment-property-assignments'>    /**
+</span>     * @hide
+     * @property assignments
+     */
+<span id='Gnt-model-TaskSegment-property-predecessors'>    /**
+</span>     * @hide
+     * @property predecessors
+     */
+<span id='Gnt-model-TaskSegment-property-successors'>    /**
+</span>     * @hide
+     * @property successors
+     */
+<span id='Gnt-model-TaskSegment-method-addMilestone'>    /**
+</span>     * @hide
+     * @method addMilestone
+     */
+<span id='Gnt-model-TaskSegment-method-addPredecessor'>    /**
+</span>     * @hide
+     * @method addPredecessor
+     */
+<span id='Gnt-model-TaskSegment-method-addSubtask'>    /**
+</span>     * @hide
+     * @method addSubtask
+     */
+<span id='Gnt-model-TaskSegment-method-addSuccessor'>    /**
+</span>     * @hide
+     * @method addSuccessor
+     */
+<span id='Gnt-model-TaskSegment-method-addTaskAbove'>    /**
+</span>     * @hide
+     * @method addTaskAbove
+     */
+<span id='Gnt-model-TaskSegment-method-addTaskBelow'>    /**
+</span>     * @hide
+     * @method addTaskBelow
+     */
+<span id='Gnt-model-TaskSegment-method-assign'>    /**
+</span>     * @hide
+     * @method assign
+     */
+<span id='Gnt-model-TaskSegment-method-cascadeChanges'>    /**
+</span>     * @hide
+     * @method cascadeChanges
+     */
+<span id='Gnt-model-TaskSegment-method-cascadeChildren'>    /**
+</span>     * @hide
+     * @method cascadeChildren
+     */
+<span id='Gnt-model-TaskSegment-method-convertToMilestone'>    /**
+</span>     * @hide
+     * @method convertToMilestone
+     */
+<span id='Gnt-model-TaskSegment-method-convertToRegular'>    /**
+</span>     * @hide
+     * @method convertToRegular
+     */
+<span id='Gnt-model-TaskSegment-method-forEachDate'>    /**
+</span>     * @hide
+     * @method forEachDate
+     */
+<span id='Gnt-model-TaskSegment-method-getAllDependencies'>    /**
+</span>     * @hide
+     * @method getAllDependencies
+     */
+<span id='Gnt-model-TaskSegment-method-getAssignmentFor'>    /**
+</span>     * @hide
+     * @method getAssignmentFor
+     */
+<span id='Gnt-model-TaskSegment-method-getAssignmentStore'>    /**
+</span>     * @hide
+     * @method getAssignmentStore
+     */
+<span id='Gnt-model-TaskSegment-method-getAssignments'>    /**
+</span>     * @hide
+     * @method getAssignments
+     */
+<span id='Gnt-model-TaskSegment-method-getBaselineEndDate'>    /**
+</span>     * @hide
+     * @method getBaselineEndDate
+     */
+<span id='Gnt-model-TaskSegment-method-getBaselinePercentDone'>    /**
+</span>     * @hide
+     * @method getBaselinePercentDone
+     */
+<span id='Gnt-model-TaskSegment-method-getBaselineStartDate'>    /**
+</span>     * @hide
+     * @method getBaselineStartDate
+     */
+<span id='Gnt-model-TaskSegment-method-setBaselineEndDate'>    /**
+</span>     * @hide
+     * @method setBaselineEndDate
+     */
+<span id='Gnt-model-TaskSegment-method-setBaselinePercentDone'>    /**
+</span>     * @hide
+     * @method setBaselinePercentDone
+     */
+<span id='Gnt-model-TaskSegment-method-setBaselineStartDate'>    /**
+</span>     * @hide
+     * @method setBaselineStartDate
+     */
+<span id='Gnt-model-TaskSegment-method-getCalendar'>    /**
+</span>     * @hide
+     * @method getCalendar
+     */
+<span id='Gnt-model-TaskSegment-method-getCalendarDuration'>    /**
+</span>     * @hide
+     * @method getCalendarDuration
+     */
+<span id='Gnt-model-TaskSegment-method-getConstraintClass'>    /**
+</span>     * @hide
+     * @method getConstraintClass
+     */
+<span id='Gnt-model-TaskSegment-method-getDates'>    /**
+</span>     * @hide
+     * @method getDates
+     */
+<span id='Gnt-model-TaskSegment-method-getDependencyStore'>    /**
+</span>     * @hide
+     * @method getDependencyStore
+     */
+<span id='Gnt-model-TaskSegment-method-getDisplayEndDate'>    /**
+</span>     * @hide
+     * @method getDisplayEndDate
+     */
+<span id='Gnt-model-TaskSegment-method-getDisplayStartDate'>    /**
+</span>     * @hide
+     * @method getDisplayStartDate
+     */
+<span id='Gnt-model-TaskSegment-method-getEarlyEndDate'>    /**
+</span>     * @hide
+     * @method getEarlyEndDate
+     */
+<span id='Gnt-model-TaskSegment-method-getEarlyStartDate'>    /**
+</span>     * @hide
+     * @method getEarlyStartDate
+     */
+<span id='Gnt-model-TaskSegment-method-getEffort'>    /**
+</span>     * @hide
+     * @method getEffort
+     */
+<span id='Gnt-model-TaskSegment-method-getEffortUnit'>    /**
+</span>     * @hide
+     * @method getEffortUnit
+     */
+<span id='Gnt-model-TaskSegment-method-getIncomingDependencies'>    /**
+</span>     * @hide
+     * @method getIncomingDependencies
+     */
+<span id='Gnt-model-TaskSegment-method-getLateEndDate'>    /**
+</span>     * @hide
+     * @method getLateEndDate
+     */
+<span id='Gnt-model-TaskSegment-method-getLateStartDate'>    /**
+</span>     * @hide
+     * @method getLateStartDate
+     */
+<span id='Gnt-model-TaskSegment-method-getOutgoingDependencies'>    /**
+</span>     * @hide
+     * @method getOutgoingDependencies
+     */
+<span id='Gnt-model-TaskSegment-method-getOwnCalendar'>    /**
+</span>     * @hide
+     * @method getOwnCalendar
+     */
+<span id='Gnt-model-TaskSegment-method-getPercentDone'>    /**
+</span>     * @hide
+     * @method getPercentDone
+     */
+<span id='Gnt-model-TaskSegment-method-getPredecessors'>    /**
+</span>     * @hide
+     * @method getPredecessors
+     */
+<span id='Gnt-model-TaskSegment-method-getPredecessorsCount'>    /**
+</span>     * @hide
+     * @method getPredecessorsCount
+     */
+<span id='Gnt-model-TaskSegment-method-getResourceStore'>    /**
+</span>     * @hide
+     * @method getResourceStore
+     */
+<span id='Gnt-model-TaskSegment-method-getResources'>    /**
+</span>     * @hide
+     * @method getResources
+     */
+<span id='Gnt-model-TaskSegment-method-getSchedulingMode'>    /**
+</span>     * @hide
+     * @method getSchedulingMode
+     */
+<span id='Gnt-model-TaskSegment-method-getSegment'>    /**
+</span>     * @hide
+     * @method getSegment
+     */
+<span id='Gnt-model-TaskSegment-method-getSequenceNumber'>    /**
+</span>     * @hide
+     * @method getSequenceNumber
+     */
+<span id='Gnt-model-TaskSegment-method-getSlack'>    /**
+</span>     * @hide
+     * @method getSlack
+     */
+<span id='Gnt-model-TaskSegment-method-getSuccessors'>    /**
+</span>     * @hide
+     * @method getSuccessors
+     */
+<span id='Gnt-model-TaskSegment-method-getTaskStore'>    /**
+</span>     * @hide
+     * @method getTaskStore
+     */
+<span id='Gnt-model-TaskSegment-method-getTotalCount'>    /**
+</span>     * @hide
+     * @method getTotalCount
+     */
+<span id='Gnt-model-TaskSegment-method-getWBSCode'>    /**
+</span>     * @hide
+     * @method getWBSCode
+     */
+<span id='Gnt-model-TaskSegment-method-hasAssignments'>    /**
+</span>     * @hide
+     * @method hasAssignments
+     */
+<span id='Gnt-model-TaskSegment-method-hasConstraint'>    /**
+</span>     * @hide
+     * @method hasConstraint
+     */
+<span id='Gnt-model-TaskSegment-method-hasIncomingDependencies'>    /**
+</span>     * @hide
+     * @method hasIncomingDependencies
+     */
+<span id='Gnt-model-TaskSegment-method-hasOutgoingDependencies'>    /**
+</span>     * @hide
+     * @method hasOutgoingDependencies
+     */
+<span id='Gnt-model-TaskSegment-method-hasResources'>    /**
+</span>     * @hide
+     * @method hasResources
+     */
+<span id='Gnt-model-TaskSegment-method-indent'>    /**
+</span>     * @hide
+     * @method indent
+     */
+<span id='Gnt-model-TaskSegment-method-insertSubtask'>    /**
+</span>     * @hide
+     * @method insertSubtask
+     */
+<span id='Gnt-model-TaskSegment-method-isAssignedTo'>    /**
+</span>     * @hide
+     * @method isAssignedTo
+     */
+<span id='Gnt-model-TaskSegment-method-isBaselineMilestone'>    /**
+</span>     * @hide
+     * @method isBaselineMilestone
+     */
+<span id='Gnt-model-TaskSegment-method-isConstraintSatisfied'>    /**
+</span>     * @hide
+     * @method isConstraintSatisfied
+     */
+<span id='Gnt-model-TaskSegment-method-isManuallyScheduled'>    /**
+</span>     * @hide
+     * @method isManuallyScheduled
+     */
+<span id='Gnt-model-TaskSegment-method-isMilestone'>    /**
+</span>     * @hide
+     * @method isMilestone
+     */
+<span id='Gnt-model-TaskSegment-method-isPersistable'>    /**
+</span>     * @hide
+     * @method isPersistable
+     */
+<span id='Gnt-model-TaskSegment-method-isProjected'>    /**
+</span>     * @hide
+     * @method isProjected
+     */
+<span id='Gnt-model-TaskSegment-method-isSegmented'>    /**
+</span>     * @hide
+     * @method isSegmented
+     */
+<span id='Gnt-model-TaskSegment-method-linkTo'>    /**
+</span>     * @hide
+     * @method linkTo
+     */
+<span id='Gnt-model-TaskSegment-method-merge'>    /**
+</span>     * @hide
+     * @method merge
+     */
+<span id='Gnt-model-TaskSegment-method-outdent'>    /**
+</span>     * @hide
+     * @method outdent
+     */
+<span id='Gnt-model-TaskSegment-method-setBaselinePercentDone'>    /**
+</span>     * @hide
+     * @method setBaselinePercentDone
+     */
+<span id='Gnt-model-TaskSegment-method-setCalendar'>    /**
+</span>     * @hide
+     * @method setCalendar
+     */
+<span id='Gnt-model-TaskSegment-method-setConstraint'>    /**
+</span>     * @hide
+     * @method setConstraint
+     */
+<span id='Gnt-model-TaskSegment-method-setConstraintDate'>    /**
+</span>     * @hide
+     * @method setConstraintDate
+     */
+<span id='Gnt-model-TaskSegment-method-setConstraintType'>    /**
+</span>     * @hide
+     * @method setConstraintType
+     */
+<span id='Gnt-model-TaskSegment-method-setEffort'>    /**
+</span>     * @hide
+     * @method setEffort
+     */
+<span id='Gnt-model-TaskSegment-method-setEffortUnit'>    /**
+</span>     * @hide
+     * @method setEffortUnit
+     */
+<span id='Gnt-model-TaskSegment-method-setPercentDone'>    /**
+</span>     * @hide
+     * @method setPercentDone
+     */
+<span id='Gnt-model-TaskSegment-method-setSchedulingMode'>    /**
+</span>     * @hide
+     * @method setSchedulingMode
+     */
+<span id='Gnt-model-TaskSegment-method-setSegments'>    /**
+</span>     * @hide
+     * @method setSegments
+     */
+<span id='Gnt-model-TaskSegment-method-setTaskStore'>    /**
+</span>     * @hide
+     * @method setTaskStore
+     */
+<span id='Gnt-model-TaskSegment-method-shift'>    /**
+</span>     * @hide
+     * @method shift
+     */
+<span id='Gnt-model-TaskSegment-method-split'>    /**
+</span>     * @hide
+     * @method split
+     */
+<span id='Gnt-model-TaskSegment-method-unAssign'>    /**
+</span>     * @hide
+     * @method unAssign
+     */
+<span id='Gnt-model-TaskSegment-method-unlinkFrom'>    /**
+</span>     * @hide
+     * @method unlinkFrom
+     */
+
+<span id='Gnt-model-TaskSegment-cfg-task'>    /**
+</span>     * @cfg {Gnt.model.Task} task The task part of which this segment is.
+     * @required
+     */
+    task                    : null,
+
+<span id='Gnt-model-TaskSegment-property-prevSegment'>    prevSegment             : null,
+</span>
+<span id='Gnt-model-TaskSegment-property-nextSegment'>    nextSegment             : null,
+</span>
+<span id='Gnt-model-TaskSegment-cfg-customizableFields'>    customizableFields      : [
+</span>        { name : 'StartOffset',     type : 'int' },
+        { name : 'EndOffset',       type : 'int' }
+    ],
+
+<span id='Gnt-model-TaskSegment-property-startOffsetField'>    startOffsetField        : 'StartOffset',
+</span><span id='Gnt-model-TaskSegment-property-endOffsetField'>    endOffsetField          : 'EndOffset',
+</span>
+<span id='Gnt-model-TaskSegment-property-taskNotifyingSuspended'>    taskNotifyingSuspended  : 0,
+</span><span id='Gnt-model-TaskSegment-property-respectNeighbours'>    respectNeighbours       : 0,
+</span>
+<span id='Gnt-model-TaskSegment-method-constructor'>    constructor : function (cfg) {
+</span>        cfg         = cfg || {};
+
+        cfg.leaf    = true;
+
+        if (!cfg.task) throw &quot;'task' has to be specified&quot;;
+
+        this.task = cfg.task;
+
+        this.setPrevSegment(cfg.prevSegment);
+
+        this.callParent(arguments);
+
+        Ext.override(this, this.overridables);
+
+        if (this.getTask().normalized &amp;&amp; this.getTaskStore(true) &amp;&amp; !this.normalized) {
+            this.normalize();
+        }
+    },
+
+
+<span id='Gnt-model-TaskSegment-property-overridables'>    overridables : {
+</span>
+        // we have to treat set() method override this way since we use explicit Ext.override() call
+        // to override it in Gnt.model.mixin.ProjectableModel, and thus we can override it using the same approach only
+        set : function () {
+            var task    = this.getTask();
+
+            if (!this.editing &amp;&amp; task) {
+                // let master task know of editing being started
+                task.onSegmentEditBegin(this);
+            }
+
+            this.callParent(arguments);
+        }
+
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-serialize'>    serialize : function () {
+</span>        var data    = {};
+
+        if (this.getId()) {
+            data[this.idProperty]       = this.getId();
+        }
+        data[this.phantomIdField]       = this.getPhantomId();
+        data[this.startDateField]       = this.getStartDate();
+        data[this.endDateField]         = this.getEndDate();
+        data[this.durationField]        = this.getDuration();
+        data[this.durationUnitField]    = this.getDurationUnit();
+        data[this.clsField]             = this.getCls();
+
+        return data;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-setStartOffset'>    setStartOffset : function (startOffset) {
+</span>        var cal                 = this.getTask().getProjectCalendar();
+        var durationInTaskUnit  = cal.convertMSDurationToUnit(this.getEndOffset() - startOffset, this.getDurationUnit());
+
+        this.beginEdit();
+
+        this.set(this.startOffsetField, startOffset);
+        this.set(this.durationField, durationInTaskUnit);
+
+        this.endEdit();
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-setEndOffset'>    setEndOffset : function (endOffset) {
+</span>        var cal                 = this.getTask().getProjectCalendar();
+        var durationInTaskUnit  = cal.convertMSDurationToUnit(endOffset - this.getStartOffset(), this.getDurationUnit());
+
+        this.beginEdit();
+
+        this.set(this.endOffsetField, endOffset);
+        this.set(this.durationField, durationInTaskUnit);
+
+        this.endEdit();
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-setStartEndOffset'>    setStartEndOffset : function (startOffset, endOffset) {
+</span>        var cal                 = this.getTask().getProjectCalendar();
+        var durationInTaskUnit  = cal.convertMSDurationToUnit(endOffset - startOffset, this.getDurationUnit());
+
+        this.beginEdit();
+
+        this.set(this.startOffsetField, startOffset);
+        this.set(this.endOffsetField, endOffset);
+        this.set(this.durationField, durationInTaskUnit);
+
+        this.endEdit();
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-normalize'>    normalize : function () {
+</span>        // fill missing standard task fields: end date based on duration or duration based on end date etc.
+        this.callParent(arguments);
+
+        var startDate   = this.getStartDate();
+
+        // fill offsets if needed
+        if (!this.getStartOffset() &amp;&amp; startDate) {
+            var task                = this.getTask();
+            var startOffset         = this.calculateDuration(task.getStartDate(), startDate, 'MILLI');
+            var endOffset           = startOffset + this.getDuration('MILLI');
+            var cal                 = task.getProjectCalendar();
+            var durationInTaskUnits = cal.convertMSDurationToUnit(endOffset - startOffset, this.getDurationUnit());
+
+            this.data[this.startOffsetField]    = startOffset;
+            this.data[this.endOffsetField]      = endOffset;
+            this.data[this.durationField]       = durationInTaskUnits;
+        }
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-updateOffsetsByDates'>    updateOffsetsByDates : function () {
+</span>        // we need task store to use its project calendar
+        if (!this.getTaskStore(true)) return;
+
+        // prevents nested updating of offsets
+        // and updating of offsets during start/end recalculation (based on offsets)
+        if (this.updatingOffsets || this.updatingDates) return;
+
+        // set flag saying that we are in the middle of updating offsets by dates
+        this.updatingOffsets    = true;
+
+        var offset              = this.calculateDuration(this.getTask().getStartDate(), this.getStartDate(), 'MILLI');
+
+        this.setStartEndOffset(offset, offset + this.getDuration('MILLI'));
+
+        this.updatingOffsets    = false;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-updateDatesByOffsets'>    updateDatesByOffsets : function (options) {
+</span>        options                 = options || {};
+
+        // prevents nested updating of dates
+        // and updating of dates during offsets updating
+        if (this.updatingDates || this.updatingOffsets) return;
+
+        var isForward           = options.isForward !== false,
+            useAbsoluteOffset   = options.useAbsoluteOffset !== false,
+            startDate           = options.startDate,
+            endDate             = options.endDate,
+            taskStore           = this.getTaskStore(true);
+
+        if (!taskStore) return;
+
+        // set flag saying that we are in the middle of updating dates by offsets
+        this.updatingDates      = true;
+
+        var date, neighbour;
+
+        if (isForward) {
+            neighbour   = this.getPrevSegment();
+
+            if (neighbour &amp;&amp; !useAbsoluteOffset) {
+                date    = this.skipWorkingTime(neighbour.getEndDate(), this.getStartOffset() - neighbour.getEndOffset());
+            } else {
+                date    = this.skipWorkingTime(startDate || this.getTask().getStartDate(), this.getStartOffset());
+            }
+
+        } else {
+            neighbour   = this.getNextSegment();
+
+            if (neighbour &amp;&amp; !useAbsoluteOffset) {
+                date    = this.skipWorkingTime(neighbour.getStartDate(), neighbour.getStartOffset() - this.getEndOffset() + this.getDuration('MILLI'), false);
+            } else {
+                date    = this.skipWorkingTime(endDate || this.getTask().getEndDate(), this.getDuration('MILLI'), false);
+            }
+
+        }
+
+        this.setStartDateWithoutPropagation(date, true, taskStore.skipWeekendsDuringDragDrop);
+
+        this.updatingDates      = false;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-getPrevSegment'>    getPrevSegment : function () {
+</span>        return this.prevSegment;
+    },
+
+<span id='Gnt-model-TaskSegment-method-getNextSegment'>    getNextSegment : function () {
+</span>        return this.nextSegment;
+    },
+
+<span id='Gnt-model-TaskSegment-method-setPrevSegment'>    setPrevSegment : function (prevSegment) {
+</span>        this.prevSegment        = prevSegment;
+
+        if (prevSegment) {
+            prevSegment.nextSegment = this;
+        }
+    },
+
+<span id='Gnt-model-TaskSegment-method-setNextSegment'>    setNextSegment : function (nextSegment) {
+</span>        this.nextSegment        = nextSegment;
+
+        if (nextSegment) {
+            nextSegment.prevSegment = this;
+        }
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-buildSnapshot'>    buildSnapshot : function () {
+</span>        // snapshot keeps:
+        // - reference to segment itself
+        // - its `data` snapshot
+        // - and few other properties
+        return [
+            this,
+            Ext.apply({}, this.data),
+            { prevSegment : this.getPrevSegment(), nextSegment : this.getNextSegment() }
+        ];
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-readSnapshot'>    readSnapshot : function (snapshot) {
+</span>        if (snapshot) {
+            Ext.apply(this.data, snapshot[1]);
+            Ext.apply(this, snapshot[2]);
+
+            return this;
+        }
+
+        return snapshot;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-enableRespectNeighbours'>    enableRespectNeighbours : function () {
+</span>        this.respectNeighbours++;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-disableRespectNeighbours'>    disableRespectNeighbours : function () {
+</span>        this.respectNeighbours--;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-suspendTaskNotifying'>    suspendTaskNotifying : function () {
+</span>        this.taskNotifyingSuspended++;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-resumeTaskNotifying'>    resumeTaskNotifying : function () {
+</span>        this.taskNotifyingSuspended--;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-setStartDate'>    setStartDate : function (date, keepDuration) {
+</span>        // if we move the segment their neighbours constraints the movement range
+        if (keepDuration) {
+            this.enableRespectNeighbours();
+        }
+
+        this.callParent(arguments);
+
+        if (keepDuration) {
+            this.disableRespectNeighbours();
+        }
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-setStartDateWithoutPropagation'>    setStartDateWithoutPropagation : function () {
+</span>        this.beginEdit();
+
+        this.callParent(arguments);
+        this.updateOffsetsByDates();
+
+        // if we have next segment(s) and we have to respect and not overlap them
+        if (!this.inShifting &amp;&amp; this.respectNeighbours &amp;&amp; this.getNextSegment()) {
+            // this.shiftNeighboursWithoutPropagation();
+            var neighbour   = this.getNextSegment();
+            var shift       = this.getEndOffset() - neighbour.getStartOffset();
+
+            if (neighbour &amp;&amp; (shift &gt; 0)) {
+                neighbour.suspendTaskNotifying();
+                neighbour.enableRespectNeighbours();
+
+                neighbour.shiftWithoutPropagation(shift);
+
+                neighbour.resumeTaskNotifying();
+                neighbour.disableRespectNeighbours();
+            }
+        }
+
+        this.endEdit();
+
+        return true;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-shiftWithoutPropagation'>    /**
+</span>     * @private
+     * Shifts the segment by provided number of milliseconds.
+     * If the segment has {@link #respectNeighbours} set to `true` this call will shift further segments as well.
+     * @param {Number} amountMS Number of milliseconds the segment shoud be mover by.
+     */
+    shiftWithoutPropagation : function (amountMS) {
+        var me          = this;
+
+        if (!amountMS) return;
+
+        me.beginEdit();
+
+        me.inShifting   = true;
+
+        me.setStartEndOffset(me.getStartOffset() + amountMS, me.getEndOffset() + amountMS);
+        me.updateDatesByOffsets();
+
+        var neighbour;
+
+        if (me.respectNeighbours &amp;&amp; (neighbour   = amountMS &gt; 0 ? me.getNextSegment() : me.getPrevSegment())) {
+            neighbour.suspendTaskNotifying();
+            neighbour.enableRespectNeighbours();
+
+            neighbour.shiftWithoutPropagation(amountMS);
+
+            neighbour.resumeTaskNotifying();
+            neighbour.disableRespectNeighbours();
+        }
+
+        me.inShifting   = false;
+
+        me.endEdit();
+
+        return true;
+    },
+
+
+<span id='Gnt-model-TaskSegment-method-setEndDateWithoutPropagation'>    setEndDateWithoutPropagation : function () {
+</span>        this.beginEdit();
+
+        this.callParent(arguments);
+        this.updateOffsetsByDates();
+
+        this.endEdit();
+
+        return true;
+    },
+
+<span id='Gnt-model-TaskSegment-method-setStartEndDateWithoutPropagation'>    setStartEndDateWithoutPropagation : function () {
+</span>        this.beginEdit();
+
+        this.callParent(arguments);
+        this.updateOffsetsByDates();
+
+        this.endEdit();
+
+        return true;
+    },
+
+<span id='Gnt-model-TaskSegment-method-setDurationWithoutPropagation'>    setDurationWithoutPropagation : function () {
+</span>        this.beginEdit();
+
+        this.callParent(arguments);
+        this.updateOffsetsByDates();
+
+        this.endEdit();
+
+        return true;
+    },
+
+<span id='Gnt-model-TaskSegment-method-getTask'>    /**
+</span>     * Gets the task part of which the segment is.
+     * @return {Gnt.model.Task} The task.
+     */
+    getTask : function () {
+        return this.task;
+    },
+
+<span id='Gnt-model-TaskSegment-method-beginEdit'>    beginEdit : function () {
+</span>        var task    = this.getTask();
+
+        if (task &amp;&amp; !this.__editCounter) {
+            // let master task know of editing being started
+            task.onSegmentEditBegin(this);
+        }
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-endEdit'>    endEdit : function () {
+</span>        var modified    = this.previous;
+
+        this.callParent(arguments);
+
+        if (!this.__editCounter &amp;&amp; !this.taskNotifyingSuspended) {
+            // if the timespan was affected by the change we gonna let the master task know of it
+            if (this.startDateField in modified || this.endDateField in modified || this.startOffsetField in modified || this.endOffsetField in modified || this.durationField in modified)
+            {
+                this.getTask().onSegmentsChanged(this, modified);
+            }
+        }
+    },
+
+    // sub-segments are not supported
+
+<span id='global-method-setSegments'>    //@ignore
+</span>    setSegments : Ext.emptyFn,
+<span id='global-method-getSegments'>    //@ignore
+</span>    getSegments : Ext.emptyFn,
+
+<span id='Gnt-model-TaskSegment-method-callTask'>    callTask : function (args) {
+</span>        var task        = this.task;
+        var method      = this.callTask.caller;
+        var taskMethod  = method &amp;&amp; task[method.$name];
+
+        if (taskMethod) return taskMethod.apply(task, args);
+    },
+
+<span id='global-method-getSchedulingMode'>    //@ignore
+</span>    getSchedulingMode : function () {
+        // #1902 here we redirected this call to the task previously (using: this.callTask(arguments);)
+        // yet it brings few questions when it comes to &quot;EfforDriven&quot; mode
+        // where end date is calculated based on effort value ..and segment just doesn't have it normally
+        return 'Normal';
+    },
+
+<span id='Gnt-model-TaskSegment-method-getCalendar'>    // methods mapped from the task
+</span>
+    getCalendar : function () {
+        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getOwnCalendar'>    getOwnCalendar : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getProjectCalendar'>    getProjectCalendar : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getDependencyStore'>    getDependencyStore : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getResourceStore'>    getResourceStore : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getAssignmentStore'>    getAssignmentStore : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getTaskStore'>    getTaskStore : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-forEachAvailabilityInterval'>    forEachAvailabilityInterval : function (options) {
+</span>        // we query the task for available intervals
+        // but force it to NOT take segmentation into account
+        options.segments    = options.segments || false;
+
+        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-propagateChanges'>    propagateChanges : function(/*...*/) {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-rejectSegmentsProjection'>    rejectSegmentsProjection : function() {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-commitSegmentsProjection'>    commitSegmentsProjection : function() {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getAssignments'>    getAssignments : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getAssignmentFor'>    getAssignmentFor : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-isAssignedTo'>    isAssignedTo : function () {
+</span>        return this.callTask(arguments);
+    },
+
+<span id='Gnt-model-TaskSegment-method-getResources'>    getResources : function () {
+</span>        return this.callTask(arguments);
+    }
+
+});
+</pre>
+</body>
+</html>

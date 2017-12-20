@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-mixin-TimelineView'>/**
+</span>@class Sch.mixin.TimelineView
+
+A base mixin for {@link Ext.view.View} classes, giving to the consuming view the &quot;time line&quot; functionality.
+This means that the view will be capable to display a list of &quot;events&quot;, ordered on the {@link Sch.data.TimeAxis time axis}.
+
+By itself this mixin is not enough for correct rendering. The class, consuming this mixin, should also consume one of the
+{@link Sch.view.Horizontal}, {@link Sch.view.Vertical} or {@link Sch.view.Calendar} mixins, which provides the implementation of some mode-specfic methods.
+
+Generally, should not be used directly, if you need to subclass the view, subclass the {@link Sch.view.SchedulerGridView} instead.
+
+*/
+Ext.define(&quot;Sch.mixin.TimelineView&quot;, {
+    extend : 'Sch.mixin.AbstractTimelineView',
+
+    requires : [
+        'Ext.tip.ToolTip',
+        'Sch.patches.TouchScroll',
+        'Sch.patches.PartnerScroll',
+        'Sch.patches.View',
+        'Sch.patches.TableView',
+        'Sch.patches.Collection',
+        'Sch.patches.ToolTip'
+    ],
+
+<span id='Sch-mixin-TimelineView-property-tip'>    tip : null,
+</span>
+<span id='Sch-mixin-TimelineView-cfg-overScheduledEventClass'>    /**
+</span>    * @cfg {String} overScheduledEventClass
+    * A CSS class to apply to each event in the view on mouseover (defaults to 'sch-event-hover').
+    */
+    overScheduledEventClass: 'sch-event-hover',
+
+<span id='Sch-mixin-TimelineView-property-ScheduleBarEvents'>    ScheduleBarEvents    : [
+</span>        &quot;mousedown&quot;,
+        &quot;mouseup&quot;,
+        &quot;click&quot;,
+        &quot;dblclick&quot;,
+        &quot;contextmenu&quot;
+    ],
+
+<span id='Sch-mixin-TimelineView-property-ResourceRowEvents'>    ResourceRowEvents      : [
+</span>        &quot;keydown&quot;,
+        &quot;keyup&quot;
+    ],
+
+<span id='Sch-mixin-TimelineView-property-preventOverCls'>    // allow the panel to prevent adding the hover CSS class in some cases - during drag drop operations
+</span>    preventOverCls      : false,
+
+<span id='Sch-mixin-TimelineView-event-beforetooltipshow'>    /**
+</span>     * @event beforetooltipshow
+     * Fires before the event tooltip is shown, return false to suppress it.
+     * @param {Sch.mixin.SchedulerPanel} scheduler The scheduler object
+     * @param {Sch.model.Event} eventRecord The event record corresponding to the rendered event
+     */
+
+<span id='Sch-mixin-TimelineView-event-columnwidthchange'>    /**
+</span>     * @event columnwidthchange
+     * @private
+     * Fires after the column width has changed
+     */
+
+    _initializeTimelineView : function() {
+        this.callParent(arguments);
+
+        this.on('destroy', this._onDestroy, this);
+        this.on('afterrender', this._onAfterRender, this);
+        this.panel.on('viewready', this._onViewReady, this);
+
+        this.setMode(this.mode);
+
+        this.enableBubble('columnwidthchange');
+
+        this.addCls(&quot;sch-timelineview&quot;);
+
+        if (this.readOnly) {
+            this.addCls(this._cmpCls + '-readonly');
+        }
+
+        this.addCls(this._cmpCls);
+
+        if (this.eventAnimations) {
+            this.addCls('sch-animations-enabled');
+        }
+
+    },
+
+<span id='Sch-mixin-TimelineView-method-handleScheduleBarEvent'>    handleScheduleBarEvent: function(e, eventBarNode){
+</span>        this.fireEvent(this.scheduledEventName + e.type, this, this.resolveEventRecord(eventBarNode), e);
+    },
+
+<span id='Sch-mixin-TimelineView-method-handleResourceRowEvent'>    handleResourceRowEvent: function (e, resourceRowNode) {
+</span>        this.fireEvent(this.scheduledEventName + e.type, this, this.resolveEventRecordFromResourceRow(resourceRowNode), e);
+    },
+
+<span id='Sch-mixin-TimelineView-method-_onDestroy'>    // private, clean up
+</span>    _onDestroy: function () {
+        if (this.tip) {
+            this.tip.destroy();
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-_onViewReady'>    _onViewReady : function () {
+</span>        // If device support touch events ext is going to wrap node container in a special scroller element.
+        // That will place secondary canvas element on a second position in view.
+        if (this.touchScroll) {
+            this.getSecondaryCanvasEl().insertBefore(this.getNodeContainer());
+        }
+    },
+
+
+<span id='Sch-mixin-TimelineView-method-_onAfterRender'>    _onAfterRender : function () {
+</span>        if (this.overScheduledEventClass) {
+            this.setMouseOverEnabled(true);
+        }
+
+        if (this.tooltipTpl) {
+            if (typeof this.tooltipTpl === 'string') {
+                this.tooltipTpl = new Ext.XTemplate(this.tooltipTpl);
+            }
+            this.el.on('mousemove', this.setupTooltip, this, { single : true });
+        }
+
+        var bufferedRenderer    = this.bufferedRenderer;
+
+        if (bufferedRenderer) {
+            this.patchBufferedRenderingPlugin(bufferedRenderer);
+            this.patchBufferedRenderingPlugin(this.lockingPartner.bufferedRenderer);
+        }
+
+        this.on('bufferedrefresh', this.onBufferedRefresh, this, { buffer : 10 });
+
+        this.setupTimeCellEvents();
+
+        // The `secondaryCanvasEl` needs to be setup early, for the underlying gridview to know about it
+        // and not remove it on later 'refresh' calls.
+        var el = this.getSecondaryCanvasEl();
+
+        // Simple smoke check to make sure CSS has been included correctly on the page
+        if (el.getStyle('position').toLowerCase() !== 'absolute') {
+            var context = Ext.Msg || window;
+
+            context.alert('ERROR: The CSS file for the Bryntum component has not been loaded.');
+        }
+
+        var eventBarListeners = {
+            delegate    : this.eventSelector,
+            scope       : this
+        };
+
+        var resourceRowListeners = {
+            delegate    : this.rowSelector,
+            scope       : this
+        };
+
+        Ext.Array.forEach(this.ScheduleBarEvents, function(name) { eventBarListeners[name] = this.handleScheduleBarEvent; }, this);
+        Ext.Array.forEach(this.ResourceRowEvents, function(name) { resourceRowListeners[name] = this.handleResourceRowEvent; }, this);
+
+        this.el.on(eventBarListeners);
+        this.el.on(resourceRowListeners);
+    },
+
+
+<span id='Sch-mixin-TimelineView-method-patchBufferedRenderingPlugin'>    patchBufferedRenderingPlugin : function (plugin) {
+</span>        var me                      = this;
+        var oldSetBodyTop           = plugin.setBodyTop;
+
+        // @OVERRIDE Overriding buffered renderer plugin
+        plugin.setBodyTop           = function (bodyTop, calculatedTop) {
+            var val                 = oldSetBodyTop.apply(this, arguments);
+
+            me.fireEvent('bufferedrefresh', this);
+
+            return val;
+        };
+    },
+
+
+<span id='Sch-mixin-TimelineView-method-onBufferedRefresh'>    onBufferedRefresh : function() {
+</span>        var el              = this.body.dom;
+        if (!el) return;
+
+        var style           = el.style;
+
+        if (Ext.isIE9m) {
+            this.getSecondaryCanvasEl().dom.style.top = this.body.dom.style.top;
+        } else {
+            var transform       = style.transform || style.msTransform || style.webkitTransform;
+
+            var match;
+
+            if (transform) {
+                match           = /\(-?\d+px,\s*(-?\d+px),\s*(-?\d+)px\)/.exec(transform);
+            }
+
+            if (match) {
+                this.getSecondaryCanvasEl().dom.style.top = transform ? match[ 1 ] : el.style.top;
+            }
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-setMouseOverEnabled'>    setMouseOverEnabled : function(enabled) {
+</span>        this[enabled ? &quot;mon&quot; : &quot;mun&quot;](this.el, {
+            mouseover : this.onEventMouseOver,
+            mouseout  : this.onEventMouseOut,
+            delegate  : this.eventSelector,
+            scope     : this
+        });
+    },
+
+<span id='Sch-mixin-TimelineView-method-onEventMouseOver'>    // private
+</span>    onEventMouseOver: function (e, t) {
+        if (t !== this.lastItem &amp;&amp; !this.preventOverCls) {
+            this.lastItem = t;
+
+            Ext.fly(t).addCls(this.overScheduledEventClass);
+
+            var eventModel      = this.resolveEventRecord(t);
+
+            // do not fire this event if model cannot be found
+            // this can be the case for &quot;sch-dragcreator-proxy&quot; elements for example
+            if (eventModel) this.fireEvent('eventmouseenter', this, eventModel, e);
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-onEventMouseOut'>    // private
+</span>    onEventMouseOut: function (e, t) {
+        if (this.lastItem) {
+            if (!e.within(this.lastItem, true, true)) {
+                Ext.fly(this.lastItem).removeCls(this.overScheduledEventClass);
+
+                this.fireEvent('eventmouseleave', this, this.resolveEventRecord(this.lastItem), e);
+                delete this.lastItem;
+            }
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-highlightItem'>    // Overridden since locked grid can try to highlight items in the unlocked grid while it's loading/empty
+</span>    highlightItem: function(item) {
+        if (item) {
+            var me = this;
+            me.clearHighlight();
+            me.highlightedItem = item;
+            Ext.fly(item).addCls(me.overItemCls);
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-setupTooltip'>    // private
+</span>    setupTooltip: function () {
+        var me = this,
+            tipCfg = Ext.apply({
+                delegate    : me.eventSelector,
+                target      : me.el,
+                anchor      : 'b',
+                rtl         : me.rtl,
+
+                show : function() {
+                    Ext.ToolTip.prototype.show.apply(this, arguments);
+
+                    // Some extra help required to correct alignment (in cases where event is in part outside the scrollable area
+                    // https://www.assembla.com/spaces/bryntum/tickets/626#/activity/ticket:
+                    if (this.triggerElement &amp;&amp; me.getMode() === 'horizontal') {
+                        this.setX(this.targetXY[0] - 10);
+
+                        var box = Ext.fly(this.triggerElement).getBox();
+                        var newY = box.top - this.getHeight() - 10;
+
+                        // if tip won't be fully visible, move it to bottom edge
+                        this.setY(newY &lt; 0 ? box.bottom + 10 : newY);
+                    }
+                }
+            }, me.tipCfg);
+
+        me.tip = new Ext.ToolTip(tipCfg);
+
+        me.tip.on({
+            beforeshow: function (tip) {
+                if (!tip.triggerElement || !tip.triggerElement.id) {
+                    return false;
+                }
+
+                var record = this.resolveEventRecord(tip.triggerElement);
+
+                if (!record || this.fireEvent('beforetooltipshow', this, record) === false) {
+                    return false;
+                }
+
+                var dataForTip = this.getDataForTooltipTpl(record, tip.triggerElement),
+                    tooltipString;
+
+                if (!dataForTip) return false;
+
+                tooltipString = this.tooltipTpl.apply(dataForTip);
+
+                if (!tooltipString) return false;
+
+                tip.update(tooltipString);
+            },
+
+            scope: this
+        });
+        
+        if (Ext.supports.Touch) {
+            // https://www.sencha.com/forum/showthread.php?301307-single-event-listener-isn-t-unbound
+            me.el.un({
+                touchmove   : me.setupTooltip,
+                mousemove   : me.setupTooltip,
+                scope       : me
+            });
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-getHorizontalTimeAxisColumn'>    getHorizontalTimeAxisColumn : function () {
+</span>        if (!this.timeAxisColumn) {
+            this.timeAxisColumn = this.headerCt.down('timeaxiscolumn');
+
+            if (this.timeAxisColumn) {
+                this.timeAxisColumn.on('destroy', function() {
+                    this.timeAxisColumn = null;
+                }, this);
+            }
+        }
+
+        return this.timeAxisColumn;
+    },
+
+<span id='Sch-mixin-TimelineView-method-getDataForTooltipTpl'>    /**
+</span>    * Template method to allow you to easily provide data for your {@link Sch.mixin.TimelinePanel#tooltipTpl} template.
+     * @param {Sch.model.Range} event The event record corresponding to the HTML element that triggered the tooltip to show.
+     * @param {HTMLElement} triggerElement The HTML element that triggered the tooltip.
+     * @return {Object} The data to be applied to your template, typically any object or array.
+    */
+    getDataForTooltipTpl : function(record, triggerElement) {
+        return Ext.apply({
+            _record : record
+        }, record.data);
+    },
+
+<span id='Sch-mixin-TimelineView-method-refreshKeepingScroll'>    /**
+</span>     * Refreshes the view and maintains the scroll position.
+     */
+    refreshKeepingScroll : function() {
+
+        Ext.suspendLayouts();
+
+        this.saveScrollState();
+
+        this.refreshView();
+
+        // we have to resume layouts before scroll in order to let element receive its new width after refresh
+        Ext.resumeLayouts(true);
+
+        // If el is not scrolled, skip setting scroll state (can be a costly DOM operation)
+        // This speeds up initial rendering
+        // HACK: reading private scrollState property in Ext JS superclass
+        // infinite scroll requires the restore scroll state always
+        if (this.scrollState.left !== 0 || this.scrollState.top !== 0 || this.infiniteScroll) {
+            this.restoreScrollState();
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-setupTimeCellEvents'>    setupTimeCellEvents: function () {
+</span>        this.mon(this.el, {
+            // `handleScheduleEvent` is an abstract method, defined in &quot;SchedulerView&quot; and &quot;GanttView&quot;
+            click       : this.handleScheduleEvent,
+            dblclick    : this.handleScheduleEvent,
+            contextmenu : this.handleScheduleEvent,
+
+            pinch       : this.handleScheduleEvent,
+            pinchstart  : this.handleScheduleEvent,
+            pinchend    : this.handleScheduleEvent,
+            scope       : this
+        });
+    },
+
+<span id='Sch-mixin-TimelineView-method-getTableRegion'>    getTableRegion: function () {
+</span>        var tableEl = this.el.down('.' + Ext.baseCSSPrefix + 'grid-item-container');
+
+        // Also handle odd timing cases where the table hasn't yet been inserted into the dom
+        return (tableEl || this.el).getRegion();
+    },
+
+<span id='Sch-mixin-TimelineView-method-getRowNode'>    // Returns the row element for a given row record
+</span>    getRowNode: function (resourceRecord) {
+        return this.getNodeByRecord(resourceRecord);
+    },
+
+<span id='Sch-mixin-TimelineView-method-findRowByChild'>    findRowByChild : function(t) {
+</span>        return this.findItemByChild(t);
+    },
+
+<span id='Sch-mixin-TimelineView-method-getRecordForRowNode'>    getRecordForRowNode : function(node) {
+</span>        return this.getRecord(node);
+    },
+
+<span id='Sch-mixin-TimelineView-method-refreshKeepingResourceScroll'>    /**
+</span>    * Refreshes the view and maintains the resource axis scroll position.
+    */
+    refreshKeepingResourceScroll : function() {
+        var scroll = this.getScroll();
+
+        this.refreshView();
+
+        if (this.getMode() === 'horizontal') {
+            this.scrollVerticallyTo(scroll.top);
+        } else {
+            this.scrollHorizontallyTo(scroll.left);
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-scrollHorizontallyTo'>    scrollHorizontallyTo : function(x, animate) {
+</span>        var el = this.getEl();
+
+        if (el &amp;&amp; Ext.supports.Touch) {
+            this.setScrollX(x);
+        }
+        else if (el) {
+            el.scrollTo('left', Math.max(0, x), animate);
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-scrollVerticallyTo'>    scrollVerticallyTo : function(y, animate) {
+</span>        var el = this.getEl();
+
+        if (el &amp;&amp; Ext.supports.Touch) {
+            this.setScrollY(y);
+        }
+        else if (el) {
+           el.scrollTo('top', Math.max(0,  y), animate);
+        }
+    },
+
+<span id='Sch-mixin-TimelineView-method-getVerticalScroll'>    getVerticalScroll : function() {
+</span>        var el = this.getEl();
+        return el.getScroll().top;
+    },
+
+<span id='Sch-mixin-TimelineView-method-getHorizontalScroll'>    getHorizontalScroll : function() {
+</span>        var el = this.getEl();
+        return el.getScroll().left;
+    },
+
+<span id='Sch-mixin-TimelineView-method-getScroll'>    getScroll : function() {
+</span>        var me = this;
+
+        return {
+            top  : me.getScrollY(),
+            left : me.getScrollX()
+        };
+    },
+
+<span id='Sch-mixin-TimelineView-method-handleScheduleEvent'>    handleScheduleEvent : function () {},
+</span>
+<span id='Sch-mixin-TimelineView-method-scrollElementIntoView'>    // A slightly modified Ext.Element#scrollIntoView method using an offset for the edges
+</span>    scrollElementIntoView: function(el, hscroll, animate, highlight, edgeOffset, callback, scope) {
+
+        var me              = this,
+            dom             = el.dom,
+            container       = Ext.getDom(me.getEl()),
+            offsets         = el.getOffsetsTo(container),
+            scroll          = me.getScroll(),
+            left            = offsets[0] + scroll.left,
+            top             = offsets[1] + scroll.top,
+            bottom          = top + dom.offsetHeight,
+            right           = left + dom.offsetWidth,
+
+            ctClientHeight  = container.clientHeight,
+            ctScrollTop     = parseInt(scroll.top, 10),
+            ctScrollLeft    = parseInt(scroll.left, 10),
+            ctBottom        = ctScrollTop + ctClientHeight,
+            ctRight         = ctScrollLeft + container.clientWidth,
+
+            newPosX,
+            newPosY;
+
+        edgeOffset = edgeOffset === null || edgeOffset === undefined ? 20 : edgeOffset;
+
+        if (dom.offsetHeight &gt; ctClientHeight || top &lt; ctScrollTop) {
+            newPosY = top - edgeOffset;
+        }
+        else if (bottom &gt; ctBottom) {
+            newPosY = bottom - ctClientHeight + edgeOffset;
+        }
+
+        if (hscroll !== false &amp;&amp; dom.offsetWidth &gt; container.clientWidth || left &lt; ctScrollLeft) {
+            newPosX = left - edgeOffset;
+        }
+        else if (hscroll !== false &amp;&amp; right &gt; ctRight) {
+            newPosX = right - container.clientWidth + edgeOffset;
+        }
+
+        animate   = animate   === true &amp;&amp; {} || animate;
+        highlight = highlight === true &amp;&amp; {} || highlight;
+        scope     = scope || me;
+
+        if (animate &amp;&amp; highlight) {
+            animate.listeners = Ext.apply(animate.listeners || {}, {
+                'afteranimate' : function() {
+                    highlight.listeners = Ext.apply(highlight.listeners || {}, {
+                        'afteranimate' : function() {
+                            callback &amp;&amp; callback.call(scope);
+                            callback = null;
+                        }
+                    });
+                    Ext.fly(dom).highlight(null, highlight);
+                }
+            });
+        }
+        else if (animate) {
+            animate.listeners = Ext.apply(animate.listeners, {
+                'afteranimate' : function() {
+                    callback &amp;&amp; callback.call(scope);
+                    callback = null;
+                }
+            });
+        }
+        else if (highlight) {
+            highlight.listeners = Ext.apply(highlight.listeners || {}, {
+                'afteranimate' : function() {
+                    callback &amp;&amp; callback.call(scope);
+                    callback = null;
+                }
+            });
+        }
+
+        newPosY !== undefined &amp;&amp; me.setScrollY(newPosY, animate);
+        newPosX !== undefined &amp;&amp; me.setScrollX(newPosX, animate);
+
+        !animate &amp;&amp; highlight &amp;&amp; Ext.fly(dom).highlight(null, highlight);
+
+        !animate &amp;&amp; !highlight &amp;&amp; callback &amp;&amp; callback.call(scope);
+    },
+
+<span id='Sch-mixin-TimelineView-method-disableViewScroller'>    disableViewScroller : function(disabled) {
+</span>        var scroller = this.getScrollable();
+
+        if (scroller) {
+            scroller.setDisabled(disabled);
+        }
+    }
+});
+</pre>
+</body>
+</html>

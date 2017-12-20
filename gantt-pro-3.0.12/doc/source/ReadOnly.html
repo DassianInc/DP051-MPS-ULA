@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">/*
+@class Gnt.field.ReadOnly
+@extends Ext.form.field.Checkbox
+
+A specialized field allowing a user to switch a task to readonly mode.
+
+*/
+Ext.define('Gnt.field.ReadOnly', {
+    extend                  : 'Ext.form.field.Checkbox',
+    mixins                  : ['Gnt.field.mixin.TaskField', 'Gnt.mixin.Localizable'],
+    alias                   : 'widget.readonlyfield',
+    alternateClassName      : ['Gnt.widget.ReadOnlyField'],
+
+    taskField               : 'readOnlyField',
+    setTaskValueMethod      : 'setReadOnly',
+    getTaskValueMethod      : 'getReadOnly',
+    instantUpdate           : true,
+
+    valueToVisible : function (value) {
+        return value ? this.L('yes') : this.L('no');
+    },
+
+    getValue : function () {
+        return this.value;
+    },
+
+    setValue : function (value) {
+
+        this.callParent([ value ]);
+
+        if (this.instantUpdate &amp;&amp; !this.getSuppressTaskUpdate() &amp;&amp; this.task) {
+            // apply changes to task
+            this.applyChanges();
+        }
+    }
+});
+</pre>
+</body>
+</html>

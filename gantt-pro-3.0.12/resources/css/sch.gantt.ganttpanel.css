@@ -1,0 +1,72 @@
+/* Base row height rule */
+.sch-ganttpanel .x-grid-cell {
+    height : 24px;
+}
+
+/* Allows us to use % based heights, so child task elements can stretch to row height */
+.sch-ganttpanel .x-grid-cell-inner {
+    height : inherit !important;
+}
+
+.sch-ganttpanel .x-grid-body {
+    overflow : hidden;
+}
+
+.sch-ganttview .sch-todayLine {
+    border-left : 2px dashed #999 !important;
+}
+
+.sch-ganttpanel {
+    z-index : 0;
+}
+
+.sch-ganttpanel-container-body {
+    background-color : #DFE8F6 !important;
+}
+
+/* Show a vertical scroll if the gantt chart is collapsed */
+.sch-normalgrid-collapsed .x-grid-inner-locked .x-tree-view,
+.sch-ganttpanel-force-locked-scroll /* https://www.assembla.com/spaces/bryntum/support/tickets/252 */
+ {
+    overflow-y : auto !important;
+}
+
+.sch-timelineview .x-grid-item-container {
+    overflow : hidden;
+}
+
+/* Ext hides the right most column border in the locked grid, put it back */
+.sch-ganttpanel .x-grid-inner-locked .x-column-header.x-column-header-last,
+.sch-ganttpanel .x-grid-inner-locked .x-grid-cell-last {
+    border-right : 1px solid #D0D0D0 !important; /* Since Ext is using !important to hide it, so must we */
+}
+
+.sch-ganttpanel .x-grid-cell-treecolumn .x-grid-cell-inner {
+    overflow : hidden; /* Temp bug in Ext 4.2, remove when fixed */
+}
+
+/* If left grid is collapsed, and header clicked then the left grid should be above the right grid (some preview mode)
+   https://www.assembla.com/spaces/bryntum/tickets/629
+*/
+.sch-ganttpanel .x-grid-inner-locked,
+.sch-ganttpanel .x-splitter {
+    z-index : 20;
+}
+
+/* This rule is fixing z-index for column resizer. By default it has z-index : 5, but our panel is assigned with value 20
+   https://www.assembla.com/spaces/bryntum/tickets/1287
+*/
+.sch-ganttpanel .x-grid-resize-marker {
+    z-index : 21;
+}
+
+/* Special fixed row height when vertical labels are used */
+.sch-gantt-topbottom-labels .x-grid-cell {
+    height : 52px;
+}
+
+.sch-ganttpanel .x-grid-with-row-lines .x-grid-item.x-grid-item-focused,
+.sch-ganttpanel .x-grid-with-row-lines .x-grid-item-focused + .x-grid-item {
+    border-style     : solid;
+    border-top-color : #ededed;
+}

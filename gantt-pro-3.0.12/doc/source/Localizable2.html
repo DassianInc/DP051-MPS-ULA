@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-mixin-Localizable'>/**
+</span>@class Sch.mixin.Localizable
+
+A mixin providing localization functionality to the consuming class.
+
+    Ext.define('My.Toolbar', {
+        extend      : 'Ext.Toolbar',
+        mixins      : [ 'Sch.mixin.Localizable' ],
+
+        initComponent   : function () {
+            Ext.apply(this, {
+                items   : [
+                    {
+                        xtype       : 'button',
+
+                        // get the button label from the current locale
+                        text        : this.L('loginText')
+                    }
+                ]
+            });
+
+            this.callParent(arguments);
+        }
+    });
+
+*/
+Ext.define('Sch.mixin.Localizable', {
+
+    // This line used to be like this:
+    //      if Sch.config.locale is specified then we'll require corresponding class
+    //      by default we require Sch.locale.En class
+//          requires            : [ typeof Sch != 'undefined' &amp;&amp; Sch.config &amp;&amp; Sch.config.locale || 'Sch.locale.En' ],
+    //
+    // But, SenchaCMD does not support dynamic expressions for `requires`
+    // Falling back to requiring English locale - that will cause English locale to always be included in the build
+    // (even if user has specified another locale in other `requires`), but thats better than requiring users
+    // to always specify and load the locale they need explicitly
+    requires            : [ 'Sch.locale.En' ],
+
+<span id='Sch-mixin-Localizable-property-legacyMode'>    legacyMode          : false,
+</span>
+<span id='Sch-mixin-Localizable-property-activeLocaleId'>    activeLocaleId      : '',
+</span>
+<span id='Sch-mixin-Localizable-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n Container of locales for the class.
+     */
+    l10n                : null,
+
+<span id='Sch-mixin-Localizable-method-isLocaleApplied'>    isLocaleApplied     : function () {
+</span>        var activeLocaleId = (this.singleton &amp;&amp; this.activeLocaleId) || this.self.activeLocaleId;
+
+        if (!activeLocaleId) return false;
+
+        for (var ns in Sch.locale.Active) {
+            if (activeLocaleId === Sch.locale.Active[ns].self.getName()) return true;
+        }
+
+        return false;
+    },
+
+<span id='Sch-mixin-Localizable-method-applyLocale'>    applyLocale         : function () {
+</span>        // loop over activated locale classes and call apply() method of each one
+        for (var ns in Sch.locale.Active) {
+            Sch.locale.Active[ns].apply(this.singleton ? this : this.self.getName());
+        }
+    },
+
+<span id='Sch-mixin-Localizable-method-L'>    /**
+</span>     * This is shorthand reference to {@link #localize}. Retrieves translation of a phrase.
+     * @param {String} id Identifier of phrase.
+     * @param {String} [legacyHolderProp=this.legacyHolderProp] Legacy class property name containing locales.
+     * @param {Boolean} [skipLocalizedCheck=false] Do not localize class if it's not localized yet.
+     * @return {String} Translation of specified phrase.
+     */
+    L                   : function () {
+        return this.localize.apply(this, arguments);
+    },
+
+<span id='Sch-mixin-Localizable-method-localize'>    /**
+</span>     * Retrieves translation of a phrase. There is a shorthand {@link #L} for this method.
+     * @param {String} id Identifier of phrase.
+     * @param {String} [legacyHolderProp=this.legacyHolderProp] Legacy class property name containing locales.
+     * @param {Boolean} [skipLocalizedCheck=false] Do not localize class if it's not localized yet.
+     * @return {String} Translation of specified phrase.
+     */
+    localize            : function (id, legacyHolderProp, skipLocalizedCheck) {
+        // if not localized yet let's do it
+        if (!this.isLocaleApplied() &amp;&amp; !skipLocalizedCheck) {
+            this.applyLocale();
+        }
+
+        // `l10n` instance property has highest priority
+        if (this.hasOwnProperty('l10n') &amp;&amp; this.l10n.hasOwnProperty(id) &amp;&amp; 'function' != typeof this.l10n[id]) return this.l10n[id];
+
+        var clsProto    = this.self &amp;&amp; this.self.prototype;
+
+        // if there were old properties for localization on this class
+        if (this.legacyMode) {
+            // if they were kept under some property
+            var prop        = legacyHolderProp || this.legacyHolderProp;
+
+            // check object instance first
+            var instHolder  = prop ? this[prop] : this;
+            if (instHolder &amp;&amp; instHolder.hasOwnProperty(id) &amp;&amp; 'function' != typeof instHolder[id]) return instHolder[id];
+
+            if (clsProto) {
+                // then let's check class definition
+                var clsHolder = prop ? clsProto[prop] : clsProto;
+                if (clsHolder &amp;&amp; clsHolder.hasOwnProperty(id) &amp;&amp; 'function' != typeof clsHolder[id]) return clsHolder[id];
+            }
+        }
+
+        // let's try to get locale from class prototype `l10n` property
+        var result      = clsProto.l10n &amp;&amp; clsProto.l10n[id];
+
+        // if no transalation found
+        if (result === null || result === undefined) {
+
+            var superClass  = clsProto &amp;&amp; clsProto.superclass;
+            // if parent class also has localize() method
+            if (superClass &amp;&amp; superClass.localize) {
+                // try to get phrase translation from parent class
+                result = superClass.localize(id, legacyHolderProp, skipLocalizedCheck);
+            }
+
+            if (result === null || result === undefined) throw 'Cannot find locale: '+id+' ['+this.self.getName()+']';
+        }
+
+        return result;
+    }
+});
+</pre>
+</body>
+</html>

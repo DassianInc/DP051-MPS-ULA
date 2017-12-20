@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Duration'>/**
+</span>
+@class Gnt.column.Duration
+@extends Ext.grid.column.Column
+
+{@img gantt/images/duration-field.png}
+
+A Column representing a `Duration` field of a task. The column is editable, however to enable the editing you will need to add a
+`Sch.plugin.TreeCellEditing` plugin to your gantt panel. The overall setup will look like this:
+
+    var gantt = Ext.create('Gnt.panel.Gantt', {
+        height      : 600,
+        width       : 1000,
+
+        // Setup your grid columns
+        columns         : [
+            ...
+            {
+                xtype       : 'durationcolumn',
+                width       : 70
+            }
+            ...
+        ],
+
+        plugins             : [
+            Ext.create('Sch.plugin.TreeCellEditing', {
+                clicksToEdit: 1
+            })
+        ],
+        ...
+    })
+
+This column uses a field - {@link Gnt.field.Duration} which allows the
+user to specify not only the duration value, but also the duration units.
+
+When rendering the name of the duration unit, the {@link Sch.util.Date#getReadableNameOfUnit}
+method will be used to retrieve the name of the unit.
+
+*/
+Ext.define('Gnt.column.Duration', {
+    extend                  : 'Ext.grid.column.Column',
+
+    alias                   : [
+        'widget.durationcolumn',
+        'widget.ganttcolumn.duration'
+    ],
+
+    requires                : ['Gnt.field.Duration'],
+
+    mixins                  : ['Gnt.column.mixin.TaskFieldColumn'],
+
+<span id='Gnt-column-Duration-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+        - text : 'Duration'
+     */
+
+<span id='Gnt-column-Duration-cfg-width'>    /**
+</span>     * @cfg {Number} width The width of the column.
+     */
+    width                   : 80,
+
+<span id='Gnt-column-Duration-cfg-align'>    /**
+</span>     * @cfg {String} align The alignment of the text in the column.
+     */
+    align                   : 'left',
+
+<span id='Gnt-column-Duration-cfg-decimalPrecision'>    /**
+</span>     * @cfg {Number} decimalPrecision A number of digits to show after the dot when rendering the value of the field or when editing it.
+     * When set to 0, the duration values containing decimals part (like &quot;6.5 days&quot;) will be considered invalid.
+     */
+    decimalPrecision        : 2,
+
+<span id='Gnt-column-Duration-cfg-useAbbreviation'>    /**
+</span>     * @cfg {Boolean} useAbbreviation When set to `true`, the column will render the abbreviated duration unit name, not full. Abbreviation will also be used
+     * when editing the value. Useful if the column width is limited.
+     */
+    useAbbreviation         : false,
+
+<span id='Gnt-column-Duration-cfg-instantUpdate'>    instantUpdate           : true,
+</span>
+<span id='Gnt-column-Duration-property-fieldProperty'>    fieldProperty           : 'durationField',
+</span>
+<span id='Gnt-column-Duration-property-fieldConfigs'>    fieldConfigs            : [ 'instantUpdate', 'useAbbreviation', 'decimalPrecision', 'fieldProperty' ],
+</span>
+<span id='Gnt-column-Duration-property-editor'>    editor                  : 'durationfield',
+</span>
+<span id='Gnt-column-Duration-property-defaultEditor'>    defaultEditor           : 'durationfield',
+</span>
+<span id='Gnt-column-Duration-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn();
+
+        this.callParent(arguments);
+    },
+
+
+<span id='Gnt-column-Duration-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        if (!Ext.isNumber(value)) return '';
+
+        return this.field.valueToVisible(value, task.getDurationUnit());
+    }
+});
+</pre>
+</body>
+</html>

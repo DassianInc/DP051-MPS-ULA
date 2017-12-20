@@ -1,0 +1,220 @@
+.sch-gantt-timeline {
+    background    : #fff;
+    border-bottom : 1px solid #99bce8 !important;
+}
+
+/* Left tree styles */
+.sch-ganttpanel .x-grid-cell {
+    height : 28px;
+}
+
+.x-touch .sch-ganttpanel .x-grid-cell {
+    height : 43px;
+}
+
+div.sch-ganttpanel .sch-gantt-project-name .x-tree-icon-parent {
+    background-image : url(../images/1387-diamond4.png);
+    background-size  : 16px;
+}
+
+.sch-ganttpanel .x-tree-icon-parent {
+    background-image : url(../images/0220-folder2.png);
+    background-size  : 16px;
+    margin-right     : 2px;
+}
+
+.sch-ganttpanel .x-grid-tree-node-expanded .x-tree-icon-parent {
+    background-image : url(../images/0221-folder-open.png);
+    background-size  : 16px;
+}
+
+.sch-ganttpanel .x-tree-icon-leaf {
+    background-image : url(../images/0873-circle-small.png);
+    background-size  : 16px;
+}
+
+.sch-ganttpanel .x-tree-expander {
+    background-image    : url(../images/1222-arrow-right5.png);
+    background-size     : 16px;
+    background-position : center center !important;
+}
+
+.sch-ganttpanel .x-tree-arrows .x-grid-tree-node-expanded .x-tree-expander {
+    background-image : url(../images/1222-arrow-downright.png);
+    background-size  : 16px;
+}
+
+.gnt-calendarmanager .x-tree-icon-parent,
+.gnt-calendarmanager .x-tree-icon-leaf {
+    display : inline;
+}
+
+.gnt-calendarmanager .x-tree-icon,
+.gnt-calendarmanager .x-tree-elbow-img,
+.gnt-calendarmanager .x-tree-checkbox {
+    margin-top : -3px;
+}
+
+.gnt-calendarmanager .x-grid-cell {
+    height : 20px;
+}
+
+.sch-ganttpanel .x-grid-inner-locked .x-grid-cell {
+    border-left-color   : transparent;
+    border-bottom-color : transparent;
+    border-top-color    : transparent;
+    color               : #555;
+}
+
+.x-grid-inner-locked .x-grid-cell,
+.sch-gantt-label {
+    transition : color 0.3s;
+}
+
+.x-grid-inner-locked .x-grid-item-selected .x-grid-cell,
+.x-grid-item-selected .sch-gantt-label {
+    color : #222;
+}
+
+.x-grid-inner-locked :not(.x-grid-item-selected) .x-grid-cell {
+    background-color : transparent;
+}
+
+.x-grid-inner-locked .x-grid-cell-inner,
+.x-grid-inner-locked .x-tree-node-text {
+    line-height : 20px;
+}
+
+.x-touch .x-grid-inner-locked .x-grid-cell-inner,
+.x-touch .x-grid-inner-locked .x-tree-node-text {
+    line-height : 40px;
+}
+
+.x-tree-icon, .x-tree-elbow-img, .x-tree-checkbox {
+    margin-top : 0;
+}
+
+.root-row .x-grid-cell-inner {
+    padding-left : 10px;
+    font-size    : 120%;
+}
+
+.root-row .x-grid-cell {
+    border-bottom : 1px solid #bbb;
+}
+
+/* EOF Left tree styles */
+
+.sch-gantt-task {
+    top    : 10%;
+    height : 80%;
+}
+
+.sch-gantt-task-bar,
+.sch-gantt-task-segment {
+    border-radius : 1px;
+    background    : #5ea6f2;
+    border-width  : 0;
+}
+
+.sch-gantt-progress-bar {
+    color            : #fff;
+    background-image : none;
+    background-color : #117be9;
+    line-height      : 21px;
+    text-align       : right;
+    text-indent      : 3px;
+    font-size        : 0.9em;
+    overflow         : visible;
+}
+
+.x-touch .sch-gantt-progress-bar {
+    line-height : 34px;
+}
+
+.x-touch .x-tree-elbow-img {
+    height : 38px;
+}
+
+.sch-gantt-task-segment .sch-gantt-progress-bar-label {
+    display : none;
+}
+
+.sch-segment-in-progress .sch-gantt-progress-bar-label {
+    display : inline;
+}
+
+.sch-event-hover.sch-gantt-parenttask-bar,
+.sch-gantt-parenttask-bar {
+    background-color : #ffce2a;
+    border-color     : #ffaa2a;
+    border-width     : 0;
+    box-shadow       : 1px 1px 2px rgba(150, 150, 150, 0.3);
+}
+
+.sch-gantt-task-readonly .sch-gantt-parenttask-bar {
+    background-color : #ddd;
+    border-color     : #ddd;
+}
+
+.sch-gantt-parenttask-bar .sch-gantt-progress-bar {
+    background-color : #ffaa2a;
+}
+
+.sch-gantt-project-task .sch-gantt-parenttask-bar {
+    background-color : #00a000;
+    border-color     : #00a000;
+}
+
+.sch-gantt-task-readonly .sch-event-hover.sch-gantt-parenttask-bar,
+.sch-gantt-task-readonly .sch-gantt-parenttask-bar {
+    background-color : #ddd;
+    border-color     : #ddd;
+}
+
+.sch-gantt-task-readonly .sch-gantt-parenttask-bar .sch-gantt-progress-bar {
+    background-color : #bdbdbd;
+}
+
+.sch-gantt-task-readonly.sch-gantt-project-task .sch-gantt-parenttask-bar {
+    background-color : #ddd;
+    border-color     : #ddd;
+}
+
+.sch-gantt-project-task .sch-gantt-progress-bar {
+    background-color : #43b48f;
+}
+
+.sch-gantt-task-readonly.sch-gantt-project-task .sch-gantt-progress-bar {
+    background-color : #bdbdbd;
+}
+
+.sch-gantt-progress-bar span {
+    margin-right : 2px;
+}
+
+.sch-gantt-milestone-diamond {
+    border-color : #bfa448;
+    background   : #ffca2a;
+}
+
+.x-strict div.sch-event-fixed {
+    background : #8b0000;
+}
+
+.sch-gantt-task .sch-gantt-labelct {
+    line-height : 19px;
+}
+
+.sch-gantt-label {
+    color : #999;
+}
+
+.sch-dependency,
+.sch-dependency-arrow {
+    border-color : #43b48f;
+}
+
+div.sch-gantt-project-task .gnt-taskarea {
+    display : none;
+}

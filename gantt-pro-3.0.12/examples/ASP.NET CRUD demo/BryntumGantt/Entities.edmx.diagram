@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="a33e0aa5d9f043b282be2c02bc03f370" Name="Diagram1">
+        <EntityTypeShape EntityType="bryntum_ganttModel.Assignment" Width="1.5" PointX="5.75" PointY="5" IsExpanded="true" />
+        <EntityTypeShape EntityType="bryntum_ganttModel.CalendarDay" Width="1.5" PointX="3.25" PointY="0.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="bryntum_ganttModel.Calendar" Width="1.5" PointX="0.625" PointY="0.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="bryntum_ganttModel.Dependency" Width="1.5" PointX="5.75" PointY="7.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="bryntum_ganttModel.Option" Width="1.5" PointX="5.75" PointY="0.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="bryntum_ganttModel.Resource" Width="1.5" PointX="5.75" PointY="2.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="bryntum_ganttModel.Task" Width="1.5" PointX="3.25" PointY="4.125" IsExpanded="true" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Assignments_Resources" ManuallyRouted="false" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Assignments_Tasks" ManuallyRouted="false" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Dependencies_Tasks" ManuallyRouted="false" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Dependencies_Tasks1" ManuallyRouted="false" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Tasks_Tasks" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_CalendarDays_Calendars1" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Calendars_Calendars1" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Resources_Calendars1" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_Tasks_Calendars1" />
+        <EntityTypeShape EntityType="bryntum_ganttModel.TaskSegment" Width="1.5" PointX="0.75" PointY="7" />
+        <AssociationConnector Association="bryntum_ganttModel.FK_TaskSegments_Tasks" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

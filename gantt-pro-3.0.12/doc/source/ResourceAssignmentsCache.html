@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-data-util-ResourceAssignmentsCache'>/**
+</span> * Assignment store resource-&gt;assignments cache.
+ * Uses resource records or resource record ids as keys.
+ *
+ * @private
+ */
+Ext.define('Sch.data.util.ResourceAssignmentsCache', {
+    extend                  : 'Sch.util.Cache',
+    requires                : [
+        'Ext.data.Model'
+    ],
+
+<span id='Sch-data-util-ResourceAssignmentsCache-property-assignmentStore'>    assignmentStore         : null,
+</span><span id='Sch-data-util-ResourceAssignmentsCache-property-assignmentStoreDetacher'>    assignmentStoreDetacher : null,
+</span><span id='Sch-data-util-ResourceAssignmentsCache-property-eventStoreDetacher'>    eventStoreDetacher      : null,
+</span><span id='Sch-data-util-ResourceAssignmentsCache-property-resourceStoreDetacher'>    resourceStoreDetacher   : null,
+</span>
+<span id='Sch-data-util-ResourceAssignmentsCache-method-constructor'>    constructor : function(assignmentStore) {
+</span>        var me            = this,
+            eventStore    = assignmentStore.getEventStore(),
+            resourceStore = eventStore &amp;&amp; eventStore.getResourceStore();
+
+        me.callParent();
+
+        function onAssignmentAdd(store, assignments) {
+            Ext.Array.forEach(assignments, function(assignment) {
+                me.add(assignment.getResourceId(), assignment);
+            });
+        }
+
+        function onAssignmentRemove(store, assignments) {
+            Ext.Array.forEach(assignments, function(assignment) {
+                me.remove(assignment.getResourceId(), assignment);
+            });
+        }
+
+        function onAssignmentUpdate(store, assignment, operation) {
+            var resourceIdField    = assignment.resourceIdField,
+                resourceIdChanged  = assignment.previous &amp;&amp; resourceIdField in assignment.previous,
+                previousResourceId = resourceIdChanged &amp;&amp; assignment.previous[resourceIdField];
+
+            if (resourceIdChanged) {
+                me.move(previousResourceId, assignment.getResourceId(), assignment);
+            }
+        }
+
+        function onAssignmentStoreClearOrReset(store) {
+            me.clear();
+        }
+
+        function onAssignmentStoreEventStoreChange(store, eventStore) {
+            attachToEventStore(eventStore);
+            attachToResourceStore(eventStore &amp;&amp; eventStore.getResourceStore());
+        }
+
+        function onEventStoreResourceStoreChange(eventStore, resourceStore) {
+            me.clear();
+            attachToResourceStore(resourceStore);
+        }
+
+        function onResourceIdChanged(resourceStore, resource, oldId, newId) {
+            me.move(oldId, newId);
+        }
+
+        function onResourceRemove(resourceStore, resources) {
+            Ext.Array.forEach(resources, function(resource) {
+                me.clear(resource);
+            });
+        }
+
+        function onResourceStoreClearOrReset() {
+            me.clear();
+        }
+
+        function attachToEventStore(eventStore) {
+            Ext.destroy(me.eventStoreDetacher);
+            me.eventStoreDetacher = eventStore &amp;&amp; eventStore.on({
+                resourcestorechange : onEventStoreResourceStoreChange,
+                priority            : 100,
+                destroyable         : true
+            });
+        }
+
+        function attachToResourceStore(resourceStore) {
+            Ext.destroy(me.resourceStoreDetacher);
+            me.resourceStoreDetacher = resourceStore &amp;&amp; resourceStore.on({
+                idchanged      : onResourceIdChanged,
+                remove         : onResourceRemove,
+                clear          : onResourceStoreClearOrReset,
+                cacheresethint : onResourceStoreClearOrReset,
+                rootchange     : onResourceStoreClearOrReset,
+                priority       : 100,
+                destroyable    : true
+            });
+        }
+
+        me.assignmentStoreDetacher = assignmentStore.on({
+            add              : onAssignmentAdd,
+            remove           : onAssignmentRemove,
+            update           : onAssignmentUpdate,
+            clear            : onAssignmentStoreClearOrReset,
+            cacheresethint   : onAssignmentStoreClearOrReset,
+            eventstorechange : onAssignmentStoreEventStoreChange,
+            // subscribing to the CRUD using priority - should guarantee that our listeners
+            // will be called first (before any other listeners, that could be provided in the &quot;listeners&quot; config)
+            // and state in other listeners will be correct
+            priority         : 100,
+            destroyable      : true
+        });
+
+        me.assignmentStoreFiltersDetacher = assignmentStore.getFilters().on('endupdate', onAssignmentStoreClearOrReset, me, {
+            // priority is calculated as:
+            // Ext.util.Collection.$endUpdatePriority + 1
+            // to reset our cache before ExtJS &quot;on filter end update&quot; listeners run
+            priority    : 1002,
+            destroyable : true
+        });
+
+        attachToEventStore(eventStore);
+        attachToResourceStore(resourceStore);
+
+        me.assignmentStore = assignmentStore;
+    },
+
+<span id='Sch-data-util-ResourceAssignmentsCache-method-destroy'>    destroy : function() {
+</span>        var me = this;
+        Ext.destroyMembers(
+            me,
+            'assignmentStoreDetacher',
+            'assignmentStoreFiltersDetacher',
+            'eventStoreDetacher',
+            'resourceStoreDetacher'
+        );
+        me.assignmentStore = null;
+    },
+
+<span id='Sch-data-util-ResourceAssignmentsCache-method-get'>    get : function(k, fn) {
+</span>        var me = this;
+
+        k = me.key(k);
+
+        fn = fn || function() {
+            return Ext.Array.filter(me.assignmentStore.getRange(), function(assignment) {
+                return assignment.getResourceId() == k;
+            });
+        };
+
+        return me.callParent([k, fn]);
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-view-Dependency'>/**
+</span> * @class Gnt.view.Dependency
+ * @extends Ext.util.Observable
+ * Internal class handling the dependency related functionality.
+ */
+Ext.define(&quot;Gnt.view.Dependency&quot;, {
+    extend      : &quot;Ext.util.Observable&quot;,
+
+    requires    : [
+        'Ext.XTemplate',
+        'Gnt.feature.DependencyDragDrop',
+        'Gnt.view.DependencyPainter'
+    ],
+
+<span id='Gnt-view-Dependency-cfg-lineWidth'>    /**
+</span>     * @cfg {Number} lineWidth
+     * The number of pixels for the line width (supported values are 1 or 2 pixels), defaults to 1.
+     */
+    lineWidth       : 1,
+
+<span id='Gnt-view-Dependency-cfg-dragZoneConfig'>    /**
+</span>     * @cfg {Object} dragZoneConfig
+     * A custom config object to pass on to configure the Ext.dd.DragZone instance used when creating new dependencies
+     */
+    dragZoneConfig  : null,
+
+<span id='Gnt-view-Dependency-cfg-dropZoneConfig'>    /**
+</span>     * @cfg {Object} dropZoneConfig
+     * A custom config object to pass on to configure the Ext.dd.DropZone instance used when creating new dependencies
+     */
+    dropZoneConfig  : null,
+
+<span id='Gnt-view-Dependency-cfg-dependencyPainterClass'>    /**
+</span>     * @cfg {String} dependencyPainterClass
+     * @protected
+     * The class used to determine how the dependencies are painted. Override this to your own custom class to take control over the
+     * painting.
+     */
+    dependencyPainterClass      : &quot;Gnt.view.DependencyPainter&quot;,
+
+<span id='Gnt-view-Dependency-property-ganttView'>    ganttView       : null,
+</span><span id='Gnt-view-Dependency-property-painter'>    painter         : null,
+</span><span id='Gnt-view-Dependency-property-taskStore'>    taskStore       : null,
+</span><span id='Gnt-view-Dependency-property-store'>    store           : null,
+</span><span id='Gnt-view-Dependency-property-dnd'>    dnd             : null,
+</span><span id='Gnt-view-Dependency-property-lineTpl'>    lineTpl         : null,
+</span><span id='Gnt-view-Dependency-property-renderTimer'>    renderTimer     : null,
+</span>
+<span id='Gnt-view-Dependency-property-enableDependencyDragDrop'>    enableDependencyDragDrop    : true,
+</span>
+<span id='Gnt-view-Dependency-property-renderAllDepsBuffered'>    renderAllDepsBuffered       : false,
+</span>
+<span id='Gnt-view-Dependency-property-dependencyCls'>    dependencyCls               : 'sch-dependency',
+</span><span id='Gnt-view-Dependency-property-selectedCls'>    selectedCls                 : 'sch-dependency-selected',
+</span>
+<span id='Gnt-view-Dependency-event-beforednd'>    /**
+</span>     * @event beforednd
+     * Fires before a drag and drop operation is initiated, return false to cancel it
+     * @param {Gnt.view.Dependency} The dependency view instance
+     * @param {HTMLNode} node The node that's about to be dragged
+     * @param {Ext.EventObject} e The event object
+     */
+
+<span id='Gnt-view-Dependency-event-dndstart'>    /**
+</span>     * @event dndstart
+     * Fires when a dependency drag and drop operation starts
+     * @param {Gnt.view.Dependency} The dependency view instance
+     */
+
+<span id='Gnt-view-Dependency-event-drop'>    /**
+</span>     * @event drop
+     * Fires after a drop has been made on a receiving terminal
+     * @param {Gnt.view.Dependency} The dependency view instance
+     * @param {Mixed} fromId The source dependency record id
+     * @param {Mixed} toId The target dependency record id
+     * @param {Number} type The dependency type, see {@link Gnt.model.Dependency} for more information
+     */
+
+<span id='Gnt-view-Dependency-event-afterdnd'>    /**
+</span>     * @event afterdnd
+     * Always fires after a dependency drag and drop operation
+     * @param {Gnt.view.Dependency} view The dependency view instance
+     */
+
+<span id='Gnt-view-Dependency-event-dependencyclick'>    /**
+</span>     * @event dependencyclick
+     * Fires after clicking on a dependency line/arrow
+     * @param {Gnt.view.Dependency} view The dependency view instance
+     * @param {Gnt.model.Dependency} record The dependency record
+     * @param {Ext.EventObject} event The event object
+     * @param {HTMLElement} target The clicked DOM element
+     */
+
+<span id='Gnt-view-Dependency-event-dependencycontextmenu'>    /**
+</span>     * @event dependencycontextmenu
+     * Fires after right clicking on a dependency line/arrow
+     * @param {Gnt.view.Dependency} view The dependency view instance
+     * @param {Gnt.model.Dependency} record The dependency record
+     * @param {Ext.EventObject} event The event object
+     * @param {HTMLElement} target The clicked DOM element
+     */
+
+<span id='Gnt-view-Dependency-event-dependencydblclick'>    /**
+</span>     * @event dependencydblclick
+     * Fires after double clicking on a dependency line/arrow
+     * @param {Gnt.view.Dependency} view The dependency view instance
+     * @param {Gnt.model.Dependency} record The dependency record
+     * @param {Ext.EventObject} event The event object
+     * @param {HTMLElement} target The clicked DOM element
+     */
+
+<span id='Gnt-view-Dependency-event-refresh'>    /**
+</span>     * @event refresh
+     * Fires after the view has fully rendered all the dependencies in the underlying store
+     * @param {Gnt.view.Dependency} view The dependency view instance
+     */
+
+<span id='Gnt-view-Dependency-method-constructor'>    // private
+</span>    constructor: function (cfg) {
+        this.callParent(arguments);
+
+        var ganttView = this.ganttView;
+
+        if (ganttView.bufferedRenderer) {
+            // when buffered view is scrolled this is one of two events that fire
+            // probably only one reliable way do know when we should render deps
+            ganttView.on({
+                itemadd : this.renderAllDependenciesBuffered,
+                scope   : this
+            });
+        }
+
+        ganttView.on({
+            refresh         : this.renderAllDependenciesBuffered,
+            itemupdate      : this.onTaskUpdated,
+            scope           : this
+        });
+
+        this.bindTaskStore(ganttView.getTaskStore());
+        this.bindDependencyStore(cfg.store);
+
+        if (!this.lineTpl) {
+            var rtl = this.rtl;
+            var side = rtl ? 'right' : 'left';
+
+            this.lineTpl = new Ext.XTemplate(
+                '&lt;tpl for=&quot;.&quot;&gt;' +
+                    (
+                        '&lt;tpl for=&quot;lineCoordinates&quot;&gt;' +
+                            // lineCls can be used to style the dependency lines
+                            '&lt;div class=&quot;{0} {[ parent.dependency.isHighlighted ? &quot;{1}&quot; : &quot;&quot; ]} {[values.x1==values.x2 ? &quot;sch-dependency-line-v&quot; : &quot;sch-dependency-line-h&quot;]} {lineCls} sch-dep-{parent.id} {0}-line {[this.getSuffixedCls(parent.cls, &quot;-line&quot;)]}&quot; ' +
+                            'style=&quot;' + side + ':{[Math.min(values.x1, values.x2)]}px;top:{[Math.min(values.y1, values.y2)]}px;' +
+                            'width:{[Math.abs(values.x1-values.x2)+' + this.lineWidth + ']}px;' +
+                            'height:{[Math.abs(values.y1-values.y2)+' + this.lineWidth + ']}px&quot;&gt;' +
+                            '&lt;/div&gt;' +
+                        '&lt;/tpl&gt;' +
+                        '&lt;div style=&quot;' + side + ':{[values.lineCoordinates[values.lineCoordinates.length - 1].x2]}px;top:{[values.lineCoordinates[values.lineCoordinates.length - 1].y2]}px&quot; ' +
+                            'class=&quot;{0}-arrow-ct {0} {[ values.dependency.isHighlighted ? &quot;{1}&quot; : &quot;&quot; ]} sch-dep-{id} {[this.getSuffixedCls(values.cls, &quot;-arrow-ct&quot;)]}&quot;&gt;' +
+                            '&lt;img src=&quot;' + Ext.BLANK_IMAGE_URL + '&quot; class=&quot;{0}-arrow {0}-arrow-{[this.getArrowDirection(values.lineCoordinates)]} {[this.getSuffixedCls(values.cls, &quot;-arrow&quot;)]}&quot; /&gt;' +
+                        '&lt;/div&gt;'
+                    ).replace(/\{0\}/g, this.dependencyCls).replace(/\{1\}/g, this.selectedCls) +
+                '&lt;/tpl&gt;',
+                {
+                    disableFormats : true,
+                    getArrowDirection: function (coords) {
+                        var lastXY = coords[coords.length - 1];
+
+                        if (lastXY.y2 &lt; lastXY.y1) return 'up';
+
+                        if (lastXY.x1 === lastXY.x2) {
+                            return 'down';
+                        } else if ((!rtl &amp;&amp; lastXY.x1 &gt; lastXY.x2) || (rtl &amp;&amp; lastXY.x1 &lt; lastXY.x2)) {
+                            return 'left';
+                        } else {
+                            return 'right';
+                        }
+                    },
+
+                    getSuffixedCls : function (cls, suffix) {
+                        if (cls &amp;&amp; cls.indexOf(' ') != -1)
+                            return cls.replace(/^\s*(.*)\s*$/, '$1').split(/\s+/).join(suffix + ' ') + suffix;
+                        else
+                            return cls + suffix;
+                    }
+                }
+            );
+        }
+
+        this.painter = Ext.create(this.dependencyPainterClass, Ext.apply({
+            rowHeight   : ganttView.getRowHeight(),
+            ganttView   : ganttView
+        }, cfg));
+
+        if (this.enableDependencyDragDrop) {
+            this.dnd = Ext.create(&quot;Gnt.feature.DependencyDragDrop&quot;, {
+                el              : ganttView.getEl(),
+                rtl             : ganttView.rtl,
+                ganttView       : ganttView,
+                dragZoneConfig  : this.dragZoneConfig,
+                dropZoneConfig  : this.dropZoneConfig,
+                dependencyStore : this.store
+            });
+
+            this.dnd.on('drop', this.onDependencyDrop, this);
+            this.relayEvents(this.dnd, ['beforednd', 'dndstart', 'afterdnd', 'drop']);
+        }
+
+        if (ganttView.rendered) {
+            this.renderAllDependenciesBuffered();
+        }
+
+        this.initDependencyListeners();
+    },
+
+<span id='Gnt-view-Dependency-method-initDependencyListeners'>    initDependencyListeners : function() {
+</span>        var me = this;
+
+        me.ganttView.mon(me.ganttView.getEl(), {
+            dblclick    : me.onDependencyClick,
+            click       : me.onDependencyClick,
+            contextmenu : me.onDependencyClick,
+            scope       : me,
+            delegate    : '.' + me.dependencyCls
+        });
+    },
+
+<span id='Gnt-view-Dependency-method-createDependencyCanvas'>    createDependencyCanvas : function(nodeContainerEl) {
+</span>        // Setup our own container element
+        return Ext.fly(nodeContainerEl).insertFirst({
+            cls : 'sch-dependencyview-ct ' + (this.lineWidth === 1 ? ' sch-dependencyview-thin ' : '')
+        });
+    },
+
+<span id='Gnt-view-Dependency-method-getDependencyCanvas'>    getDependencyCanvas : function() {
+</span>        var me = this,
+            nodeContainer = me.ganttView.getNodeContainer() || me.ganttView.scrollerEl,
+            canvasEl = nodeContainer &amp;&amp; Ext.fly(nodeContainer).child('div.sch-dependencyview-ct');
+
+        if (nodeContainer &amp;&amp; !canvasEl) {
+            canvasEl = me.createDependencyCanvas(nodeContainer);
+        }
+
+        return canvasEl;
+    },
+
+<span id='Gnt-view-Dependency-method-bindDependencyStore'>    bindDependencyStore : function (store) {
+</span>        this.depStoreListeners = {
+            // For filtering, server write etc
+            refresh         : this.renderAllDependenciesBuffered,
+            clear           : this.renderAllDependenciesBuffered,
+
+            load            : this.renderAllDependenciesBuffered,
+
+            add             : this.onDependencyAdd,
+            update          : this.onDependencyUpdate,
+            remove          : this.onDependencyDelete,
+
+            scope           : this
+        };
+
+        store.on(this.depStoreListeners);
+
+        this.store = store;
+    },
+
+<span id='Gnt-view-Dependency-method-unBindDependencyStore'>    unBindDependencyStore : function () {
+</span>        if (this.depStoreListeners) {
+            this.store.un(this.depStoreListeners);
+        }
+    },
+
+<span id='Gnt-view-Dependency-method-bindTaskStore'>    bindTaskStore : function (taskStore) {
+</span>
+        this.taskStoreListeners = {
+            cascade             : this.onTaskStoreCascade,
+
+            noderemove          : this.renderAllDependenciesBuffered,
+            nodeinsert          : this.renderAllDependenciesBuffered,
+            nodeappend          : this.renderAllDependenciesBuffered,
+            nodemove            : this.renderAllDependenciesBuffered,
+
+            nodeexpand          : this.renderAllDependenciesBuffered,
+            nodecollapse        : this.renderAllDependenciesBuffered,
+
+            sort                : this.renderAllDependenciesBuffered,
+
+            scope               : this
+        };
+
+        taskStore.on(this.taskStoreListeners);
+
+        this.taskStore = taskStore;
+    },
+
+<span id='Gnt-view-Dependency-method-onTaskStoreCascade'>    onTaskStoreCascade : function(store, cascadeContext) {
+</span>        if (cascadeContext &amp;&amp; cascadeContext.nbrAffected &gt; 0) {
+            this.renderAllDependenciesBuffered();
+        }
+    },
+
+<span id='Gnt-view-Dependency-method-unBindTaskStore'>    unBindTaskStore : function (taskStore) {
+</span>        taskStore       = taskStore || this.taskStore;
+
+        if (!taskStore) return;
+
+        if (this.ganttViewListeners) {
+            this.ganttView.un(this.ganttViewListeners);
+        }
+
+        taskStore.un(this.taskStoreListeners);
+    },
+
+<span id='Gnt-view-Dependency-method-onDependencyClick'>    onDependencyClick : function(e, t) {
+</span>        var rec = this.getRecordForDependencyEl(t);
+        this.fireEvent('dependency' + e.type, this, rec, e, t);
+    },
+
+<span id='Gnt-view-Dependency-method-highlightDependency'>    /**
+</span>     * Highlight the elements representing a particular dependency
+     * @param {Mixed} record Either the id of a record or a record in the dependency store
+     */
+    highlightDependency: function (record) {
+        if (!(record instanceof Ext.data.Model)) {
+            record = this.getDependencyRecordByInternalId(record);
+        }
+
+        if (record) {
+            record.isHighlighted    = true;
+
+            this.getElementsForDependency(record).addCls(this.selectedCls);
+        }
+    },
+
+
+<span id='Gnt-view-Dependency-method-unhighlightDependency'>    /**
+</span>     * Remove highlight of the elements representing a particular dependency
+     * @param {Mixed} record Either the id of a record or a record in the dependency store
+     */
+    unhighlightDependency: function (record) {
+        if (!(record instanceof Ext.data.Model)) {
+            record = this.getDependencyRecordByInternalId(record);
+        }
+
+        if (record) {
+            record.isHighlighted    = false;
+
+            this.getElementsForDependency(record).removeCls(this.selectedCls);
+        }
+    },
+
+
+<span id='Gnt-view-Dependency-method-getElementsForDependency'>    /**
+</span>     * Retrieve the elements representing a particular dependency
+     * @param {Gnt.model.Dependency} rec the record in the dependency store
+     * @return {Ext.CompositeElementLite/Ext.CompositeElement/false}
+     */
+    getElementsForDependency: function (rec) {
+        var me = this,
+            id = rec instanceof Ext.data.Model ? rec.internalId : rec,
+            containerEl = me.getDependencyCanvas();
+
+        return containerEl &amp;&amp; containerEl.select('.sch-dep-' + id);
+    },
+
+<span id='Gnt-view-Dependency-property-depRe'>    // private
+</span>    depRe: new RegExp('sch-dep-([^\\s]+)'),
+
+
+<span id='Gnt-view-Dependency-method-getDependencyRecordByInternalId'>    getDependencyRecordByInternalId : function(id) {
+</span>        return this.store.getModelByInternalId(id);
+    },
+
+<span id='Gnt-view-Dependency-method-getRecordForDependencyEl'>    // private
+</span>    getRecordForDependencyEl: function (t) {
+        var m = t.className.match(this.depRe),
+            rec = null;
+
+        if (m &amp;&amp; m[1]) {
+            var recordId = m[1];
+
+            rec = this.getDependencyRecordByInternalId(recordId);
+        }
+
+        return rec;
+    },
+
+
+<span id='Gnt-view-Dependency-method-renderAllDependenciesBuffered'>    renderAllDependenciesBuffered : function () {
+</span>        var me              = this,
+            containerEl;
+
+        var hiddenParent    = me.ganttView.up(&quot;{isHidden()}&quot;);
+
+        // if view el is hidden, postpone the paint until next time it's shown
+        if (hiddenParent) {
+            clearTimeout(me.renderTimer);
+            me.renderTimer  = null;
+
+            hiddenParent.on('show', me.renderAllDependenciesBuffered, me, { single : true });
+            return;
+        }
+
+        // Check if rendering is already scheduled
+        if (me.renderTimer) return;
+
+        containerEl = me.getDependencyCanvas();
+
+        me.renderTimer    = setTimeout(function () {
+            me.renderTimer  = null;
+
+            if (!me.ganttView.isDestroyed) me.renderAllDependencies();
+        }, 0);
+    },
+
+<span id='Gnt-view-Dependency-method-renderAllDependencies'>    /**
+</span>     * Renders all the dependencies for the current view
+     */
+    renderAllDependencies : function() {
+        var me = this,
+            containerEl = me.getDependencyCanvas();
+
+        // component has been destroyed already
+        if (!containerEl) return;
+
+        me.renderDependencies(this.store.data.items, true);
+        me.fireEvent('refresh', this);
+    },
+
+<span id='Gnt-view-Dependency-method-getDependencyElements'>    /**
+</span>     * Returns all the elements representing the rendered dependencies
+     * @return {Ext.CompositeElementLite/Ext.CompositeElement/false}
+     */
+    getDependencyElements : function() {
+        var me = this,
+            containerEl = me.getDependencyCanvas();
+
+        return containerEl &amp;&amp; containerEl.select('.' + me.dependencyCls);
+    },
+
+<span id='Gnt-view-Dependency-method-renderDependencies'>    renderDependencies: function (dependencyRecords, full) {
+</span>        var me          = this,
+            containerEl = me.getDependencyCanvas(),
+            tplData;
+
+        if (!containerEl) return;
+
+        if (dependencyRecords &amp;&amp; !Ext.isArray(dependencyRecords)) {
+            dependencyRecords = [dependencyRecords];
+        }
+
+        if (dependencyRecords &amp;&amp; dependencyRecords.length &gt; 0){
+            tplData = me.painter.getDependencyTplData(dependencyRecords);
+            me.lineTpl[full ? 'overwrite' : 'append'](containerEl, tplData);
+        } else if (full) {
+            // Clear all
+            containerEl.update();
+        }
+    },
+
+
+<span id='Gnt-view-Dependency-method-renderTaskDependencies'>    renderTaskDependencies: function (tasks) {
+</span>        var toDraw  = [];
+
+        if (tasks instanceof Ext.data.Model) {
+            tasks = [tasks];
+        }
+
+        for (var i = 0, n = tasks.length; i &lt; n; i++) {
+            toDraw = toDraw.concat(tasks[i].getAllDependencies());
+        }
+        this.renderDependencies(toDraw);
+    },
+
+<span id='Gnt-view-Dependency-method-onDependencyUpdate'>    onDependencyUpdate: function (store, depRecord) {
+</span>
+        this.removeDependencyElements(depRecord, false);
+
+        // Draw new dependencies for the event
+        this.renderDependencies(depRecord);
+    },
+
+
+
+<span id='Gnt-view-Dependency-method-onDependencyAdd'>    onDependencyAdd: function (store, depRecords) {
+</span>        // Draw added dependencies
+        this.renderDependencies(depRecords);
+    },
+
+<span id='Gnt-view-Dependency-method-removeDependencyElements'>    removeDependencyElements: function (record, animate) {
+</span>        if (animate !== false) {
+            this.getElementsForDependency(record).fadeOut({ remove: true });
+        } else {
+            this.getElementsForDependency(record).remove();
+        }
+    },
+
+<span id='Gnt-view-Dependency-method-onDependencyDelete'>    onDependencyDelete: function (store, depRecords) {
+</span>        Ext.Array.each(depRecords, function (depRecord) {
+            this.removeDependencyElements(depRecord);
+        }, this);
+    },
+
+<span id='Gnt-view-Dependency-method-dimEventDependencies'>    dimEventDependencies: function (eventId) {
+</span>        var me = this,
+            containerEl = me.getDependencyCanvas();
+
+        containerEl &amp;&amp; containerEl.select(me.depRe + eventId).setOpacity(0.2);
+    },
+
+<span id='Gnt-view-Dependency-method-clearSelectedDependencies'>    // private
+</span>    clearSelectedDependencies : function() {
+        var me = this,
+            containerEl = me.getDependencyCanvas();
+
+        containerEl.select('.' + me.selectedCls).removeCls(me.selectedCls);
+
+        me.store.each(function (dependency) {
+            dependency.isHighlighted    = false;
+        });
+    },
+
+
+<span id='Gnt-view-Dependency-method-onTaskUpdated'>    onTaskUpdated: function (task) {
+</span>        if (!this.taskStore.cascading &amp;&amp; (!task.previous || task.startDateField in task.previous || task.endDateField in task.previous)) {
+            this.updateDependencies(task);
+        }
+    },
+
+
+<span id='Gnt-view-Dependency-method-updateDependencies'>    updateDependencies: function (tasks) {
+</span>        var me      = this;
+
+        if (tasks instanceof Ext.data.Model) {
+            tasks = [ tasks ];
+        }
+
+        Ext.Array.forEach(tasks, function (task) {
+            Ext.Array.forEach(task.getAllDependencies(), function (dependency) {
+                me.removeDependencyElements(dependency, false);
+            });
+        });
+
+        // Draw new dependencies for the task
+        this.renderTaskDependencies(tasks);
+    },
+
+
+<span id='Gnt-view-Dependency-method-onNewDependencyCreated'>    onNewDependencyCreated : function () {
+</span>    },
+
+
+<span id='Gnt-view-Dependency-method-onDependencyDrop'>    onDependencyDrop: function (plugin, fromId, toId, type) {
+</span>        var me = this,
+            taskStore = me.taskStore,
+            fromTask;
+
+        fromTask = taskStore &amp;&amp; taskStore.getModelById(fromId);
+        fromTask &amp;&amp; fromTask.linkTo(toId, type, null, Ext.Function.bind(me.onNewDependencyCreated, me));
+    },
+
+<span id='Gnt-view-Dependency-method-destroy'>    destroy: function () {
+</span>        if (this.dnd) {
+            this.dnd.destroy();
+        }
+
+        this.unBindTaskStore();
+
+        this.unBindDependencyStore();
+    },
+
+<span id='Gnt-view-Dependency-method-setRowHeight'>    setRowHeight : function(height, preventRefresh) {
+</span>        this.rowHeight = height;
+        this.painter.setRowHeight(height);
+
+        if (!preventRefresh) {
+            this.renderAllDependencies();
+        }
+    }
+});
+</pre>
+</body>
+</html>

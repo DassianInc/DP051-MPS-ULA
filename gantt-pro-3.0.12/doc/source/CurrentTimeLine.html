@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-CurrentTimeLine'>/**
+</span>@class Sch.plugin.CurrentTimeLine
+@extends Sch.plugin.Lines
+
+Plugin (ptype = 'scheduler_currenttimeline') indicating the current date and time as a line in the schedule.
+
+To add this plugin to scheduler:
+
+    var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+        ...
+
+        resourceStore   : resourceStore,
+        eventStore      : eventStore,
+
+        plugins         : [
+            Ext.create('Sch.plugin.CurrentTimeLine', { updateInterval : 30000 })
+        ]
+    });
+
+
+*/
+Ext.define(&quot;Sch.plugin.CurrentTimeLine&quot;, {
+    extend              : &quot;Sch.plugin.Lines&quot;,
+    alias               : 'plugin.scheduler_currenttimeline',
+    mixins              : ['Sch.mixin.Localizable'],
+
+    requires            : [
+        'Ext.data.JsonStore'
+    ],
+
+<span id='Sch-plugin-CurrentTimeLine-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - tooltipText : 'Current time'
+     */
+
+<span id='Sch-plugin-CurrentTimeLine-cfg-store'>    /**
+</span>     * @cfg {Ext.data.Store} store
+     * @hide
+     */
+
+<span id='Sch-plugin-CurrentTimeLine-cfg-updateInterval'>    /**
+</span>     * @cfg {Number} updateInterval This value (in ms) defines how often the timeline shall be refreshed. Defaults to every once every minute.
+     */
+    updateInterval      : 60000,
+
+<span id='Sch-plugin-CurrentTimeLine-cfg-showHeaderElements'>    showHeaderElements  : true,
+</span>
+<span id='Sch-plugin-CurrentTimeLine-cfg-autoUpdate'>    /**
+</span>     * @cfg {Boolean} autoUpdate true to automatically update the line position over time. Default value is `true`
+     */
+    autoUpdate          : true,
+
+<span id='Sch-plugin-CurrentTimeLine-property-expandToFitView'>    expandToFitView     : true,
+</span>
+<span id='Sch-plugin-CurrentTimeLine-property-timer'>    timer               : null,
+</span>
+<span id='Sch-plugin-CurrentTimeLine-method-init'>    init                : function(cmp) {
+</span>        // touch scheduler does not support header elements
+        if (Ext.getVersion('touch')) this.showHeaderElements = false;
+        
+        var store = new Ext.data.JsonStore({
+            fields  : ['Date', 'Cls', 'Text'],
+            data    : [
+                { Date : new Date(), Cls : 'sch-todayLine', Text : this.L('tooltipText')}
+            ]
+        });
+
+        var record = store.first();
+
+        if (this.autoUpdate) {
+            this.timer = setInterval(function() {
+                record.set('Date', new Date());
+            }, this.updateInterval);
+        }
+
+        this.store = store;
+        this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-CurrentTimeLine-method-destroy'>    destroy       : function() {
+</span>        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+
+        if (this.store.autoDestroy) {
+            this.store.destroy();
+        }
+
+        this.callParent(arguments);
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">Ext.define('Gnt.field.ConstraintDate', {
+
+    extend              : 'Gnt.field.Date',
+    alias               : 'widget.constraintdatefield',
+
+    // This is required to properly handle the field's read only state as designated in task's isEditable() method
+    taskField           : 'constraintDateField',
+    getTaskValueMethod  : 'getConstraintDate',
+    setTaskValueMethod  : 'setConstraintDate',
+
+    reAssertValue       : false,
+
+    valueToVisible : function (value, task) {
+        task    = task || this.task;
+
+        var me              = this,
+            constraintClass = task &amp;&amp; task.getConstraintClass(),
+            format          = me.format || Ext.Date.defaultFormat;
+
+        if (constraintClass) {
+            return constraintClass.getDisplayableConstraintDateForFormat(value, format, task);
+        } else {
+            return value;
+        }
+    },
+
+    visibleToValue : function (value) {
+        var me              = this,
+            format          = me.format || Ext.Date.defaultFormat,
+            task            = me.task,
+            constraintClass = task &amp;&amp; task.getConstraintClass();
+
+        if (constraintClass &amp;&amp; !Ext.isEmpty(value)) {
+            value = constraintClass.adjustConstraintDateFromDisplayableWithFormat(value, format, task);
+        }
+
+        return value;
+    }
+
+});
+</pre>
+</body>
+</html>

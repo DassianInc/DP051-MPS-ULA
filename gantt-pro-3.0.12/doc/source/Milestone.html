@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-Milestone'>/**
+</span>@class Gnt.field.Milestone
+@extends Ext.form.field.ComboBox
+
+A specialized field allowing a user to convert regular task to milestone and back.
+
+*/
+Ext.define('Gnt.field.Milestone', {
+    extend                  : 'Ext.form.field.ComboBox',
+    requires                : 'Ext.data.JsonStore',
+    mixins                  : ['Gnt.field.mixin.TaskField', 'Gnt.mixin.Localizable'],
+
+    alias                   : 'widget.milestonefield',
+
+<span id='Gnt-field-Milestone-cfg-instantUpdate'>    instantUpdate           : false,
+</span><span id='Gnt-field-Milestone-property-allowBlank'>    allowBlank              : false,
+</span><span id='Gnt-field-Milestone-property-forceSelection'>    forceSelection          : true,
+</span><span id='Gnt-field-Milestone-property-displayField'>    displayField            : 'text',
+</span><span id='Gnt-field-Milestone-property-valueField'>    valueField              : 'value',
+</span><span id='Gnt-field-Milestone-property-queryMode'>    queryMode               : 'local',
+</span>
+<span id='Gnt-field-Milestone-method-constructor'>    constructor : function (config) {
+</span>
+        Ext.apply(this, config);
+
+        this.store  = new Ext.data.JsonStore({
+            fields  : ['value', 'text'],
+            data    : [
+                { value : 0, text : this.L('no') },
+                { value : 1, text : this.L('yes') }
+            ]
+        });
+
+        this.callParent(arguments);
+
+        this.on('change', this.onFieldChange, this);
+    },
+
+<span id='Gnt-field-Milestone-method-onSetTask'>    onSetTask : function () {
+</span>        this.setValue(this.task.isMilestone() ? 1 : 0);
+    },
+
+<span id='Gnt-field-Milestone-method-valueToVisible'>    valueToVisible : function (value) {
+</span>        return value ? this.L('yes') : this.L('no');
+    },
+
+<span id='Gnt-field-Milestone-method-onFieldChange'>    onFieldChange : function (value) {
+</span>
+        if (this.instantUpdate &amp;&amp; !this.getSuppressTaskUpdate() &amp;&amp; this.task) {
+
+            if (this.task.isMilestone() != Boolean(this.value)) {
+                // apply changes to task
+                this.applyChanges();
+            }
+        }
+    },
+
+<span id='Gnt-field-Milestone-method-getValue'>    getValue : function () {
+</span>        return this.value;
+    },
+
+<span id='Gnt-field-Milestone-method-applyChanges'>    applyChanges : function (task) {
+</span>        task    = task || this.task;
+
+        if (this.getValue()) {
+            task.convertToMilestone();
+        } else {
+            task.convertToRegular();
+        }
+
+        // since we have an &quot;applyChanges&quot; method different from the one provided by &quot;TaskField&quot; mixin
+        // we need to fire &quot;taskupdated&quot; ourself
+        task.fireEvent('taskupdated', task, this);
+    }
+});
+</pre>
+</body>
+</html>

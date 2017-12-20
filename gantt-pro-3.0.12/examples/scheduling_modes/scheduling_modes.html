@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <!--Ext and ux styles -->
+    <link href="http://cdn.sencha.com/ext/gpl/5.1.0/packages/ext-theme-classic/build/resources/ext-theme-classic-all.css"
+          rel="stylesheet" type="text/css"/>
+
+	<!--Scheduler styles-->
+    <link href="../../resources/css/sch-gantt-all.css?ver=3.0.12" rel="stylesheet" type="text/css" />
+
+	<!--Implementation specific styles-->
+    <link href="scheduling_modes.css" rel="stylesheet" type="text/css" />
+    <link href="../css/examples.css" rel="stylesheet" type="text/css" />
+      
+	<!--Ext lib and UX components-->
+    <script src="http://cdn.sencha.com/ext/gpl/5.1.0/build/ext-all.js" type="text/javascript"></script>
+
+    
+    <script src="../../gnt-all-debug.js?ver=3.0.12" type="text/javascript"></script>
+
+    <!--Application files-->
+    <script src="DemoGanttPanel.js" type="text/javascript"></script>
+    <script src="scheduling_modes.js" type="text/javascript"></script>
+
+    <title>Scheduling modes demo</title>
+</head>
+<body>
+    <div id="example-description">
+        <p>
+            NOTE: For this example to work you have to run it in a web server context. The js for the example code is not minified so it is readable. See <a href="scheduling_modes.js">scheduling_modes.js</a>.
+        </p>
+        <h2>
+            This is a more advanced example demonstrating various scheduling modes supported by Gantt component:
+        </h2>
+        <ul style="list-style:disc;padding-left:20px">
+            <li><b>Manual</b> - task bypasses any holidays/availability rules, user can manually specify any start/end date for it</li>
+            <li><b>Normal</b> - backward compatibility mode with Gantt 2.0.x, task only takes into account full days (holidays/weekends), but not hours. Resource calendars does not affect task schedule</li>
+            <li><b>Fixed duration</b> - scheduling mode with fixed duration (the effort of task will change when assigning/removing resources)</li>
+            <li><b>Effort driven</b> - scheduling mode with fixed effort (the duration of task will change when assigning/removing resources)</li>
+            <li><b>Dynamic assignment</b> - scheduling mode with fixed duration and effort (the resources allocation will change when assigning/removing resources)</li>
+        </ul>
+    </div>
+</body>
+</html>

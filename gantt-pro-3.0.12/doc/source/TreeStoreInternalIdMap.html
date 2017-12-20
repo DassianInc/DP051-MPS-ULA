@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">// byInternalIdMap is removed from 5.1.1 and it is widely used in projection mechanism
+Ext.define('Sch.patches.TreeStoreInternalIdMap', {
+    extend      : 'Sch.util.Patch',
+
+    requires    : ['Ext.data.TreeStore'],
+    target      : 'Ext.data.TreeStore',
+
+    minVersion  : '5.1.1',
+
+    overrides   : {
+        registerNode: function(node, includeChildren) {
+            var me = this;
+
+            if (!me.byInternalIdMap) {
+                me.byInternalIdMap = {};
+            }
+
+            me.byInternalIdMap[node.internalId] = node;
+
+            me.callParent(arguments);
+        },
+
+        unregisterNode: function(node, includeChildren) {
+            var me = this;
+
+            if (me.byInternalIdMap) {
+                delete me.byInternalIdMap[node.internalId];
+            }
+
+            me.callParent(arguments);
+        },
+
+        updateRoot: function () {
+            this.byInternalIdMap = {};
+
+            this.callParent(arguments);
+        }
+    }
+});</pre>
+</body>
+</html>

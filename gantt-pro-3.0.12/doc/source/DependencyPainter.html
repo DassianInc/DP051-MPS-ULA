@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-plugin-exporter-mixin-DependencyPainter'>/**
+</span> @private
+
+ @class Gnt.plugin.exporter.mixin.DependencyPainter
+
+ This mixin class handles the rendering of dependencies for the exporters.
+
+ */
+
+Ext.define ('Gnt.plugin.exporter.mixin.DependencyPainter', {
+
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-property-taskBoxes'>    taskBoxes           : null,
+</span>
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-property-dependencyPainter'>    dependencyPainter   : null,
+</span>
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-property-dependenciesHtml'>    dependenciesHtml    : '',
+</span>
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-property-ganttView'>    ganttView           : null,
+</span>
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-method-initDependencyPainter'>    initDependencyPainter : function () {
+</span>        var me  = this;
+
+        me.dependencyPainter    = me.normalView.dependencyView.painter;
+        me.ganttView            = me.dependencyPainter.ganttView;
+        me.taskBoxes            = {};
+    },
+
+
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-method-getLineCoordinates'>    getLineCoordinates : function () {
+</span>        var me  = this;
+        // redirect to real painter method
+        return me.dependencyPainter.getLineCoordinates.apply(me.dependencyPainter, arguments);
+    },
+
+
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-method-renderDependencies'>    renderDependencies : function (dependencies) {
+</span>        var me              = this;
+
+        me.dependenciesHtml = me.normalView.dependencyView.lineTpl.apply( me.getDependencyTplData(dependencies) );
+    },
+
+
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-method-fillTaskBox'>    fillTaskBox : function (task) {
+</span>        var me      = this,
+            painter = me.normalView.dependencyView.painter;
+
+        if (task.hasIncomingDependencies() || task.hasOutgoingDependencies()) {
+
+            var bodyTop;
+
+            // HACK: bufferedRenderer.bodyTop is used inside of real DependencyPainter
+            // but it breaks dependency position in our painter so we set it to zero
+            if (me.ganttView.bufferedRenderer) {
+                bodyTop     = me.ganttView.bufferedRenderer.bodyTop;
+                me.ganttView.bufferedRenderer.bodyTop = 0;
+            }
+
+            me.taskBoxes[task.getId()] = painter.getTaskBox(task);
+
+            // restore original bodyTop value
+            if (me.ganttView.bufferedRenderer) me.ganttView.bufferedRenderer.bodyTop = bodyTop;
+        }
+    },
+
+
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-method-getRenderData'>    getRenderData : function (dependency) {
+</span>        var me          = this,
+            fromTask    = dependency.getSourceTask(),
+            toTask      = dependency.getTargetTask();
+
+        if (fromTask &amp;&amp; toTask) {
+            return {
+                fromBox : me.taskBoxes[fromTask.getId()],
+                toBox   : me.taskBoxes[toTask.getId()]
+            };
+        }
+    },
+
+
+<span id='Gnt-plugin-exporter-mixin-DependencyPainter-method-getDependencyTplData'>    getDependencyTplData : function (dependencyRecords) {
+</span>        dependencyRecords   = dependencyRecords || this.normalView.dependencyView.store.getRange();
+
+        return this.dependencyPainter.getDependencyTplData.call(this, dependencyRecords);
+    }
+
+});</pre>
+</body>
+</html>

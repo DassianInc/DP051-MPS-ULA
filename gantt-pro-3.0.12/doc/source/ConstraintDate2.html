@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-ConstraintDate'>/**
+</span> *
+ * @class Gnt.column.ConstraintDate
+ * @extends Ext.grid.column.Date
+ *
+ * A Column displaying a task's constraint date. The column is editable when adding a
+ * `Sch.plugin.TreeCellEditing` plugin to your Gantt panel. The overall setup will look like this:
+ *
+ *
+ *     var gantt = Ext.create('Gnt.panel.Gantt', {
+ *         height      : 600,
+ *         width       : 1000,
+ *
+ *         columns         : [
+ *             ...
+ *             {
+ *                 xtype       : 'constraintdatecolumn',
+ *                 width       : 80
+ *             }
+ *             ...
+ *         ],
+ *         ...
+ *     })
+ *
+ * Note, that this class inherit from [Ext.grid.column.Date](http://docs.sencha.com/ext-js/4-2/#!/api/Ext.grid.column.Date) and supports its configuration options, notably the &quot;format&quot;.
+*/
+Ext.define('Gnt.column.ConstraintDate', {
+    extend              : 'Ext.grid.column.Date',
+
+    alias               : [
+        'widget.constraintdatecolumn',
+        'widget.ganttcolumn.constraintdate'
+    ],
+
+    requires            : ['Gnt.field.ConstraintDate'],
+    mixins              : ['Gnt.column.mixin.TaskFieldColumn'],
+
+<span id='Gnt-column-ConstraintDate-cfg-text'>    /**
+</span>     * @cfg {string} text The text to show in the column header, defaults to `Mode`
+     * @deprecated Please use {@link #l10n l10n} instead.
+     */
+<span id='Gnt-column-ConstraintDate-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n A object, purposed for the class localization.
+     * @cfg {String} l10n.text Column title
+     */
+
+<span id='Gnt-column-ConstraintDate-cfg-width'>    /**
+</span>     * @cfg {Number} width The width of the column.
+     */
+    width               : 100,
+
+<span id='Gnt-column-ConstraintDate-cfg-align'>    /**
+</span>     * @cfg {String} align The alignment of the text in the column.
+     */
+    align               : 'left',
+
+<span id='Gnt-column-ConstraintDate-property-fieldProperty'>    // Need to properly obtain the data index if none is given
+</span>    fieldProperty       : 'constraintDateField',
+
+<span id='Gnt-column-ConstraintDate-property-editor'>    editor              : 'constraintdatefield',
+</span>
+<span id='Gnt-column-ConstraintDate-property-defaultEditor'>    defaultEditor       : 'constraintdatefield',
+</span>
+<span id='Gnt-column-ConstraintDate-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn({
+            format      : this.editorFormat || this.format || Ext.Date.defaultFormat,
+            taskField   : this.fieldProperty
+        });
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-ConstraintDate-method-getValueToRender'>    getValueToRender : function (value, meta, task) {
+</span>        return value &amp;&amp; Ext.Date.format(this.field.valueToVisible(value, task), this.format) || '';
+    }
+});
+</pre>
+</body>
+</html>

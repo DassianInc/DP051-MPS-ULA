@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-data-util-ResourceEventsCache'>/**
+</span> * Event store's resource-&gt;events cache.
+ * Uses resource records or resource record ids as keys.
+ *
+ * @private
+ */
+Ext.define('Sch.data.util.ResourceEventsCache', {
+    extend   : 'Sch.util.Cache',
+    requires : [
+        'Ext.data.Model'
+    ],
+
+<span id='Sch-data-util-ResourceEventsCache-property-eventStore'>    eventStore            : null,
+</span><span id='Sch-data-util-ResourceEventsCache-property-eventStoreDetacher'>    eventStoreDetacher    : null,
+</span><span id='Sch-data-util-ResourceEventsCache-property-resourceStoreDetacher'>    resourceStoreDetacher : null,
+</span>
+<span id='Sch-data-util-ResourceEventsCache-method-constructor'>    constructor : function(eventStore) {
+</span>        var me            = this,
+            resourceStore = eventStore.getResourceStore();
+
+        me.callParent();
+
+        function onEventAdd(eventStore, events) {
+            Ext.Array.forEach(events, function(event) {
+                me.add(event.getResourceId(), event);
+            });
+        }
+
+        function onEventRemove(eventStore, events) {
+            Ext.Array.forEach(events, function(event) {
+                me.remove(event.getResourceId(), event);
+            });
+        }
+
+        function onEventUpdate(eventStore, event, operation, modifiedFieldNames) {
+            var resourceIdField    = event.resourceIdField,
+                resourceIdChanged  = event.previous &amp;&amp; resourceIdField in event.previous,
+                previousResourceId = resourceIdChanged &amp;&amp; event.previous[resourceIdField];
+
+            if (resourceIdChanged) {
+                me.move(previousResourceId, event.getResourceId(), event);
+            }
+        }
+
+        function onEventStoreClearOrReset() {
+            me.clear();
+        }
+
+        function onEventStoreResourceStoreChange(eventStore, newResourceStore, oldResourceStore) {
+            me.clear();
+            attachToResourceStore(newResourceStore);
+        }
+
+        function onResourceIdChanged(resourceStore, resource, oldId, newId) {
+            me.move(oldId, newId);
+        }
+
+        function onResourceRemove(resourceStore, resources) {
+            Ext.Array.forEach(resources, function(resource) {
+                me.clear(resource);
+            });
+        }
+
+        function onResourceStoreClearOrReset() {
+            me.clear();
+        }
+
+        function attachToResourceStore(resourceStore) {
+            Ext.destroy(me.resourceStoreDetacher);
+            me.resourceStoreDetacher = resourceStore &amp;&amp; resourceStore.on({
+                idchanged      : onResourceIdChanged,
+                remove         : onResourceRemove,
+                clear          : onResourceStoreClearOrReset,
+                cacheresethint : onResourceStoreClearOrReset,
+                rootchange     : onResourceStoreClearOrReset,
+                priority       : 100,
+                destroyable    : true
+            });
+        }
+
+        me.eventStoreDetacher = eventStore.on({
+            add                 : onEventAdd,
+            remove              : onEventRemove,
+            update              : onEventUpdate,
+            clear               : onEventStoreClearOrReset,
+            cacheresethint      : onEventStoreClearOrReset,
+            rootchange          : onEventStoreClearOrReset,
+            resourcestorechange : onEventStoreResourceStoreChange,
+            // subscribing to the CRUD using priority - should guarantee that our listeners
+            // will be called first (before any other listeners, that could be provided in the &quot;listeners&quot; config)
+            // and state in other listeners will be correct
+            priority            : 100,
+            destroyable         : true
+        });
+
+        me.eventStoreFiltersDetacher = eventStore.getFilters().on('endupdate', onEventStoreClearOrReset, this, {
+            // priority is calculated as:
+            // Ext.util.Collection.$endUpdatePriority + 1
+            // to reset our cache before ExtJS &quot;on filter end update&quot; listeners run
+            priority    : 1002,
+            destroyable : true
+        });
+
+        attachToResourceStore(resourceStore);
+
+        me.eventStore = eventStore;
+    },
+
+<span id='Sch-data-util-ResourceEventsCache-method-destroy'>    destroy : function() {
+</span>        var me = this;
+        Ext.destroyMembers(
+            me,
+            'eventStoreDetacher',
+            'eventStoreFiltersDetacher',
+            'resourceStoreDetacher'
+        );
+        me.eventStore = null;
+    },
+
+<span id='Sch-data-util-ResourceEventsCache-method-get'>    get : function(k, fn) {
+</span>        var me = this;
+
+        k = me.key(k);
+
+        fn = fn || function() {
+            return Ext.Array.filter(me.eventStore.getRange(), function(event) {
+                return event.getResourceId() == k;
+            });
+        };
+
+        return me.callParent([k, fn]);
+    }
+});
+</pre>
+</body>
+</html>

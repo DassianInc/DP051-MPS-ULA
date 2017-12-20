@@ -1,0 +1,129 @@
+{
+
+    "tasks" : [
+        {
+            "Id"                : 1,
+            "Name"              : "Planning",
+            "PercentDone"       : 50,
+            "StartDate"         : "2010-01-18",
+            "Duration"          : 20,
+            "expanded"          : true,
+            "tasks"          : [
+                {
+                    "Id"                : 11,
+                    "leaf"              : true,
+                    "Name"              : "Investigate",
+                    "PercentDone"       : 50,
+                    "StartDate"         : "2010-01-18",
+                    "Rollup"            : true,
+                    "Duration"          : 10
+                },
+                {
+                    "Id"                : 12,
+                    "leaf"              : true,
+                    "Name"              : "Assign resources",
+                    "PercentDone"       : 50,
+                    "StartDate"         : "2010-01-18",
+                    "Rollup"            : true,
+                    "Duration"          : 10
+                },
+                {
+                    "Id"                : 13,
+                    "leaf"              : true,
+                    "Name"              : "Gather documents (not resizable)",
+                    "Resizable"         : false,
+                    "PercentDone"       : 50,
+                    "StartDate"         : "2010-02-01",
+                    "Duration"          : 10
+                },
+                {
+                    "Id"                : 17,
+                    "leaf"              : true,
+                    "Name"              : "Report to management",
+                    "PercentDone"       : 0,
+                    "StartDate"         : "2010-01-30",
+                    "Rollup"            : true,
+                    "Duration"          : 0
+                }
+            ]
+        },
+        {
+            "Id"                : 4,
+            "Name"              : "Implementation Phase 1",
+            "PercentDone"       : 50,
+            "StartDate"         : "2010-02-01",
+            "Rollup"            : true,
+            "Duration"          : 10,
+            "expanded"          : true,
+            "tasks"          : [
+                {
+                    "Id"                : 34,
+                    "leaf"              : true,
+                    "Name"              : "Preparation work",
+                    "PercentDone"       : 30,
+                    "StartDate"         : "2010-02-01",
+                    "Duration"          : 5
+                },
+                {
+                    "Id"                : 14,
+                    "leaf"              : true,
+                    "Name"              : "Evaluate chipsets",
+                    "PercentDone"       : 30,
+                    "StartDate"         : "2010-02-01",
+                    "Duration"          : 5
+                },
+                {
+                    "Id"                : 16,
+                    "leaf"              : true,
+                    "Name"              : "Choose technology suite",
+                    "PercentDone"       : 30,
+                    "StartDate"         : "2010-02-01",
+                    "Duration"          : 5
+                },
+                {
+                    "Id"                : 15,
+                    "Rollup"            : true,
+                    "Name"              : "Build prototype",
+                    "PercentDone"       : 40,
+                    "StartDate"         : "2010-02-08",
+                    "Duration"          : 5,
+                    "expanded"          : true,
+                    "tasks"          : [
+                        {
+                            "Id"                : 20,
+                            "leaf"              : true,
+                            "Name"              : "Step 1",
+                            "PercentDone"       : 60,
+                            "StartDate"         : "2010-02-08",
+                            "Duration"          : 4
+                        },
+                        {
+                            "Id"                : 19,
+                            "leaf"              : true,
+                            "Name"              : "Step 2",
+                            "PercentDone"       : 60,
+                            "StartDate"         : "2010-02-08",
+                            "Duration"          : 4
+                        },
+                        {
+                            "Id"                : 18,
+                            "leaf"              : true,
+                            "Name"              : "Step 3",
+                            "PercentDone"       : 60,
+                            "StartDate"         : "2010-02-08",
+                            "Duration"          : 4
+                        },
+                        {
+                            "Id"                : 21,
+                            "leaf"              : true,
+                            "Name"              : "Follow up with customer",
+                            "PercentDone"       : 60,
+                            "StartDate"         : "2010-02-12",
+                            "Duration"          : 1
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

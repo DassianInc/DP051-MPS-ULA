@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-model-Range'>/**
+</span>
+ @class Sch.model.Range
+ @extends Sch.model.Customizable
+
+ This class represent a simple date range. It is being used in various subclasses and plugins which operate on date ranges.
+
+ Its a subclass of the {@link Sch.model.Customizable}, which is in turn subclass of {@link Ext.data.Model}.
+ Please refer to documentation of those classes to become familar with the base interface of this class.
+
+ A range has the following fields:
+
+ - `StartDate`   - start date of the task in the ISO 8601 format
+ - `EndDate`     - end date of the task in the ISO 8601 format (not inclusive)
+ - `Name`        - an optional name of the range
+ - `Cls`         - an optional CSS class to be associated with the range.
+
+ The name of any field can be customized in the subclass. Please refer to {@link Sch.model.Customizable} for details.
+
+ */
+
+if (!Ext.ClassManager.get(&quot;Sch.model.Range&quot;)) {
+    Ext.define('Sch.model.Range', {
+        extend : 'Sch.model.Customizable',
+
+        requires : [
+            'Sch.util.Date'
+        ],
+
+        idProperty : 'Id',
+
+        // For Sencha Touch
+        config     : Ext.versions.touch ? { idProperty : 'Id' } : null,
+
+<span id='Sch-model-Range-cfg-startDateField'>        /**
+</span>         * @cfg {String} startDateField The name of the field that defines the range start date. Defaults to &quot;StartDate&quot;.
+         */
+        startDateField : 'StartDate',
+
+<span id='Sch-model-Range-cfg-endDateField'>        /**
+</span>         * @cfg {String} endDateField The name of the field that defines the range end date. Defaults to &quot;EndDate&quot;.
+         */
+        endDateField : 'EndDate',
+
+<span id='Sch-model-Range-cfg-nameField'>        /**
+</span>         * @cfg {String} nameField The name of the field that defines the range name. Defaults to &quot;Name&quot;.
+         */
+        nameField : 'Name',
+
+<span id='Sch-model-Range-cfg-clsField'>        /**
+</span>         * @cfg {String} clsField The name of the field that holds the range &quot;class&quot; value (usually corresponds to a CSS class). Defaults to &quot;Cls&quot;.
+         */
+        clsField : 'Cls',
+
+        customizableFields : [
+<span id='Sch-model-Range-method-getStartDate'>        /**
+</span>         * @method getStartDate
+         *
+         * Returns the range start date
+         *
+         * @return {Date} The start date
+         */
+            { name : 'StartDate', type : 'date', dateFormat : 'c' },
+
+<span id='Sch-model-Range-method-getEndDate'>        /**
+</span>         * @method getEndDate
+         *
+         * Returns the range end date
+         *
+         * @return {Date} The end date
+         */
+            { name : 'EndDate', type : 'date', dateFormat : 'c' },
+
+<span id='Sch-model-Range-method-getCls'>        /**
+</span>         * @method getCls
+         *
+         * Gets the &quot;class&quot; of the range
+         *
+         * @return {String} cls The &quot;class&quot; of the range
+         */
+<span id='Sch-model-Range-method-setCls'>        /**
+</span>         * @method setCls
+         *
+         * Sets the &quot;class&quot; of the range
+         *
+         * @param {String} cls The new class of the range
+         */
+            {
+                name : 'Cls', type : 'string'
+            },
+
+<span id='Sch-model-Range-method-getName'>        /**
+</span>         * @method getName
+         *
+         * Gets the name of the range
+         *
+         * @return {String} name The &quot;name&quot; of the range
+         */
+<span id='Sch-model-Range-method-setName'>        /**
+</span>         * @method setName
+         *
+         * Sets the &quot;name&quot; of the range
+         *
+         * @param {String} name The new name of the range
+         */
+            {
+                name : 'Name', type : 'string'
+            }
+        ],
+
+<span id='Sch-model-Range-method-setStartDate'>        /**
+</span>         * @method setStartDate
+         *
+         * Sets the range start date
+         *
+         * @param {Date} date The new start date
+         * @param {Boolean} keepDuration Pass `true` to keep the duration of the task (&quot;move&quot; the event), `false` to change the duration (&quot;resize&quot; the event).
+         * Defaults to `false`
+         */
+        setStartDate : function (date, keepDuration) {
+            var endDate = this.getEndDate();
+            var oldStart = this.getStartDate();
+
+            this.set(this.startDateField, date);
+
+            if (keepDuration === true &amp;&amp; endDate &amp;&amp; oldStart) {
+                this.setEndDate(Sch.util.Date.add(date, Sch.util.Date.MILLI, endDate - oldStart));
+            }
+        },
+
+<span id='Sch-model-Range-method-setEndDate'>        /**
+</span>         * @method setEndDate
+         *
+         * Sets the range end date
+         *
+         * @param {Date} date The new end date
+         * @param {Boolean} keepDuration Pass `true` to keep the duration of the task (&quot;move&quot; the event), `false` to change the duration (&quot;resize&quot; the event).
+         * Defaults to `false`
+         */
+        setEndDate : function (date, keepDuration) {
+            var startDate = this.getStartDate();
+            var oldEnd = this.getEndDate();
+
+            this.set(this.endDateField, date);
+
+            if (keepDuration === true &amp;&amp; startDate &amp;&amp; oldEnd) {
+                this.setStartDate(Sch.util.Date.add(date, Sch.util.Date.MILLI, -(oldEnd - startDate)));
+            }
+        },
+
+<span id='Sch-model-Range-method-setStartEndDate'>        /**
+</span>         * Sets the event start and end dates
+         *
+         * @param {Date} start The new start date
+         * @param {Date} end The new end date
+         */
+        setStartEndDate : function (start, end) {
+            this.beginEdit();
+
+            this.set(this.startDateField, start);
+            this.set(this.endDateField, end);
+
+            this.endEdit();
+        },
+
+<span id='Sch-model-Range-method-getDates'>        /**
+</span>         * Returns an array of dates in this range. If the range starts/ends not at the beginning of day, the whole day will be included.
+         * @return {Date[]}
+         */
+        getDates : function () {
+            var dates = [],
+                endDate = this.getEndDate();
+
+            for (var date = Ext.Date.clearTime(this.getStartDate(), true); date &lt; endDate; date = Sch.util.Date.add(date, Sch.util.Date.DAY, 1)) {
+
+                dates.push(date);
+            }
+
+            return dates;
+        },
+
+
+<span id='Sch-model-Range-method-forEachDate'>        /**
+</span>         * Iterates over the results from {@link #getDates}
+         * @param {Function} func The function to call for each date
+         * @param {Object} scope The scope to use for the function call
+         */
+        forEachDate : function (func, scope) {
+            return Ext.each(this.getDates(), func, scope);
+        },
+
+        // Simple check if end date is greater than start date
+        isValid     : function () {
+            var valid = this.callParent(arguments);
+
+            if (valid) {
+                var start = this.getStartDate(),
+                    end = this.getEndDate();
+
+                valid = !start || !end || (end - start &gt;= 0);
+            }
+
+            return valid;
+        },
+
+<span id='Sch-model-Range-method-shift'>        /**
+</span>         * Shift the dates for the date range by the passed amount and unit
+         * @param {String} unit The unit to shift by (e.g. range.shift(Sch.util.Date.DAY, 2); ) to bump the range 2 days forward
+         * @param {Number} amount The amount to shift
+         */
+        shift : function (unit, amount) {
+            this.setStartEndDate(
+                Sch.util.Date.add(this.getStartDate(), unit, amount),
+                Sch.util.Date.add(this.getEndDate(), unit, amount)
+            );
+        },
+
+        fullCopy : function () {
+            return this.copy.apply(this, arguments);
+        }
+    });
+}</pre>
+</body>
+</html>

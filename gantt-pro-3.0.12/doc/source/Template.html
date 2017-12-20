@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-template-Template'>/**
+</span>@class Gnt.template.Template
+@extends Ext.XTemplate
+
+Base class of all UI task templates. Subclass this class to implement your own UI template.
+*/
+Ext.define(&quot;Gnt.template.Template&quot;, {
+    extend      : 'Ext.XTemplate',
+
+<span id='Gnt-template-Template-property-isLegacyIE'>    isLegacyIE  : Ext.isIE8m,
+</span>
+<span id='Gnt-template-Template-method-getInnerTpl'>    getInnerTpl : Ext.emptyFn,
+</span>
+<span id='Gnt-template-Template-property-innerTpl'>    innerTpl    : null,
+</span>
+<span id='Gnt-template-Template-property-dependencyTerminalMarkup'>    dependencyTerminalMarkup : '&lt;div class=&quot;sch-gantt-terminal sch-gantt-terminal-start&quot;&gt;&lt;/div&gt;&lt;div class=&quot;sch-gantt-terminal sch-gantt-terminal-end&quot;&gt;&lt;/div&gt;',
+</span>
+<span id='Gnt-template-Template-method-constructor'>    constructor : function (cfg) {
+</span>        Ext.apply(this, cfg);
+
+        var side = cfg.rtl ? 'right' : 'left';
+        var inner = this.getInnerTpl(cfg) || '';
+
+        this.callParent([
+                 '&lt;div class=&quot;sch-event-wrap {ctcls} ' + Ext.baseCSSPrefix + 'unselectable&quot; style=&quot;' + side + ':{offset}px&quot;&gt;',
+                    '&lt;tpl if=&quot;isRollup&quot;&gt;',
+                        inner,
+                    '&lt;tpl else&gt;',
+                        (cfg.leftLabel ? '&lt;div class=&quot;sch-gantt-labelct sch-gantt-labelct-left&quot;&gt;&lt;label class=&quot;sch-gantt-label sch-gantt-label-left&quot;&gt;{leftLabel}&lt;/label&gt;&lt;/div&gt;' : ''),
+                        (cfg.rightLabel ? '&lt;div class=&quot;sch-gantt-labelct sch-gantt-labelct-right&quot; style=&quot;left:{width}px&quot;&gt;&lt;label class=&quot;sch-gantt-label sch-gantt-label-right&quot;&gt;{rightLabel}&lt;/label&gt;&lt;/div&gt;' : ''),
+                        (cfg.topLabel ? '&lt;div class=&quot;sch-gantt-labelct sch-gantt-labelct-top&quot;&gt;&lt;label class=&quot;sch-gantt-label sch-gantt-label-top&quot;&gt;{topLabel}&lt;/label&gt;&lt;/div&gt;' : ''),
+                        inner,
+                        (cfg.bottomLabel ? '&lt;div class=&quot;sch-gantt-labelct sch-gantt-labelct-bottom&quot;&gt;&lt;label class=&quot;sch-gantt-label sch-gantt-label-bottom&quot;&gt;{bottomLabel}&lt;/label&gt;&lt;/div&gt;' : ''),
+                    '&lt;/tpl&gt;',
+                '&lt;/div&gt;',
+            {
+                disableFormats  : true
+            }
+        ]);
+    }
+});
+</pre>
+</body>
+</html>

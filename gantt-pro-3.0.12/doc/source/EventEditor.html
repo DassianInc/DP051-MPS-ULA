@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-EventEditor'>/**
+</span>@class Sch.plugin.EventEditor
+@extends Ext.form.Panel
+
+A plugin (ptype = 'scheduler_eventeditor') used to edit event start/end dates as well as any meta data. It inherits from {@link Ext.form.FormPanel} so you can define any fields and use any layout you want.
+
+{@img scheduler/images/event-editor.png}
+
+Normally, this plugin shows the same form for all events. However you can show different forms for different event types. To do that:
+
+- the event type is supposed to be provided as the value of the `EventType` field in the event model.
+- in the {@link #fieldsPanelConfig} provide the container with card layout. The children of that container should be the forms which will be used to edit different
+event types
+- each such form should contain the `EventType` configuration option, matching to the appropriate event type.
+- the small top form, containing the start date, start time and duration fields is always shared among all forms.
+- this whole behavior can be disabled with the `dynamicForm : false` option.
+
+The overall picture will look like:
+
+    fieldsPanelConfig : {
+        xtype       : 'container',
+
+        layout      : 'card',
+
+        items       : [
+            // form for &quot;Meeting&quot; EventType
+            {
+                EventType   : 'Meeting',
+
+                xtype       : 'form',
+
+                items       : [
+                    ...
+                ]
+            },
+            // eof form for &quot;Meeting&quot; EventType
+
+            // form for &quot;Appointment&quot; EventType
+            {
+                EventType   : 'Appointment',
+
+                xtype       : 'form',
+
+                items       : [
+                    ...
+                ]
+            }
+            // eof form for &quot;Appointment&quot; EventType
+        ]
+    }
+
+Note, that you can customize the start date, start time and duration fields with appropriate configuration options: {@link #dateConfig}, {@link #timeConfig}, {@link #durationConfig}
+
+
+    var eventEditor    = Ext.create('Sch.plugin.EventEditor', {
+        ...
+        timeConfig      : {
+            minValue    : '08:00',
+            maxValue    : '18:00'
+        },
+        ...
+    });
+
+
+    var scheduler = Ext.create('Sch.panel.SchedulerGrid', {
+        ...
+
+        resourceStore   : resourceStore,
+        eventStore      : eventStore,
+
+        plugins         : [
+            eventEditor
+        ]
+    });
+
+
+If you include additional components which have floating sub-components, such as combo boxes or date pickers -
+you need to decorate them with a special CSS class so the editor will stay open when clicking 'outside' of the editor element.
+
+    var myComboBox = new Ext.form.ComboBox({
+        width           : 70,
+        ...
+    });
+
+    // Tell the editor that this component and its picker are part of the editor, clicking them should not hide the editor.
+    myComboBox.getPicker().addCls('sch-event-editor-ignore-click');
+
+ */
+Ext.define(&quot;Sch.plugin.EventEditor&quot;, {
+    extend      : &quot;Ext.form.Panel&quot;,
+
+    mixins      : [
+        'Ext.AbstractPlugin',
+        'Sch.mixin.Localizable'
+    ],
+
+    alias       : ['widget.eventeditor',  'plugin.scheduler_eventeditor'],
+
+<span id='Sch-plugin-EventEditor-property-lockableScope'>    lockableScope : 'normal',
+</span>
+    requires    : [
+        'Sch.util.Date',
+        'Ext.util.Region',
+        'Ext.form.Label',
+        'Ext.form.field.Date',
+        'Ext.form.field.Time'
+    ],
+
+<span id='Sch-plugin-EventEditor-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - saveText    : 'Save',
+            - deleteText  : 'Delete',
+            - cancelText  : 'Cancel'
+     */
+
+<span id='Sch-plugin-EventEditor-cfg-hideOnBlur'>    /**
+</span>     * @cfg {Boolean} hideOnBlur True to hide this panel if a click is detected outside the panel (defaults to true)
+     */
+    hideOnBlur              : true,
+
+<span id='Sch-plugin-EventEditor-cfg-saveAndCloseOnEnter'>    /**
+</span>     * @cfg {Boolean} saveAndCloseOnEnter True to save and close this panel if ENTER is pressed in one of the input fields inside the panel.
+     */
+    saveAndCloseOnEnter     : true,
+
+<span id='Sch-plugin-EventEditor-property-startDateField'>    /**
+</span>     * This property provides access to the start date field
+     * @property {Ext.form.field.Date} startDateField
+     */
+    startDateField          : null,
+
+<span id='Sch-plugin-EventEditor-property-startTimeField'>    /**
+</span>     * This property provides access to the start time field
+     * @property {Ext.form.field.Time} startTimeField
+     */
+    startTimeField          : null,
+
+<span id='Sch-plugin-EventEditor-property-durationField'>    /**
+</span>     * This property provides access to the duration spinner field
+     * @property {Ext.form.field.Number} durationField
+     */
+    durationField           : null,
+
+<span id='Sch-plugin-EventEditor-cfg-timeConfig'>    /**
+</span>     * @cfg {Object} timeConfig Config for the `startTimeField` constructor.
+     */
+    timeConfig              : null,
+
+<span id='Sch-plugin-EventEditor-cfg-dateConfig'>    /**
+</span>     * @cfg {Object} dateConfig Config for the `startDateField` constructor.
+     */
+    dateConfig              : null,
+
+<span id='Sch-plugin-EventEditor-cfg-durationConfig'>    /**
+</span>     * @cfg {Object} durationConfig A custom config object that is used to configure the {@link Ext.form.field.Number duration field}.
+     */
+    durationConfig          : null,
+
+<span id='Sch-plugin-EventEditor-cfg-durationUnit'>    /**
+</span>     * @cfg {String} durationUnit The unit in which the duration is measured, defaults to Sch.util.Date.HOUR.
+     *                            Please see {@link Sch.util.Date} for the possible values.
+     */
+    durationUnit            : null,
+
+<span id='Sch-plugin-EventEditor-cfg-durationText'>    /**
+</span>     * @cfg {String} durationText The text to show after the duration spinner field
+     */
+    durationText            : null,
+
+<span id='Sch-plugin-EventEditor-cfg-triggerEvent'>    /**
+</span>     * @cfg {String} triggerEvent The event that shall trigger showing the editor. Defaults to 'eventdblclick', set to '' or null to disable editing of existing events.
+     */
+    triggerEvent            : 'eventdblclick',
+
+<span id='Sch-plugin-EventEditor-cfg-fieldsPanelConfig'>    /**
+</span>     * @cfg {Object} fieldsPanelConfig (required) A panel config representing your fields that is associated with a scheduled event.
+     *
+     * Example:
+
+        fieldsPanelConfig : {
+            layout      : 'form',
+
+            style       : 'background : #fff',
+            border      : false,
+            cls         : 'editorpanel',
+            labelAlign  : 'top',
+
+            defaults    : {
+                width : 135
+            },
+
+            items       : [
+                titleField      = new Ext.form.TextField({
+                    name            : 'Title',
+                    fieldLabel      : 'Task'
+                }),
+
+                locationField   = new Ext.form.TextField({
+                    name            : 'Location',
+                    fieldLabel      : 'Location'
+                })
+            ]
+        }
+     *
+     */
+    fieldsPanelConfig       : null,
+
+<span id='Sch-plugin-EventEditor-cfg-dateFormat'>    /**
+</span>     * @cfg {String} dateFormat This config parameter is passed to the `startDateField` constructor.
+     */
+    dateFormat              : 'Y-m-d',
+
+<span id='Sch-plugin-EventEditor-cfg-timeFormat'>    /**
+</span>     * @cfg {String} timeFormat This config parameter is passed to the `startTimeField` constructor.
+     */
+    timeFormat              : 'H:i',
+
+
+<span id='Sch-plugin-EventEditor-property-cls'>    cls                     : 'sch-eventeditor',
+</span><span id='Sch-plugin-EventEditor-property-border'>    border                  : false,
+</span><span id='Sch-plugin-EventEditor-property-shadow'>    shadow                  : false,
+</span>
+<span id='Sch-plugin-EventEditor-cfg-dynamicForm'>    /**
+</span>     * @cfg {Boolean} dynamicForm True to use several forms. Default is `true`.
+     */
+    dynamicForm             : true,
+
+<span id='Sch-plugin-EventEditor-property-eventRecord'>    /**
+</span>     * @property {Sch.model.Event} eventRecord The current {@link Sch.model.Event} record, which is being edited by the event editor
+     */
+    eventRecord             : null,
+
+<span id='Sch-plugin-EventEditor-property-hidden'>    hidden          : true,
+</span><span id='Sch-plugin-EventEditor-property-collapsed'>    collapsed       : true,
+</span><span id='Sch-plugin-EventEditor-property-currentForm'>    currentForm     : null,
+</span><span id='Sch-plugin-EventEditor-property-schedulerView'>    schedulerView   : null,
+</span><span id='Sch-plugin-EventEditor-property-resourceRecord'>    resourceRecord  : null,
+</span><span id='Sch-plugin-EventEditor-property-preventHeader'>    preventHeader   : true,
+</span><span id='Sch-plugin-EventEditor-property-floating'>    floating        : true,
+</span><span id='Sch-plugin-EventEditor-property-hideMode'>    hideMode        : 'offsets',
+</span><span id='Sch-plugin-EventEditor-property-ignoreCls'>    ignoreCls       : 'sch-event-editor-ignore-click',
+</span><span id='Sch-plugin-EventEditor-property-layout'><span id='Sch-plugin-EventEditor-property-readOnly'>    readOnly        : false, // Cached value of scheduler setting
+</span></span>
+    layout          : {
+        type    : 'vbox',
+        align   : 'stretch'
+    },
+
+<span id='Sch-plugin-EventEditor-property-dragProxyEl'>    dragProxyEl     : null,
+</span>
+<span id='Sch-plugin-EventEditor-cfg-constrain'>    /**
+</span>     * @cfg {Boolean} constrain Pass `true` to enable the constraining - ie editor panel will not exceed the document edges. This option will disable the animation
+     * during the expansion. Default value is `false`.
+     */
+    constrain           : false,
+
+<span id='Sch-plugin-EventEditor-event-beforeeventdelete'>    /**
+</span>     * @event beforeeventdelete
+     * Fires before an event is deleted (return false to cancel the operation)
+     * @param {Sch.plugin.EventEditor} editor The editor instance
+     * @param {Sch.model.Event} eventRecord The record about to be deleted
+     */
+
+<span id='Sch-plugin-EventEditor-event-beforeeventsave'>    /**
+</span>     * @event beforeeventsave
+     * Fires before an event is saved (return false to cancel the operation)
+     * @param {Sch.plugin.EventEditor} editor The editor instance
+     * @param {Sch.model.Event} eventRecord The record about to be saved
+     */
+
+    constructor : function(config) {
+        config              = config || {};
+        Ext.apply(this, config);
+
+        this.durationUnit   = this.durationUnit || Sch.util.Date.HOUR;
+
+        this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-EventEditor-method-init'>    init : function (grid) {
+</span>        // setting the ownerCt helps a possible container of the scheduler (such as a window), to not try to
+        // position itself above the editor, since it's in sort of a &quot;child&quot; of the Window component in that case.
+        this.ownerCt        = grid;
+
+        this.schedulerView  = grid.getView();
+        this.eventStore     = this.schedulerView.getEventStore();
+
+        this.schedulerView.on({
+            afterrender     : this.onSchedulerRender,
+            dragcreateend   : this.onDragCreateEnd,
+
+            scope           : this
+        });
+
+        this.schedulerView.on('eventrepaint', this.onEventRepaint, this);
+
+        if (this.triggerEvent) {
+            this.schedulerView.on(this.triggerEvent, this.onActivateEditor, this);
+        }
+
+        this.schedulerView.registerEventEditor(this);
+    },
+
+<span id='Sch-plugin-EventEditor-method-initComponent'>    initComponent : function() {
+</span>
+        if (!this.fieldsPanelConfig) throw 'Must define a fieldsPanelConfig property';
+
+        Ext.apply(this, {
+            fbar            : this.buttons || this.buildButtons(),
+
+            items           : [
+                {
+                    xtype   : 'container',
+                    layout  : 'hbox',
+                    height  : 35,
+                    border  : false,
+                    cls     : 'sch-eventeditor-timefields',
+
+                    items   : this.buildDurationFields()
+                },
+                Ext.applyIf(this.fieldsPanelConfig, {
+                    flex        : 1,
+                    activeItem  : 0
+                })
+            ]
+        });
+
+        this.callParent(arguments);
+    },
+
+<span id='Sch-plugin-EventEditor-method-afterRender'>    afterRender : function() {
+</span>        this.callParent(arguments);
+
+        if (this.saveAndCloseOnEnter) {
+            this.el.on({
+                'keyup' : function(e, t) {
+                    if (e.getKey() === e.ENTER &amp;&amp; t.tagName.toLowerCase() === 'input') {
+                        this.saveAndClose();
+                    }
+                },
+                scope : this
+            });
+        }
+    },
+
+
+
+<span id='Sch-plugin-EventEditor-method-onSchedulerRender'>    onSchedulerRender : function() {
+</span>        this.render(Ext.getBody());
+
+        if (this.hideOnBlur) {
+            // Hide when clicking outside panel
+            this.mon(Ext.getDoc(), 'mousedown', this.onMouseDown, this);
+        }
+    },
+
+
+<span id='Sch-plugin-EventEditor-method-show'>    /**
+</span>     * Activates the editor for the passed event record.
+     * @param {Sch.model.Event} eventRecord The record to show in the editor panel
+     */
+    show : function (eventRecord, alignToEl) {
+
+        var readOnly = this.schedulerView.isReadOnly();
+
+        if (readOnly !== this.readOnly) {
+            Ext.Array.forEach(this.query('field'), function(field) {
+                field.setReadOnly(readOnly);
+            });
+
+            this.saveButton.setVisible(!readOnly);
+            this.deleteButton.setVisible(!readOnly);
+
+            this.readOnly = readOnly;
+        }
+
+        // Only show delete button if the event belongs to a store
+        if (this.deleteButton) {
+            this.deleteButton.setVisible(!readOnly &amp;&amp; this.eventStore.indexOf(eventRecord) &gt;= 0);
+        }
+
+        this.eventRecord = eventRecord;
+
+        // Manually set the duration field value
+        this.durationField.setValue(Sch.util.Date.getDurationInUnit(eventRecord.getStartDate(), eventRecord.getEndDate(), this.durationUnit, true));
+
+        var startDate = eventRecord.getStartDate();
+        this.startDateField.setValue(startDate);
+        this.startTimeField.setValue(startDate);
+
+        // If the scheduler we're attached to is inside a floating component (window etc)
+        // we need to make sure we're on top of it at show time.
+        var floatingContainer = this.schedulerView.up('[floating=true]');
+        if (floatingContainer){
+            this.getEl().setZIndex(floatingContainer.getEl().getZIndex() + 1);
+            floatingContainer.addCls(this.ignoreCls);
+        }
+
+        this.callParent();
+
+        alignToEl = alignToEl || this.schedulerView.getElementsFromEventRecord(eventRecord)[0];
+
+        this.alignTo(alignToEl, this.schedulerView.getMode() == 'horizontal' ? 'bl' : 'tl-tr', this.getConstrainOffsets(alignToEl));
+
+        this.expand(!this.constrain);
+
+        if (this.constrain) {
+            this.doConstrain(Ext.util.Region.getRegion(Ext.getBody()));
+        }
+
+        var form,
+            eventType = eventRecord.get('EventType');
+
+        if (eventType &amp;&amp; this.dynamicForm) {
+            var fieldsPanel     = this.items.getAt(1),
+                forms           = fieldsPanel.query('&gt; component[EventType=' + eventType + ']');
+
+            if (!forms.length)                                  {
+                throw &quot;Can't find form for EventType=&quot; + eventType;
+            }
+            if (!fieldsPanel.getLayout().setActiveItem)         {
+                throw &quot;Can't switch active component in the 'fieldsPanel'&quot;;
+            }
+
+            form = forms[ 0 ];
+
+            if (!(form instanceof Ext.form.Panel))              {
+                throw &quot;Each child component of 'fieldsPanel' should be a 'form'&quot;;
+            }
+
+            fieldsPanel.getLayout().setActiveItem(form);
+        } else {
+            form = this;
+        }
+
+        this.currentForm = form;
+
+        // get the &quot;basicForm&quot; from current form and load it from event record
+        form.getForm().loadRecord(eventRecord);
+    },
+
+<span id='Sch-plugin-EventEditor-method-getConstrainOffsets'>    // Override this to add support for constraining the editor panel to the viewport or scheduler
+</span>    getConstrainOffsets : function(eventEl) {
+        return [0, 0];
+    },
+
+<span id='Sch-plugin-EventEditor-method-onSaveClick'>    onSaveClick : function() {
+</span>        this.saveAndClose();
+    },
+
+<span id='Sch-plugin-EventEditor-method-saveAndClose'>    /**
+</span>    * This method first checks that the form values are valid and then updates the event and hides the form.
+    */
+    saveAndClose : function() {
+        var me          = this,
+            record      = me.eventRecord,
+            form        = me.currentForm.getForm();
+
+        if (form.isValid() &amp;&amp; me.fireEvent('beforeeventsave', me, record) !== false) {
+
+            var startDate   = me.startDateField.getValue(),
+                endDate,
+                startTime   = me.startTimeField.getValue(),
+                duration    = me.durationField.getValue();
+
+            if (startDate &amp;&amp; duration &gt;= 0) {
+
+                if (startTime) {
+                    Sch.util.Date.copyTimeValues(startDate, startTime);
+                }
+
+                endDate = Sch.util.Date.add(startDate, me.durationUnit, duration);
+            } else {
+                return;
+            }
+
+
+            if (!me.schedulerView.allowOverlap) {
+                var resources = record.getResources(me.eventStore);
+                var abort     = false;
+
+                // Manually locate the event resource for new records
+                resources = resources.length &gt; 0 ? resources : [me.resourceRecord];
+
+                Ext.each(resources, function(resource) {
+                    return abort = !me.schedulerView.isDateRangeAvailable(startDate, endDate, record, resource);
+                });
+
+                if (abort) return;
+            }
+
+            // HACK Prevent editor realignment while we're closing it
+            me.schedulerView.un('eventrepaint', me.onEventRepaint, me);
+
+            me.onBeforeSave(record);
+
+            record.beginEdit();
+
+            form.updateRecord(record);
+
+            record.setStartEndDate(startDate, endDate);
+
+            record.endEdit();
+
+            // Check if me is a new record
+            if (me.eventStore.indexOf(record) &lt; 0) {
+                if (me.schedulerView.fireEvent('beforeeventadd', me.schedulerView, record) !== false) {
+                    if (Ext.data.TreeStore &amp;&amp; me.eventStore instanceof Ext.data.TreeStore) {
+                        record.set('leaf', true);
+                    }
+                    me.eventStore.append(record);
+
+                    record.assign(me.resourceRecord);
+                }
+            }
+
+            me.onAfterSave(record);
+
+            me.collapse(null, true);
+
+            me.schedulerView.on('eventrepaint', me.onEventRepaint, me);
+        }
+    },
+
+<span id='Sch-plugin-EventEditor-method-onBeforeSave'>    /**
+</span>     * Template method, intended to be overridden. Called before the event record has been updated.
+     * @param {Sch.model.EventRecord} eventRecord The event record
+     *
+     **/
+    onBeforeSave : function(eventRecord) {},
+
+<span id='Sch-plugin-EventEditor-method-onAfterSave'>    /**
+</span>     * Template method, intended to be overridden. Called after the event record has been updated.
+     * @param {Sch.model.EventRecord} eventRecord The event record
+     *
+     **/
+    onAfterSave : function(eventRecord) {},
+
+<span id='Sch-plugin-EventEditor-method-onDeleteClick'>    onDeleteClick : function() {
+</span>        if (this.fireEvent('beforeeventdelete', this, this.eventRecord) !== false) {
+            this.eventStore.remove(this.eventRecord);
+        }
+        this.collapse(null, true);
+    },
+
+
+<span id='Sch-plugin-EventEditor-method-onCancelClick'>    onCancelClick : function() {
+</span>        this.collapse(null, true);
+    },
+
+<span id='Sch-plugin-EventEditor-method-buildButtons'>    buildButtons : function() {
+</span>
+        this.saveButton = new Ext.Button({
+            text        : this.L('saveText'),
+
+            scope       : this,
+            handler     : this.onSaveClick
+        });
+
+        this.deleteButton = new Ext.Button({
+            text        : this.L('deleteText'),
+
+            scope       : this,
+            handler     : this.onDeleteClick
+        });
+
+        this.cancelButton = new Ext.Button({
+            text        : this.L('cancelText'),
+
+            scope       : this,
+            handler     : this.onCancelClick
+        });
+
+        return [ this.saveButton, this.deleteButton, this.cancelButton ];
+    },
+
+
+<span id='Sch-plugin-EventEditor-method-buildDurationFields'>    buildDurationFields : function() {
+</span>
+        this.startDateField = new Ext.form.field.Date(Ext.apply({
+            width           : 90,
+            allowBlank      : false,
+            format          : this.dateFormat
+        }, this.dateConfig || {}));
+
+        this.startDateField.getPicker().addCls(this.ignoreCls);
+
+        this.startTimeField = new Ext.form.field.Time(Ext.apply({
+            width           : 70,
+            allowBlank      : false,
+            format          : this.timeFormat
+
+        }, this.timeConfig || {}));
+
+        this.startTimeField.getPicker().addCls(this.ignoreCls);
+
+        this.durationField = new Ext.form.field.Number(Ext.apply({
+
+            width           : 45,
+
+            value           : 0,
+
+            minValue        : 0,
+            allowNegative   : false
+
+        }, this.durationConfig || {}));
+
+
+        this.durationLabel = new Ext.form.Label({
+            text            : this.getDurationText()
+        });
+
+        return [ this.startDateField, this.startTimeField, this.durationField, this.durationLabel ];
+    },
+
+
+<span id='Sch-plugin-EventEditor-method-onActivateEditor'>    onActivateEditor : function(g, evtRecord) {
+</span>        this.show(evtRecord);
+    },
+
+
+<span id='Sch-plugin-EventEditor-method-onMouseDown'>    onMouseDown : function(e){
+</span>
+        if (
+            this.collapsed || e.within(this.getEl()) ||
+            // ignore the click on the menus and combo-boxes (which usually floats as the direct child of &lt;body&gt; and
+            // leaks through the `e.within(this.getEl())` check
+
+            // if clicks should be ignored for any other element - it should have this class
+                e.getTarget('.' + this.ignoreCls, 9) ||
+                e.getTarget(this.schedulerView.eventSelector)
+        ) {
+            return;
+        }
+
+        this.collapse();
+    },
+
+
+<span id='Sch-plugin-EventEditor-method-onDragCreateEnd'>    onDragCreateEnd : function(s, eventRecord, resourceRecord, e, proxyEl) {
+</span>        this.dragProxyEl = proxyEl;
+
+        this.resourceRecord = resourceRecord;
+
+        // Call scheduler template method
+        this.schedulerView.onEventCreated(eventRecord);
+
+        this.show(eventRecord, this.dragProxyEl);
+    },
+
+<span id='Sch-plugin-EventEditor-method-hide'>    //@OVERRIDE
+</span>    hide : function() {
+        this.callParent(arguments);
+        var dpEl = this.dragProxyEl;
+
+        if (dpEl) {
+            dpEl.hide();
+        }
+    },
+
+<span id='Sch-plugin-EventEditor-method-afterCollapse'>    //@OVERRIDE: Always hide drag proxy on collapse
+</span>    afterCollapse : function() {
+        // currently the header is kept even after collapse, so need to hide the form completely
+        this.hide();
+
+        this.callParent(arguments);
+    },
+
+
+<span id='Sch-plugin-EventEditor-method-getDurationText'>    getDurationText : function () {
+</span>        if (this.durationText) {
+            return this.durationText;
+        }
+
+        return Sch.util.Date.getShortNameOfUnit(Sch.util.Date.getNameOfUnit(this.durationUnit));
+    },
+
+<span id='Sch-plugin-EventEditor-method-onEventRepaint'>    // Reposition / update form content if event is moved
+</span>    onEventRepaint : function(store, record) {
+        if (!this.getCollapsed() &amp;&amp; record === this.eventRecord) {
+            this.show(record);
+        }
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-feature-DependencyDragDrop'>/**
+</span> * @class Gnt.feature.DependencyDragDrop
+ * @extends Ext.util.Observable
+ * @private
+ * Internal class managing the interaction of setting up new dependencies using drag and drop between dependency terminals.
+ */
+Ext.define(&quot;Gnt.feature.DependencyDragDrop&quot;, {
+    extend : 'Ext.util.Observable',
+
+    mixins : {
+        localizable : 'Gnt.mixin.Localizable'
+    },
+
+    requires : [
+        'Gnt.feature.DependencyDragZone',
+        'Gnt.feature.DependencyDropZone',
+        'Ext.XTemplate'
+    ],
+
+<span id='Gnt-feature-DependencyDragDrop-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+     - fromText    : 'From: &lt;strong&gt;{0},&lt;/strong&gt; {1},&lt;br/&gt;',
+     - toText      : 'To: &lt;strong&gt;{0},&lt;/strong&gt; {1},',
+     - startText   : 'Start',
+     - endText     : 'End'
+     */
+
+<span id='Gnt-feature-DependencyDragDrop-cfg-useLineProxy'>    /**
+</span>     * @cfg {Boolean} useLineProxy True to display a line while dragging
+     */
+    useLineProxy     : true,
+
+<span id='Gnt-feature-DependencyDragDrop-cfg-dragZoneConfig'>    /**
+</span>     * @cfg {Object} dragZoneConfig
+     * A custom config object used to configure the Ext.dd.DragZone instance.
+     */
+    dragZoneConfig  : null,
+
+<span id='Gnt-feature-DependencyDragDrop-cfg-dropZoneConfig'>    /**
+</span>     * @cfg {Object} dropZoneConfig
+     * A custom config object used to configure the Ext.dd.DropZone instance.
+     */
+    dropZoneConfig  : null,
+
+
+<span id='Gnt-feature-DependencyDragDrop-cfg-toolTipTpl'>    /**
+</span>     * @cfg {Object} toolTipTpl
+     * A custom config object to configure the template for the drag tooltip.
+     */
+    toolTipTpl  : [
+        '&lt;div class=&quot;sch-dd-dependency&quot;&gt;',
+        '&lt;table&gt;&lt;tbody&gt;',
+        '&lt;tr&gt;',
+        '&lt;td&gt;&lt;span class=&quot;sch-dd-dependency-from&quot;&gt;{fromLabel}:&lt;/span&gt;&lt;/td&gt;',
+        '&lt;td&gt;&lt;span class=&quot;sch-dd-dependency-from-name&quot;&gt;{fromTaskName}&lt;/span&gt; - {fromSide}&lt;/td&gt;',
+        '&lt;/tr&gt;',
+        '&lt;tr&gt;',
+        '&lt;td&gt;&lt;span class=&quot;sch-dd-dependency-to&quot;&gt;{toLabel}:&lt;/span&gt;&lt;/td&gt;',
+        '&lt;td&gt;&lt;span class=&quot;sch-dd-dependency-to-name&quot;&gt;{toTaskName}&lt;/span&gt; - {toSide}&lt;/td&gt;',
+        '&lt;/tr&gt;',
+        '&lt;/tbody&gt;&lt;/table&gt;',
+        '&lt;/div&gt;'
+    ],
+
+<span id='Gnt-feature-DependencyDragDrop-property-terminalSelector'>    // private, the terminal CSS selector
+</span>    terminalSelector : '.sch-gantt-terminal',
+<span id='Gnt-feature-DependencyDragDrop-property-el'>    el               : null,
+</span><span id='Gnt-feature-DependencyDragDrop-property-rtl'>    rtl              : null,
+</span><span id='Gnt-feature-DependencyDragDrop-property-ddGroup'>    ddGroup          : null,
+</span><span id='Gnt-feature-DependencyDragDrop-property-ganttView'>    ganttView        : null,
+</span><span id='Gnt-feature-DependencyDragDrop-property-dependencyStore'>    dependencyStore  : null,
+</span>
+<span id='Gnt-feature-DependencyDragDrop-event-beforednd'>    /**
+</span>     * @event beforednd
+     * Fires before a drag and drop operation is initiated, return false to cancel it
+     * @param {Gnt.feature.DependencyDragDrop} dnd The drag and drop instance
+     * @param {Ext.data.Model} fromRecord The task record
+     */
+
+<span id='Gnt-feature-DependencyDragDrop-event-dndstart'>    /**
+</span>     * @event dndstart
+     * Fires when a drag and drop operation starts
+     * @param {Gnt.feature.DependencyDragDrop} dnd The drag and drop instance
+     */
+
+<span id='Gnt-feature-DependencyDragDrop-event-drop'>    /**
+</span>     * @event drop
+     * Fires after a drop has been made on a receiving terminal
+     * @param {Gnt.feature.DependencyDragDrop} dnd The drag and drop instance
+     * @param {Mixed} fromId The source dependency task record id
+     * @param {Mixed} toId The target dependency task record id
+     * @param {Number} type The dependency type, see {@link Gnt.model.Dependency} for more information about possible values.
+     */
+
+<span id='Gnt-feature-DependencyDragDrop-event-afterdnd'>    /**
+</span>     * @event afterdnd
+     * Always fires after a dependency drag and drop operation
+     * @param {Gnt.feature.DependencyDragDrop} dnd The drag and drop instance
+     */
+
+    constructor : function (config) {
+
+        var view = config.ganttView;
+
+        Ext.apply(this, config);
+
+        this.ddGroup = view.id + '-sch-dependency-dd';
+
+        // Lazy setup
+        this.el.on('mousemove', this.doSetup, this, { single : true });
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-feature-DependencyDragDrop-method-doSetup'>    doSetup : function () {
+</span>        var me = this;
+
+        // The drag zone behaviour
+        this.dragZone = new Gnt.feature.DependencyDragZone(this.el, Ext.apply({
+            rtl                    : this.rtl,
+            terminalSelector       : this.terminalSelector,
+            useLineProxy           : this.useLineProxy,
+            ddGroup                : this.ddGroup,
+            ganttView              : this.ganttView,
+            startText              : this.L('startText'),
+            endText                : this.L('endText'),
+            fromText               : this.L('fromText'),
+            toText                 : this.L('toText'),
+            toolTipTpl             : Ext.XTemplate.getTpl(this, 'toolTipTpl')
+        }, this.dragZoneConfig));
+
+
+        this.relayEvents(this.dragZone, [
+            'beforednd',
+            'dndstart',
+            'afterdnd'
+        ]);
+
+        this.dropZone = Ext.create(&quot;Gnt.feature.DependencyDropZone&quot;, this.el, Ext.apply({
+            rtl              : this.rtl,
+            terminalSelector : this.terminalSelector,
+            ddGroup          : this.ddGroup,
+            ganttView        : this.ganttView,
+            dependencyStore  : this.dependencyStore,
+
+            startText        : this.L('startText'),
+            endText          : this.L('endText'),
+            toText           : this.L('toText'),
+            toolTipTpl       : Ext.XTemplate.getTpl(this, 'toolTipTpl')
+        }, this.dropZoneConfig));
+
+        this.relayEvents(this.dropZone, ['drop', 'afterdnd']);
+
+        this.configureAllowedSourceTerminals();
+
+
+        if (this.dependencyStore.allowedDependencyTypes) {
+            // Define the allowed targets at drag start time
+            this.dragZone.on('dndstart', this.configureAllowedTargetTerminals, this);
+        } else {
+            // Allow all types
+            this.el.addCls(['sch-gantt-terminal-allow-target-start', 'sch-gantt-terminal-allow-target-end']);
+        }
+    },
+
+<span id='Gnt-feature-DependencyDragDrop-method-configureAllowedSourceTerminals'>    configureAllowedSourceTerminals : function () {
+</span>        var allowed = this.dependencyStore.allowedDependencyTypes;
+        var classes = ['sch-gantt-terminal-allow-source-start', 'sch-gantt-terminal-allow-source-end'];
+
+        if (allowed) {
+            classes = [];
+
+            if (Ext.Array.indexOf(allowed, 'EndToEnd') &gt; -1 || Ext.Array.indexOf(allowed, 'EndToStart') &gt; -1 ) {
+                classes.push('sch-gantt-terminal-allow-source-end');
+            }
+
+            if (Ext.Array.indexOf(allowed, 'StartToStart') &gt; -1 || Ext.Array.indexOf(allowed, 'StartToEnd') &gt; -1) {
+                classes.push('sch-gantt-terminal-allow-source-start');
+            }
+        }
+
+        this.el.addCls(classes);
+    },
+
+
+<span id='Gnt-feature-DependencyDragDrop-method-configureAllowedTargetTerminals'>    configureAllowedTargetTerminals : function () {
+</span>        var allowed = this.dependencyStore.allowedDependencyTypes;
+        var classes = [];
+
+        this.el.removeCls(['sch-gantt-terminal-allow-target-start', 'sch-gantt-terminal-allow-target-end']);
+
+        if (Ext.Array.contains(allowed, 'EndToEnd') || Ext.Array.contains(allowed, 'StartToEnd')) {
+            classes.push('sch-gantt-terminal-allow-target-end');
+        }
+
+        if (Ext.Array.contains(allowed, 'StartToStart') || Ext.Array.contains(allowed, 'EndToStart')) {
+            classes.push('sch-gantt-terminal-allow-target-start');
+        }
+
+        this.el.addCls(classes);
+    },
+
+
+<span id='Gnt-feature-DependencyDragDrop-method-destroy'>    destroy : function () {
+</span>        if (this.dragZone) {
+            this.dragZone.destroy();
+        }
+
+        if (this.dropZone) {
+            this.dropZone.destroy();
+        }
+    }
+});
+</pre>
+</body>
+</html>

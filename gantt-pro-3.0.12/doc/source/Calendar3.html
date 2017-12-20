@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-model-Calendar'>/**
+</span>@class Gnt.model.Calendar
+@extends Sch.model.Customizable
+
+A model representing a single calendar.
+Every model instance will be also decorated with the {@link Gnt.data.Calendar} instance, created based on the model field values.
+The fields of the model correspond to the properties of {@link Gnt.data.Calendar} class.
+
+Fields
+------
+
+- `Id` - record identifier (corresponds to {@link Gnt.data.Calendar#calendarId})
+- `Name` - corresponds to {@link Gnt.data.Calendar#name}
+- `DaysPerMonth` - corresponds to {@link Gnt.data.Calendar#daysPerMonth}
+- `DaysPerWeek` - corresponds to {@link Gnt.data.Calendar#daysPerWeek}
+- `HoursPerDay` - corresponds to {@link Gnt.data.Calendar#hoursPerDay}
+- `WeekendsAreWorkdays` - corresponds to {@link Gnt.data.Calendar#weekendsAreWorkdays}
+- `WeekendFirstDay` - corresponds to {@link Gnt.data.Calendar#weekendFirstDay}
+- `WeekendSecondDay` - corresponds to {@link Gnt.data.Calendar#weekendSecondDay}
+- `DefaultAvailability` - corresponds to {@link Gnt.data.Calendar#defaultAvailability}
+- `Days` - stores reference to the {@link Gnt.data.Calendar} instance
+- `CalendarClass` - calendar class that should be used to create {@link Gnt.data.Calendar} instance
+- `PhantomId` - phantom record identifier
+- `PhantomParentId` - phantom parent record identifier
+
+A collection of this models is supposed to be provided for the {@link Gnt.data.CalendarManager calendar manager}.
+*/
+Ext.define('Gnt.model.Calendar', {
+    extend                      : 'Sch.model.Customizable',
+
+    requires                    : ['Ext.data.NodeInterface'],
+
+<span id='Gnt-model-Calendar-property-idProperty'>    idProperty                  : 'Id',
+</span>
+<span id='Gnt-model-Calendar-property-calendar'>    calendar                    : null,
+</span>
+<span id='Gnt-model-Calendar-cfg-nameField'>    /**
+</span>     * @cfg {String} nameField The name of the field specifying the calendar name.
+     */
+    nameField                   : 'Name',
+
+<span id='Gnt-model-Calendar-cfg-daysPerMonthField'>    /**
+</span>     * @cfg {String} daysPerMonthField The name of the field specifying the number of days per month
+     * (used when converting the big duration units like month/year to days).
+     */
+    daysPerMonthField           : 'DaysPerMonth',
+
+<span id='Gnt-model-Calendar-cfg-daysPerWeekField'>    /**
+</span>     * @cfg {String} daysPerWeekField The name of the field specifying the number of days per week
+     * (used when converting the duration only).
+     */
+    daysPerWeekField            : 'DaysPerWeek',
+
+<span id='Gnt-model-Calendar-cfg-hoursPerDayField'>    /**
+</span>     * @cfg {String} hoursPerDayField The name of the field specifying the number of hours per day
+     * (used when converting the duration only).
+     */
+    hoursPerDayField            : 'HoursPerDay',
+
+<span id='Gnt-model-Calendar-cfg-weekendsAreWorkdaysField'>    /**
+</span>     * @cfg {String} weekendsAreWorkdaysField The name of the field specifying if all weekdays are working.
+     */
+    weekendsAreWorkdaysField    : 'WeekendsAreWorkdays',
+
+<span id='Gnt-model-Calendar-cfg-weekendFirstDayField'>    /**
+</span>     * @cfg {String} weekendFirstDayField The name of the field specifying the index of the first day in weekend.
+     */
+    weekendFirstDayField        : 'WeekendFirstDay',
+
+<span id='Gnt-model-Calendar-cfg-weekendSecondDayField'>    /**
+</span>     * @cfg {String} weekendSecondDayField The name of the field specifying the index of the second day in weekend.
+     */
+    weekendSecondDayField       : 'WeekendSecondDay',
+
+<span id='Gnt-model-Calendar-cfg-defaultAvailabilityField'>    /**
+</span>     * @cfg {String} defaultAvailabilityField The name of the fields specifying the calendar default availability
+     */
+    defaultAvailabilityField    : 'DefaultAvailability',
+
+<span id='Gnt-model-Calendar-cfg-daysField'>    /**
+</span>     * @cfg {String} daysField The name of the fields specifying the calendar content ({@link Gnt.data.Calendar} instance)
+     */
+    daysField                   : 'Days',
+
+<span id='Gnt-model-Calendar-cfg-calendarClassField'>    /**
+</span>     * @cfg {String} calendarClassField The name of the fields specifying the class that should be used to
+     * to create {@link Gnt.data.Calendar the calendar} instance
+     */
+    calendarClassField          : 'CalendarClass',
+
+<span id='Gnt-model-Calendar-cfg-phantomIdField'>    /**
+</span>     * @cfg {String} phantomIdField The name of the field specifying the phantom id when this record is being 'realized' by the server.
+     */
+    phantomIdField              : 'PhantomId',
+
+<span id='Gnt-model-Calendar-cfg-phantomParentIdField'>    /**
+</span>     * @cfg {String} phantomParentIdField The name of the field specifying the parent calendar phantom id when this record is being 'realized' by the server.
+     */
+    phantomParentIdField        : 'PhantomParentId',
+
+<span id='Gnt-model-Calendar-cfg-customizableFields'>    customizableFields      : [
+</span>        { name : 'Name' },
+        { name : 'DaysPerMonth', type : 'number' },
+        { name : 'DaysPerWeek', type : 'number' },
+        { name : 'HoursPerDay', type : 'number' },
+        { name : 'WeekendsAreWorkdays', type : 'boolean' },
+        { name : 'WeekendFirstDay', type : 'integer' },
+        { name : 'WeekendSecondDay', type : 'integer' },
+        { name : 'DefaultAvailability' },
+        { name : 'Days' },
+        { name : 'CalendarClass', defaultValue : 'Gnt.data.Calendar' },
+        { name : 'PhantomId' },
+        { name : 'PhantomParentId' }
+    ],
+
+<span id='Gnt-model-Calendar-method-constructor'>    constructor : function (config, id, node) {
+</span>        var cfg         = config || node || {};
+
+        var days        = cfg.calendar || cfg.Days;
+
+        config &amp;&amp; delete config.calendar;
+        node &amp;&amp; delete node.calendar;
+
+        this.callParent(arguments);
+
+        this.setDays(days);
+
+        this.data[this.phantomIdField]  = this.getId();
+    },
+
+<span id='Gnt-model-Calendar-method-get'>    get : function (field) {
+</span>        if (field === 'Days') {
+            return this.getCalendar() || this.data[this.daysField];
+        } else {
+            return this.callParent(arguments);
+        }
+    },
+
+<span id='Gnt-model-Calendar-method-set'>    set : function (field, value) {
+</span>        if (field === 'Days') {
+            if (value instanceof Gnt.data.Calendar) {
+                this.setCalendar(value);
+            } else {
+                this.data[this.daysField]   = value;
+            }
+        } else {
+            return this.callParent(arguments);
+        }
+    },
+
+<span id='Gnt-model-Calendar-method-getCalendar'>    /**
+</span>     * Gets a calendar assigned to the record.
+     */
+    getCalendar : function () {
+        return this.calendar;
+    },
+
+<span id='Gnt-model-Calendar-method-setCalendar'>    /**
+</span>     * @private
+     * Assign a calendar to the record.
+     * @param {Gnt.data.Calendar} calendar The calendar to assign.
+     */
+    setCalendar : function (calendar) {
+        this.calendar   = calendar;
+    },
+
+<span id='Gnt-model-Calendar-method-getCalendarConfig'>    getCalendarConfig : function () {
+</span>        return {
+            calendarId          : this.getId(),
+            daysPerMonth        : this.getDaysPerMonth(),
+            daysPerWeek         : this.getDaysPerWeek(),
+            defaultAvailability : this.getDefaultAvailability(),
+            hoursPerDay         : this.getHoursPerDay(),
+            name                : this.getName(),
+            parent              : this.parentNode &amp;&amp; this.parentNode.getCalendar(),
+            weekendFirstDay     : this.getWeekendFirstDay(),
+            weekendSecondDay    : this.getWeekendSecondDay(),
+            weekendsAreWorkdays : this.getWeekendsAreWorkdays()
+        };
+    },
+
+<span id='Gnt-model-Calendar-method-getModelConfig'>    getModelConfig : function (calendar, isPrototype) {
+</span>        var result = {};
+
+        // if we retrieve data from class prototype we should not
+        // set reference to &quot;calendar&quot; instance ..since &quot;calendar&quot; is not an instance really
+        if (!isPrototype) {
+            result.parentId = calendar.parent &amp;&amp; calendar.parent.calendarId;
+            result.calendar = calendar;
+        }
+
+        result[this.daysPerMonthField]          = calendar.daysPerMonth;
+        result[this.daysPerWeekField]           = calendar.daysPerWeek;
+        result[this.defaultAvailabilityField]   = calendar.defaultAvailability;
+        result[this.hoursPerDayField]           = calendar.hoursPerDay;
+        result[this.nameField]                  = calendar.name;
+        result[this.weekendFirstDayField]       = calendar.weekendFirstDay;
+        result[this.weekendSecondDayField]      = calendar.weekendSecondDay;
+        result[this.weekendsAreWorkdaysField]   = calendar.weekendsAreWorkdays;
+        result[this.calendarClassField] = Ext.getClassName(calendar);
+
+        return result;
+    },
+
+<span id='Gnt-model-Calendar-method-setCalendarManager'>    setCalendarManager : function (calendarManager) {
+</span>        this.calendarManager    = calendarManager;
+    },
+
+<span id='Gnt-model-Calendar-method-getCalendarManager'>    getCalendarManager : function () {
+</span>        return this.calendarManager;
+    },
+
+<span id='Gnt-model-Calendar-method-getParentCalendarClass'>    getParentCalendarClass : function () {
+</span>        var parent = this.parentNode,
+            result;
+
+        while (parent &amp;&amp; !result) {
+            result = parent.getCalendarClass();
+            parent = parent.parentNode;
+        }
+
+        return result;
+    },
+
+<span id='Gnt-model-Calendar-method-fillNodeFromPrototype'>    fillNodeFromPrototype : function (node) {
+</span>        // try to get proper calendar class:
+        //  1. from the &quot;node&quot; itself
+        var cls     = node[this.calendarClassField] ||
+            //  2. from this.treeStore if presented
+            this.treeStore &amp;&amp; this.treeStore.getCalendarClass() ||
+            //  2. from &quot;this&quot; or its parents (&quot;this&quot; is supposed to become the &quot;node&quot; parent)
+            this.getCalendarClass() || this.getParentCalendarClass() ||
+            this.getField(this.calendarClassField).getDefaultValue();
+
+        if (cls) {
+            Ext.applyIf(node, this.getModelConfig(Ext.ClassManager.get(cls).prototype, true));
+
+            var children = node.children;
+
+            if (children &amp;&amp; children.length) {
+                for (var i = 0; i &lt; children.length; i++) {
+                    this.fillNodeFromPrototype(children[i]);
+                }
+            }
+        }
+    },
+
+<span id='Gnt-model-Calendar-method-prepareCalendarNode'>    prepareCalendarNode  : function (node) {
+</span>        // fill model fields with data retrieved from the calendar
+        if (node instanceof Gnt.data.Calendar) {
+            node = this.getModelConfig(node);
+        // .. or from associated CalendarClass prototype
+        } else if (Ext.isObject(node)) {
+            this.fillNodeFromPrototype(node);
+        }
+
+        node = this.createNode(node);
+
+        if (this.phantom) {
+            if (this.getId() !== node.data[this.phantomParentIdField]) {
+                node.modified                               = node.modified || {};
+                node.modified[this.phantomParentIdField]    = node.data[this.phantomParentIdField];
+                node.data[this.phantomParentIdField]        = this.getId();
+            }
+        }
+
+        return node;
+    }
+
+}, function () {
+    // Do this first to be able to override NodeInterface methods
+    Ext.data.NodeInterface.decorate(this);
+
+    this.override({
+        // @OVERRIDE
+        insertBefore : function (node) {
+            node = this.prepareCalendarNode(node);
+
+            return this.callParent(arguments);
+        },
+
+        // @OVERRIDE
+        appendChild : function (node) {
+            if (node instanceof Array) {
+                for (var i = 0; i &lt; node.length; i++) {
+                    node[i] = this.prepareCalendarNode(node[i]);
+                }
+            } else {
+                node = this.prepareCalendarNode(node);
+            }
+
+            return this.callParent(arguments);
+        }
+    });
+});
+</pre>
+</body>
+</html>

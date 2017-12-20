@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">// https://www.sencha.com/forum/showthread.php?301258-Tooltip-should-not-ignore-mouseover-event-on-touch-devices
+Ext.define('Sch.patches.ToolTip', {
+    extend  : 'Sch.util.Patch',
+    
+    requires   : ['Ext.tip.ToolTip'],
+    target     : 'Ext.tip.ToolTip',
+    
+    minVersion : '5.1.0',
+    
+    overrides : {
+        setTarget: function(target) {
+            var me = this,
+                t = Ext.get(target),
+                tg;
+    
+            if (me.target) {
+                tg = Ext.get(me.target);
+                me.mun(tg, {
+                    mouseover: me.onTargetOver,
+                    tap: me.onTargetOver,
+                    mouseout: me.onTargetOut,
+                    mousemove: me.onMouseMove,
+                    scope: me
+                });
+            }
+    
+            me.target = t;
+            if (t) {
+                me.mon(t, {
+                    mouseover: me.onTargetOver,
+                    tap: me.onTargetOver,
+                    mouseout: me.onTargetOut,
+                    mousemove: me.onMouseMove,
+                    scope: me
+                });
+            }
+            if (me.anchor) {
+                me.anchorTarget = me.target;
+            }
+        }
+    }
+});</pre>
+</body>
+</html>

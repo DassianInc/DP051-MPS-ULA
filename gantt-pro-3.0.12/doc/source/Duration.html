@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-field-Duration'>/**
+</span>@class Gnt.field.Duration
+@extends Ext.form.field.Number
+
+A specialized field allowing a user to also specify duration unit when editing the duration value.
+This class inherits from the standard Ext JS &quot;number&quot; field, so any usual `Ext.form.field.Number`
+configs can be used (like `minValue/maxValue` etc).
+
+
+
+*/
+Ext.define('Gnt.field.Duration', {
+    extend                  : 'Ext.form.field.Number',
+
+    requires                : ['Gnt.util.DurationParser'],
+
+    mixins                  : ['Gnt.field.mixin.TaskField', 'Gnt.mixin.Localizable'],
+
+    alias                   : 'widget.durationfield',
+    alternateClassName      : 'Gnt.widget.DurationField',
+
+<span id='Gnt-field-Duration-property-disableKeyFilter'>    disableKeyFilter        : true,
+</span><span id='Gnt-field-Duration-property-allowExponential'>    allowExponential        : false,
+</span><span id='Gnt-field-Duration-property-minValue'>    minValue                : 0,
+</span>
+
+<span id='Gnt-field-Duration-cfg-durationUnit'>    /**
+</span>     * @cfg {String} durationUnit The default duration unit to use when editing the value.
+     * This is usually being set automatically, using the `DurationUnit` field of the task.
+     */
+    durationUnit            : 'h',
+
+<span id='Gnt-field-Duration-cfg-invalidText'>    /**
+</span>     * @cfg {String} invalidText Text shown when field value cannot be parsed to valid duration.
+     * If you want to change the text for all instances of this class please use {@link #l10n l10n} instead.
+     */
+<span id='Gnt-field-Duration-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - invalidText : 'Invalid duration value'
+     */
+
+<span id='Gnt-field-Duration-cfg-useAbbreviation'>    /**
+</span>     * @cfg {Boolean} useAbbreviation When set to `true` the field will use short names of unit durations
+     * (as returned by {@link Sch.util.Date#getShortNameOfUnit})
+     */
+    useAbbreviation         : false,
+
+<span id='Gnt-field-Duration-property-getDurationUnitMethod'>    getDurationUnitMethod   : 'getDurationUnit',
+</span><span id='Gnt-field-Duration-property-setTaskValueMethod'>    setTaskValueMethod      : 'setDuration',
+</span><span id='Gnt-field-Duration-property-getTaskValueMethod'>    getTaskValueMethod      : 'getDuration',
+</span>
+<span id='Gnt-field-Duration-property-taskField'>    taskField               : 'durationField',
+</span>
+<span id='Gnt-field-Duration-property-durationParser'>    durationParser          : null,
+</span><span id='Gnt-field-Duration-property-durationParserConfig'>    durationParserConfig    : null,
+</span>
+<span id='Gnt-field-Duration-method-constructor'>    constructor : function (config) {
+</span>        var me = this;
+
+        Ext.apply(this, config);
+
+        this.durationParser = new Gnt.util.DurationParser(Ext.apply({
+            // Since we're reusing the NumberField's parsing of numbers, we have to pass this on to the parser
+            // to avoid having the same definitions in the parser too
+            parseNumberFn   : function() { return me.parseValue.apply(me, arguments); },
+            allowDecimals   : this.decimalPrecision &gt; 0
+
+        }, this.durationParserConfig));
+
+        this.callParent(arguments);
+
+        this.invalidText = this.L('invalidText');
+    },
+
+<span id='Gnt-field-Duration-method-onSetTask'>    onSetTask : function () {
+</span>        this.durationUnit = this.task[this.getDurationUnitMethod]();
+
+        var value = this.getTaskValueMethod ? this.getTaskValue() : this.task.get(this.task[this.taskField]);
+
+        this.setValue(value);
+
+        this.setSpinUpEnabled(value == null || value &lt; this.maxValue, true);
+        this.setSpinDownEnabled(value &gt; this.minValue, true);
+    },
+
+<span id='Gnt-field-Duration-method-rawToValue'>    rawToValue : function (rawValue) {
+</span>        var parsed  = this.parseDuration(rawValue);
+
+        if (!parsed) return null;
+
+        this.durationUnit    = parsed.unit;
+
+        return parsed.value != null ? parsed.value : null;
+    },
+
+<span id='Gnt-field-Duration-method-valueToVisible'>    valueToVisible : function (value, durationUnit) {
+</span>        if (Ext.isNumber(value)) {
+            var valueInt    = parseInt(value, 10),
+                valueFixed  = Ext.Number.toFixed(value, this.decimalPrecision);
+
+            return String(valueInt == valueFixed ? valueInt : valueFixed).replace('.', this.decimalSeparator) + ' ' +
+                Sch.util.Date[ this.useAbbreviation ? 'getShortNameOfUnit' : 'getReadableNameOfUnit' ](durationUnit || this.durationUnit, value !== 1);
+        }
+
+        return '';
+    },
+
+<span id='Gnt-field-Duration-method-valueToRaw'>    valueToRaw : function (value) {
+</span>        return this.valueToVisible(value, this.durationUnit, this.decimalPrecision, this.useAbbreviation);
+    },
+
+<span id='Gnt-field-Duration-method-parseDuration'>    parseDuration : function (value) {
+</span>        if (value == null) {
+            return null;
+        }
+
+        var duration = this.durationParser.parse(value);
+
+        if (!duration) {
+            return null;
+        }
+
+        duration.unit = duration.unit || this.durationUnit;
+
+        return duration;
+    },
+
+
+<span id='Gnt-field-Duration-method-getDurationValue'>    /**
+</span>     * Returns an object, representing the current value of the field:
+
+    {
+        value   : ... // duration value,
+        unit    : ... // duration unit
+    }
+
+     * @return {Object}
+     */
+    getDurationValue : function () {
+        return this.parseDuration(this.getRawValue());
+    },
+
+
+<span id='Gnt-field-Duration-method-getErrors'>    getErrors : function (value) {
+</span>        var parsed;
+
+        if (value) {
+            parsed   = this.parseDuration(value);
+
+            if (!parsed) {
+                return [ this.L('invalidText') ];
+            }
+
+            value   = parsed.value;
+        }
+
+        return this.callParent(arguments);
+    },
+
+
+<span id='Gnt-field-Duration-method-checkChange'>    // @OVERRIDE
+</span>    checkChange : function () {
+        if (!this.suspendCheckChange) {
+            var me = this,
+                newVal = me.getDurationValue(),
+                oldVal = me.lastValue;
+
+            var isDifferent = newVal &amp;&amp; !oldVal || !newVal &amp;&amp; oldVal || newVal &amp;&amp; oldVal &amp;&amp;
+                (newVal.value != oldVal.value || newVal.unit != oldVal.unit);
+
+            if (isDifferent &amp;&amp; !me.isDestroyed) {
+                me.lastValue = newVal;
+                me.fireEvent('change', me, newVal, oldVal);
+                me.onChange(newVal, oldVal);
+            }
+        }
+    },
+
+<span id='Gnt-field-Duration-method-getValue'>    // @OVERRIDE
+</span>    getValue : function () {
+        return this.value;
+    },
+
+
+<span id='Gnt-field-Duration-method-applyChanges'>    /**
+</span>     * This method applies the changes from the field to the bound task or to the task provided as 1st argument.
+     * If {@link #instantUpdate} option is enabled this method is called automatically after any change in the field.
+     *
+     * @param {Gnt.model.Task} [toTask] The task to apply the changes to. If not provided, changes will be applied to the last bound task
+     * (with {@link #task} config option or {@link #setTask) method)
+     */
+    applyChanges : function (toTask) {
+        toTask = toTask || this.task;
+
+        this.setTaskValue(toTask, this.getValue(), this.durationUnit);
+
+        // since we have an &quot;applyChanges&quot; method different from the one provided by &quot;TaskField&quot; mixin
+        // we need to fire &quot;taskupdated&quot; ourself
+        toTask.fireEvent('taskupdated', toTask, this);
+    },
+
+<span id='Gnt-field-Duration-method-setValue'>    // @OVERRIDE
+</span>    setValue : function (value, forceUpdate) {
+        var val                 = value;
+
+        if (Ext.isObject(value)) {
+            this.durationUnit   = value.unit;
+            val                 = value.value;
+        }
+
+        this.callParent([ val ]);
+
+        if ((forceUpdate || this.instantUpdate) &amp;&amp; !this.getSuppressTaskUpdate() &amp;&amp; this.task) {
+            // apply changes to task
+            this.applyChanges();
+        }
+    },
+
+<span id='Gnt-field-Duration-method-assertValue'>    // @private
+</span>    // it's called in editor.completeEdit()
+    assertValue : function () {
+        var me      = this,
+            oldVal  = me.getValue(),
+            oldUnit = me.durationUnit,
+            newVal  = me.getDurationValue();
+
+        if (this.isValid()) {
+            var isDifferent = /*newVal &amp;&amp; !oldVal ||*/ !newVal &amp;&amp; oldVal || newVal &amp;&amp;
+                (newVal.value != oldVal || newVal.unit != oldUnit);
+
+            if (isDifferent) {
+                // at this point `setValue` should apply any changes from the field to the task
+                // even if `instantUpdate` is disabled
+                me.setValue(newVal, true);
+            }
+        }
+    },
+
+<span id='Gnt-field-Duration-method-beforeBlur'>    // @OVERRIDE
+</span>    beforeBlur : function () {
+        this.assertValue();
+    },
+
+<span id='Gnt-field-Duration-method-onSpinUp'>    onSpinUp: function() {
+</span>        var me = this;
+
+        if (!me.readOnly) {
+            var value   = me.getValue() || 0;
+
+            me.setSpinValue(Ext.Number.constrain(value + me.step, me.minValue, me.maxValue));
+        }
+    },
+
+<span id='Gnt-field-Duration-method-onSpinDown'>    onSpinDown: function() {
+</span>        var me = this;
+
+        if (!me.readOnly) {
+            var value   = me.getValue() || 0;
+
+            me.setSpinValue(Ext.Number.constrain(value - me.step, me.minValue, me.maxValue));
+        }
+    }
+});
+</pre>
+</body>
+</html>

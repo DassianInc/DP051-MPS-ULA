@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-Calendar'>/**
+</span> * @class Gnt.column.Calendar
+ * @extends Ext.grid.column.Column
+ *
+ * {@img gannt/images/calendar-field.png}
+ *
+ * A column representing a 'CalendarId' field of a task. The column is editable, however to enable the editing you will
+ * need to add a `Sch.plugin.TreeCellEditing` plugin to your gantt panel. The overall setup will look like this:
+ *
+ *    var gantt = Ext.create('Gnt.panel.Gantt', {
+ *        height      : 600,
+ *        width       : 1000,
+ *
+ *        // Setup your static columns
+ *        columns         : [
+ *            ...
+ *            {
+ *                xtype       : 'calendarcolumn',
+ *                width       : 80
+ *            }
+ *            ...
+ *        ],
+ *
+ *        plugins             : [
+ *            Ext.create('Sch.plugin.TreeCellEditing', {
+ *                clicksToEdit: 1
+ *            })
+ *        ],
+ *        ...
+ *   });
+ *
+ * This column uses a field - {@link Gnt.field.Calendar} as the editor.
+ */
+Ext.define('Gnt.column.Calendar', {
+    extend                  : 'Ext.grid.column.Column',
+
+    alias                   : [
+        'widget.calendarcolumn',
+        'widget.ganttcolumn.calendar'
+    ],
+
+    requires                : [
+        'Gnt.model.Calendar',
+        'Gnt.field.Calendar'
+    ],
+
+    mixins                  : ['Gnt.column.mixin.TaskFieldColumn'],
+
+<span id='Gnt-column-Calendar-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+     *
+     *  - text : 'Calendar'
+     */
+
+<span id='Gnt-column-Calendar-cfg-width'>    /**
+</span>     * @cfg {Number} width
+     * The width of the column.
+     */
+    width                   : 100,
+
+<span id='Gnt-column-Calendar-cfg-align'>    /**
+</span>     * @cfg {String} align
+     * The alignment of the text in the column.
+     */
+    align                   : 'left',
+
+<span id='Gnt-column-Calendar-cfg-instantUpdate'>    instantUpdate           : true,
+</span>
+<span id='Gnt-column-Calendar-property-store'>    store                   : null,
+</span>
+<span id='Gnt-column-Calendar-property-fieldProperty'>    fieldProperty           : 'calendarIdField',
+</span>
+<span id='Gnt-column-Calendar-property-fieldConfigs'>    fieldConfigs            : [ 'instantUpdate', 'store', 'fieldProperty' ],
+</span>
+<span id='Gnt-column-Calendar-property-editor'>    editor                  : 'calendarfield',
+</span>
+<span id='Gnt-column-Calendar-property-defaultEditor'>    defaultEditor           : 'calendarfield',
+</span>
+<span id='Gnt-column-Calendar-method-initComponent'>    initComponent : function () {
+</span>        this.initTaskFieldColumn({
+            format      : this.editorFormat || this.format || Ext.Date.defaultFormat
+        });
+
+        this.callParent(arguments);
+    },
+
+
+<span id='Gnt-column-Calendar-method-applyColumnCls'>    applyColumnCls : function (value, meta, task, col, index, store) {
+</span>        if (!value) {
+            meta.tdCls  = (meta.tdCls || '') + ' gnt-default';
+        }
+    },
+
+
+<span id='Gnt-column-Calendar-method-getValueToRender'>    getValueToRender : function (value, meta, task, col, index, store) {
+</span>        value       = value || (store.calendar ? store.calendar.calendarId : '');
+
+        return this.field.valueToVisible(value, task) || value;
+    }
+
+});
+</pre>
+</body>
+</html>

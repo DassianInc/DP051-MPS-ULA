@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-data-util-EventAssignmentsCache'>/**
+</span> * Assignment store event-&gt;assignments cache.
+ * Uses event records or event record ids as keys.
+ *
+ * @private
+ */
+Ext.define('Sch.data.util.EventAssignmentsCache', {
+    extend                  : 'Sch.util.Cache',
+    requires                : [
+        'Ext.data.Model'
+    ],
+
+<span id='Sch-data-util-EventAssignmentsCache-property-assignmentStore'>    assignmentStore         : null,
+</span><span id='Sch-data-util-EventAssignmentsCache-property-assignmentStoreDetacher'>    assignmentStoreDetacher : null,
+</span><span id='Sch-data-util-EventAssignmentsCache-property-eventStoreDetacher'>    eventStoreDetacher      : null,
+</span>
+<span id='Sch-data-util-EventAssignmentsCache-method-constructor'>    constructor : function(assignmentStore) {
+</span>        var me         = this,
+            eventStore = assignmentStore.getEventStore();
+
+        me.callParent();
+
+        function onAssignmentAdd(store, assignments) {
+            Ext.Array.forEach(assignments, function(assignment) {
+                me.add(assignment.getEventId(), assignment);
+            });
+        }
+
+        function onAssignmentRemove(store, assignments) {
+            Ext.Array.forEach(assignments, function(assignment) {
+                me.remove(assignment.getEventId(), assignment);
+            });
+        }
+
+        function onAssignmentUpdate(store, assignment, operation) {
+            var eventIdField    = assignment.eventIdField,
+                eventIdChanged  = assignment.previous &amp;&amp; eventIdField in assignment.previous,
+                previousEventId = eventIdChanged &amp;&amp; assignment.previous[eventIdField];
+
+            if (eventIdChanged) {
+                me.move(previousEventId, assignment.getEventId(), assignment);
+            }
+        }
+
+        function onAssignmentStoreClearOrReset(store) {
+            me.clear();
+        }
+
+        function onAssignmentStoreEventStoreChange(store, eventStore) {
+            me.clear();
+            attachToEventStore(eventStore);
+        }
+
+        function onEventIdChanged(eventStore, event, oldId, newId) {
+            me.move(oldId, newId);
+        }
+
+        function onEventRemove(eventStore, events) {
+            Ext.Array.forEach(events, function(event) {
+                me.clear(event);
+            });
+        }
+
+        function onEventStoreClearOrReset() {
+            me.clear();
+        }
+
+        function attachToEventStore(eventStore) {
+            Ext.destroy(me.eventStoreDetacher);
+            me.eventStoreDetacher = eventStore &amp;&amp; eventStore.on({
+                idchanged      : onEventIdChanged,
+                remove         : onEventRemove,
+                cacheresethint : onEventStoreClearOrReset,
+                clear          : onEventStoreClearOrReset,
+                rootchange     : onEventStoreClearOrReset,
+                priority       : 100,
+                destroyable    : true
+            });
+        }
+
+        me.assignmentStoreDetacher = assignmentStore.on({
+            add              : onAssignmentAdd,
+            remove           : onAssignmentRemove,
+            update           : onAssignmentUpdate,
+            cacheresethint   : onAssignmentStoreClearOrReset,
+            clear            : onAssignmentStoreClearOrReset,
+            eventstorechange : onAssignmentStoreEventStoreChange,
+            // subscribing to the CRUD using priority - should guarantee that our listeners
+            // will be called first (before any other listeners, that could be provided in the &quot;listeners&quot; config)
+            // and state in other listeners will be correct
+            priority         : 100,
+            destroyable      : true
+        });
+
+        me.assignmentStoreFiltersDetacher = assignmentStore.getFilters().on('endupdate', onAssignmentStoreClearOrReset, me, {
+            // priority is calculated as:
+            // Ext.util.Collection.$endUpdatePriority + 1
+            // to reset our cache before ExtJS &quot;on filter end update&quot; listeners run
+            priority    : 1002,
+            destroyable : true
+        });
+
+        attachToEventStore(eventStore);
+
+        me.assignmentStore = assignmentStore;
+    },
+
+<span id='Sch-data-util-EventAssignmentsCache-method-destroy'>    destroy : function() {
+</span>        var me = this;
+        Ext.destroyMembers(
+            me,
+            'assignmentStoreDetacher',
+            'eventStoreDetacher'
+        );
+        me.assignmentStore = null;
+    },
+
+<span id='Sch-data-util-EventAssignmentsCache-method-get'>    get : function(k, fn) {
+</span>        var me = this;
+
+        k = me.key(k);
+
+        fn = fn || function() {
+            return Ext.Array.filter(me.assignmentStore.getRange(), function(assignment) {
+                return assignment.getEventId() == k;
+            });
+        };
+
+        return me.callParent([k, fn]);
+    }
+});
+</pre>
+</body>
+</html>

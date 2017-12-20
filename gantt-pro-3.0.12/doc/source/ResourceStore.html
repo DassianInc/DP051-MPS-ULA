@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-data-ResourceStore'>/**
+</span>@class Gnt.data.ResourceStore
+@extends Sch.data.ResourceStore
+
+A class representing the collection of the resources - {@link Gnt.model.Resource} records.
+
+*/
+
+Ext.define('Gnt.data.ResourceStore', {
+
+    requires    : [
+        'Gnt.model.Resource'
+    ],
+
+    extend      : 'Sch.data.ResourceStore',
+
+
+<span id='Gnt-data-ResourceStore-property-storeId'>    storeId     : 'resources',
+</span><span id='Gnt-data-ResourceStore-property-model'>    model       : 'Gnt.model.Resource',
+</span>    alias       : 'store.gantt_resourcestore',
+
+
+<span id='Gnt-data-ResourceStore-property-taskStore'>    /**
+</span>     * @property {Gnt.data.TaskStore} taskStore The task store to which this resource store is associated.
+     * Usually is configured automatically, by the task store itself.
+     */
+    taskStore   : null,
+
+<span id='Gnt-data-ResourceStore-property-proxy'>    proxy       : 'memory',
+</span>
+<span id='Gnt-data-ResourceStore-method-constructor'>    constructor : function (config) {
+</span>
+        this.callParent([config]);
+
+        this.on({
+            load            : this.normalizeResources,
+            remove          : this.onResourceRemoved,
+
+            // Our internal listeners should be ran before any client listeners
+            priority        : 100
+        });
+    },
+
+
+<span id='Gnt-data-ResourceStore-method-normalizeResources'>    normalizeResources : function () {
+</span>        // scan through all resources and re-assign the &quot;calendarId&quot; property to get the listeners in place
+        this.each(function (resource) {
+            if (!resource.normalized) {
+                var calendarId      = resource.getCalendarId();
+
+                if (calendarId) resource.setCalendarId(calendarId, true);
+
+                resource.normalized     = true;
+            }
+        });
+    },
+
+<span id='Gnt-data-ResourceStore-method-onResourceRemoved'>    // Performance optimization possibility: Assignment store datachange will cause a full refresh
+</span>    // so removing a resource will currently cause 2 refreshes. Not critical since this is not a very common use case
+    onResourceRemoved : function(store, resources) {
+        var assignmentStore = this.getAssignmentStore();
+
+        Ext.Array.each(resources, function(resource) {
+            assignmentStore.removeAssignmentsForResource(resource);
+        });
+    },
+
+<span id='Gnt-data-ResourceStore-method-getTaskStore'>    /**
+</span>     * Returns the associated task store instance.
+     *
+     * @return {Gnt.data.TaskStore|null}
+     */
+    getTaskStore : function() {
+        return this.taskStore;
+    },
+
+<span id='Gnt-data-ResourceStore-method-setTaskStore'>    /**
+</span>     * Sets associated task store instance
+     *
+     * @param {Gnt.data.TaskStore} store
+     */
+    setTaskStore : function(store) {
+        this.taskStore = store;
+    },
+
+<span id='Gnt-data-ResourceStore-method-getAssignmentStore'>    /**
+</span>     * Returns the associated assignment store instance.
+     *
+     * @return {Gnt.data.AssignmentStore|null}
+     */
+    getAssignmentStore : function() {
+        var taskStore = this.getTaskStore();
+        return taskStore &amp;&amp; taskStore.getAssignmentStore() || null;
+    },
+
+<span id='Gnt-data-ResourceStore-method-getDependencyStore'>    /**
+</span>     * Returns the associated dependency store
+     *
+     * @return {Gnt.data.DependencyStore|null}
+     */
+    getDependencyStore : function() {
+        var taskStore = this.getTaskStore();
+        return taskStore &amp;&amp; taskStore.getDependencyStore() || null;
+    }
+});
+</pre>
+</body>
+</html>

@@ -1,0 +1,41 @@
+/* Sized via inline style in the Gnt.template.Milestone */
+.sch-gantt-milestone-diamond {
+    border-color      : royalblue;
+    background-color  : royalblue;
+    box-shadow        : 1px 1px 3px darkgray;
+}
+
+.x-grid-item-selected .sch-gantt-milestone-diamond {
+    border-color : red;
+}
+
+.sch-gantt-milestone-baseline .sch-gantt-milestone-diamond {
+    background-color : #aaa;
+    border-color     : #aaa;
+}
+
+.sch-gantt-milestone-baseline .sch-gantt-milestone-diamond-top,
+.sch-gantt-milestone-baseline .sch-gantt-milestone-diamond-bottom {
+    border-color : #aaa;
+}
+
+.sch-gantt-milestone-diamond-top,
+.sch-gantt-milestone-diamond-bottom {
+    border-color       : royalblue;
+}
+
+.sch-rollup-wrap .sch-gantt-milestone-diamond {
+    background-color : #ccc;
+    border-color     : #aaa;
+}
+
+/* IE8- specific*/
+.sch-rollup-wrap .sch-gantt-milestone-diamond-top,
+.sch-rollup-wrap .sch-gantt-milestone-diamond-bottom {
+    border-color     : #aaa;
+}
+
+.sch-gantt-task-readonly .sch-gantt-milestone-diamond {
+    border-color      : #696969;
+    background-color  : #696969;
+}

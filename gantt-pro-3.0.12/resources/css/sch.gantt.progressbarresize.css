@@ -1,0 +1,38 @@
+.sch-gantt-item .sch-gantt-progressbar-handle {
+    position    : absolute;
+    bottom      : -2px;
+    display     : none;
+    width       : 10px;
+    height      : 8px;
+    cursor      : e-resize !important;
+    z-index     : 1000;
+    margin-left : -4px;
+    overflow    : hidden;
+    background  : url(../images/progressbar-handle.png) no-repeat left top;
+}
+
+.x-rtl .sch-gantt-progressbar-handle {
+    margin-left  : 0;
+    margin-right : -4px;
+}
+
+.x-quirks .x-ie .sch-gantt-progressbar-handle {
+    bottom : -1px;
+}
+
+.sch-event-hover .sch-gantt-progressbar-handle {
+    display : block;
+}
+
+.sch-gantt-progress-bar .x-resizable-handle-east,
+.sch-gantt-dragproxy .sch-gantt-progressbar-handle,
+.sch-ganttview-readonly .sch-gantt-progressbar-handle,
+.x-resizable-over .sch-gantt-progressbar-handle {
+    display : none !important;
+}
+
+/* Element height is set in px by Ext JS resizer, which we don't like - override it*/
+.sch-gantt-resizing .sch-gantt-progress-bar
+{
+    height : 100% !important;
+}

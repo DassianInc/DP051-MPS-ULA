@@ -1,0 +1,73 @@
+[
+    {
+        "title": "Ext Gantt 3.0 Guides",
+        "items": [
+            {
+                "name"          : "gantt_getting_started",
+                "title"         : "Getting Started with Ext Gantt 3",
+                "description"   : "This guide will allow you to get started with Ext Gantt 3."
+            },
+            {
+                "name"          : "gantt_styling_guide",
+                "title"         : "Styling and customizing Ext Gantt 3",
+                "description"   : "This guide will show you what parts of Gantt component can be customized and how."
+            },
+            {
+                "name"          : "gantt_ext_styling_guide",
+                "title"         : "Using Ext functionality for styling and customizing Ext Gantt 3",
+                "description"   : "This guide will show you how to utilize built-in ExtJs functionality for easier customization and better working experience with Ext Gantt."
+            },
+            {
+                "name"          : "gantt_data_integration",
+                "title"         : "Data integration guide",
+                "description"   : "This guide will show you how to set up a PHP/MySQL based Ext Gantt 3."
+            },
+            {
+                "name"          : "gantt_calendars",
+                "title"         : "Using calendars",
+                "description"   : "This guide describes all the features of Ext Gantt related to calendars."
+            },
+            {
+                "name"          : "gantt_scheduler_localization",
+                "title"         : "Localizing Scheduler and Gantt",
+                "description"   : "This guide describes how to localize Bryntum Scheduler and Gantt."
+            },
+            {
+                "name"          : "gantt_split_task",
+                "title"         : "Splitting tasks",
+                "description"   : "This guide describes how to use the split task feature"
+            },
+            {
+                "name"          : "crud_manager",
+                "title"         : "CRUD manager general information",
+                "description"   : "This guide describes the generic parts of the CRUD manager applicable for both Scheduler and Gantt."
+            },
+            {
+                "name"          : "gantt_crud_manager",
+                "title"         : "Using CRUD manager with Ext Gantt",
+                "description"   : "This guide describes the Gantt specific details of implementing the CRUD manager."
+            },
+            {
+                "name"          : "gantt_constraints",
+                "title"         : "Using task constraints in Ext Gantt 3",
+                "description"   : "This guide describes the task constraints mechanism in Ext Gantt 3."
+            }
+        ]
+    },
+    {
+        "title": "Ext Scheduler 3.0 Guides",
+        "items": [
+            {
+                "name"          : "scheduler_getting_started",
+                "title"         : "Getting Started with Ext Scheduler 3.",
+                "description"   : "This guide will allow you to get started with Ext Scheduler 3."
+            },
+            {
+                "name"          : "scheduler_extension",
+                "title"         : "Sencha Architect 3 extension",
+                "description"   : "This guide gives brief information about extension installation and usage"
+            }
+            
+        ]
+    }
+]

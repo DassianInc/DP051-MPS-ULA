@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Sch-plugin-exporter-AbstractExporter'>/**
+</span> @class Sch.plugin.exporter.AbstractExporter
+ @extends Ext.util.Observable
+
+ This class represents the base implementation of an exporter.
+ An exporter extracts the provided component content and packs it into array of pages (based on provided export settings and implemented algorithm).
+ The main entry point for an exporter that launches the extraction process is {@link #extractPages} method:
+
+             exporter.extractPages(component, config, function (pages) {
+
+                alert(pages.length + &quot; extracted&quot;);
+
+                ...
+
+             }, me);
+
+
+*/
+Ext.define('Sch.plugin.exporter.AbstractExporter', {
+
+    extend                  : 'Ext.util.Observable',
+
+    requires                : [
+        'Ext.dom.Element',
+        'Ext.core.DomHelper'
+    ],
+
+    mixins                  : ['Sch.mixin.Localizable'],
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-pageHeaderHeight'>    /**
+</span>     * @cfg {Number} pageHeaderHeight
+     * Header height. Amount of space for {@link #headerTpl the page header}.
+     */
+    pageHeaderHeight        : 41,
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-pageFooterHeight'>    /**
+</span>     * @cfg {Number} pageFooterHeight
+     * Footer height. Amount of space for {@link #footerTpl the page footer}.
+     */
+    pageFooterHeight        : 0,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-bufferedHeightMargin'>    bufferedHeightMargin    : 25,
+</span>
+<span id='Sch-plugin-exporter-AbstractExporter-property-isExporter'>    /**
+</span>     * @property {Boolean} isExporter
+     * @readonly
+     * `true` in this class to identify an object as an instantiated Exporter, or subclass thereof.
+     */
+    isExporter              : true,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-paperWidth'>    /**
+</span>     * @property {Number} paperWidth
+     * Paper width. Calculated based on provided page format and DPI resolution.
+     */
+    paperWidth              : 0,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-paperHeight'>    /**
+</span>     * @property {Number} paperHeight
+     * Paper height. Calculated based on provided page format and DPI resolution.
+     */
+    paperHeight             : 0,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-printHeight'>    /**
+</span>     * @property {Number} printHeight
+     * Paper height that can be used for printing rows. Calculated as {@link #paperHeight} minus header heights.
+     */
+    printHeight             : 0,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-lockedRowsHeight'>    lockedRowsHeight        : 0,
+</span>
+<span id='Sch-plugin-exporter-AbstractExporter-property-normalRowsHeight'>    normalRowsHeight        : 0,
+</span>
+<span id='Sch-plugin-exporter-AbstractExporter-property-iterateTimeout'>    iterateTimeout          : 10,
+</span>
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-tableSelector'>    /**
+</span>     * @cfg {String} tableSelector
+     * The selector for the row container used for both normalGrid and lockedGrid.
+     */
+    tableSelector           : undefined,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-currentPage'>    /**
+</span>     * @property {Ext.dom.Element} currentPage
+     * Current page being extracted.
+     */
+    currentPage             : undefined,
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-headerTplDataFn'>    /**
+</span>     * @cfg {Function} headerTplDataFn
+     * If specified the function result will be applied to {@link #getHeaderTplData} result.
+     * To define the scope please use {@link #headerTplDataFnScope}.
+     */
+    headerTplDataFn        : null,
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-footerTplDataFn'>    /**
+</span>     * @cfg {Function} footerTplDataFn
+     * If specified the function result will be applied to {@link #getFooterTplData} result.
+     * To define the scope please use {@link #footerTplDataFnScope}.
+     */
+    footerTplDataFn        : null,
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-headerTplDataFnScope'>    /**
+</span>     * @cfg {Object} headerTplDataFnScope The scope for {@link #footerTplDataFn} template method.
+     */
+    headerTplDataFnScope   : null,
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-footerTplDataFnScope'>    /**
+</span>     * @cfg {Object} footerTplDataFnScope The scope for {@link #footerTplDataFn} template method.
+     */
+    footerTplDataFnScope   : null,
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - name    : 'Exporter'
+     */
+
+    config                 : {
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-exporterId'>        /**
+</span>         * @cfg {String} exporterId
+         * Exporter identifier. Has to be unique among other exporters when you register in in {@link Sch.plugin.Export} instance.
+         */
+        exporterId                : 'abstractexporter',
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-name'>        /**
+</span>         * Exporter name. By default will be taken from the class {@link #l10n locale}.
+         * @cfg {String}
+         */
+        name                      : '',
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-translateURLsToAbsolute'>        translateURLsToAbsolute   : true,
+</span>
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-expandAllBeforeExport'>        expandAllBeforeExport     : false,
+</span>
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-headerTpl'>        /**
+</span>         * @cfg {String} headerTpl
+         * Template of an extracted page header.
+         */
+        headerTpl                 : '&lt;div class=&quot;sch-export-header&quot; style=&quot;height:{height}px; width:{width}px&quot;&gt;&lt;h2&gt;{pageNo}/{totalPages}&lt;/h2&gt;&lt;/div&gt;',
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-tpl'>        /**
+</span>         * @cfg {String/Ext.XTemplate} tpl
+         * Template of an extracted page.
+         */
+        tpl                       : '&lt;!DOCTYPE html&gt;' +
+            '&lt;html class=&quot;' + Ext.baseCSSPrefix + 'border-box {htmlClasses}&quot;&gt;' +
+            '&lt;head&gt;' +
+            '&lt;meta content=&quot;text/html; charset=UTF-8&quot; http-equiv=&quot;Content-Type&quot; /&gt;' +
+            '&lt;title&gt;{title}&lt;/title&gt;' +
+            '{styles}' +
+            '&lt;/head&gt;' +
+            '&lt;body class=&quot;' + Ext.baseCSSPrefix + 'webkit sch-export {bodyClasses}&quot;&gt;' +
+            '{header}' +
+            '&lt;div class=&quot;{componentClasses}&quot; style=&quot;height:{bodyHeight}px; width:{totalWidth}px; position: relative !important&quot;&gt;' +
+            '{HTML}' +
+            '&lt;/div&gt;' +
+            '{footer}' +
+            '&lt;/body&gt;' +
+            '&lt;/html&gt;',
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-footerTpl'>        /**
+</span>         * @cfg {String} footerTpl
+         * Template of an extracted page footer.
+         */
+        footerTpl                 : '',
+
+<span id='Sch-plugin-exporter-AbstractExporter-cfg-rowVisibilityThreshold'>        // Row visibility detection threshold (0.6 - means that when 60% of a row height is visible we consider it as visible)
+</span>        rowVisibilityThreshold    : 0.6
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-callbacks'>    //private placeholder for provided callback functions passed in extractPages
+</span>    callbacks               : undefined,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-error'>    //private String errorMessage, when internally set this message will be displayed in a pop-up message.
+</span>    error                   : undefined,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-extractedPages'>    /**
+</span>     * @property {Object[]} extractedPages Collection of extracted pages.
+     */
+    extractedPages          : undefined,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-numberOfPages'>    /**
+</span>     * @property {Number} numberOfPages Total number of pages extracted.
+     */
+    numberOfPages           : 0,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-firstExportedRowOffset'>    // vertical offset of the very first row exported
+</span>    firstExportedRowOffset  : 0,
+
+<span id='Sch-plugin-exporter-AbstractExporter-property-secondaryCanvasOffset'>    // Vertical offset of the secondary canvas. Initially equals to the negative &quot;firstExportedRowOffset&quot;.
+</span>    // Though the value might change while pages getting extracted.
+    secondaryCanvasOffset   : 0,
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-constructor'>    constructor : function (config) {
+</span>        var me  = this;
+
+        config  = config || {};
+
+        me.callParent(arguments);
+
+        // initConfig thinks that we're trying to override methods so we have to delete following
+        delete config.getUserHeaderTplData;
+        delete config.getUserFooterTplData;
+
+        me.initConfig(config);
+
+        if (!config.tableSelector) {
+            me.tableSelector    = '.' + Ext.baseCSSPrefix + 'grid-item-container';
+        }
+
+        // get the exporter name from locale (if not provided explicitly)
+        if (!config.name) me.setName(me.L('name'));
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setHeaderTpl'>    setHeaderTpl : function (tpl) {
+</span>        this.headerTpl = this.getTplInstance(tpl);
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getHeaderTpl'>    getHeaderTpl : function () {
+</span>       return this.headerTpl;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setTpl'>    setTpl : function (tpl) {
+</span>        this.tpl = this.getTplInstance(tpl);
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getTpl'>    getTpl : function () {
+</span>        return this.tpl;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setFooterTpl'>    setFooterTpl : function (tpl) {
+</span>        this.footerTpl = this.getTplInstance(tpl);
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getFooterTpl'>    getFooterTpl : function () {
+</span>        return this.footerTpl;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getTplInstance'>    getTplInstance : function (tpl) {
+</span>        return (tpl &amp;&amp; !tpl.isTemplate) ? new Ext.XTemplate(tpl, { disableFormats : true }) : tpl;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getBodyClasses'>    /**
+</span>     * @protected
+     * Returns the CSS classes for BODY element of extracted page. Override this if you need to customize exported pages CSS classes.
+     * @return {String} CSS classes.
+     */
+    getBodyClasses : function () {
+        var re      = new RegExp(Ext.baseCSSPrefix + 'ie\\d?|' + Ext.baseCSSPrefix + 'gecko', 'g'),
+            result  = Ext.getBody().dom.className.replace(re, '');
+
+        if (Ext.isIE) {
+            result  += ' sch-ie-export';
+        }
+
+        return result;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getComponentClasses'>    /**
+</span>     * @protected
+     * Returns the CSS classes for element containing exported component. Override this if you need to customize exported pages CSS classes.
+     * @return {String} CSS classes.
+     */
+    getComponentClasses : function () {
+        return this.getComponent().el.dom.className;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setComponent'>    /**
+</span>     * Sets the component being exported.
+     * @param {Sch.panel.SchedulerGrid/Sch.panel.SchedulerTree} component The component being exported.
+     */
+    setComponent : function (component) {
+        var me                  = this;
+
+        me.component            = component;
+        me.view                 = component.getSchedulingView();
+        me.normalGrid           = component.normalGrid;
+        me.lockedGrid           = component.lockedGrid;
+        me.normalView           = component.normalGrid.view;
+        me.lockedView           = component.lockedGrid.view;
+        me.lockedBodySelector   = '#' + me.lockedView.getId();
+        me.normalBodySelector   = '#' + me.normalView.getId();
+        me.lockedHeader         = me.lockedGrid.headerCt;
+        me.normalHeader         = me.normalGrid.headerCt;
+        me.headerHeight         = me.normalHeader.getHeight();
+
+        // page height w/o component headers
+        me.printHeight = Math.floor(me.paperHeight) - me.headerHeight - (me.exportConfig.showHeader ? me.pageHeaderHeight : 0) - (me.exportConfig.showFooter ? me.pageFooterHeight : 0);
+
+        me.saveComponentState(component);
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getComponent'>    /**
+</span>     * Returns the component being exported.
+     * @return {Sch.panel.SchedulerGrid/Sch.panel.SchedulerTree} The component being exported.
+     */
+    getComponent : function () {
+        return this.component;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setPaperSize'>    /**
+</span>     * @private
+     * Applies the selected paper size based on export configuration and {@link #paperSizes} config. Calculates {@link #paperWidth} and {@link #paperHeight} properties.
+     */
+    setPaperSize : function (pageSize, orientation) {
+        var me          = this;
+
+        //size of paper we will be printing on. take orientation into account
+        if (orientation === 'landscape') {
+            me.paperWidth   = pageSize.height;
+            me.paperHeight  = pageSize.width;
+        } else {
+            me.paperWidth   = pageSize.width;
+            me.paperHeight  = pageSize.height;
+        }
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getPaperFormat'>    /**
+</span>     * @return {String} returns the format of the current export operation.
+     */
+    getPaperFormat : function () {
+        return this.exportConfig.format;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-isBuffered'>    /**
+</span>     * @private
+     * Returns whether the component uses buffered rendering.
+     * @return {boolean} `true` if the underlying component uses buffered rendering.
+     */
+    isBuffered : function () {
+        return !!this.getBufferedRenderer();
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getBufferedRenderer'>    /**
+</span>     * @private
+     * Returns the normal grid buffered renderer instance (if the component uses buffered rendering).
+     * @return {Ext.grid.plugin.BufferedRendererView} The normal grid buffered renderer instance.
+     */
+    getBufferedRenderer : function () {
+        return this.view.bufferedRenderer;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setComponentRange'>    /**
+</span>     * @protected
+     * Applies the passed date range to the component.
+     * @param {Object} config Export configuration.
+     */
+    setComponentRange : function (config) {
+        var me          = this,
+            component   = me.getComponent();
+
+        // if we export a part of scheduler
+        if (config.range !== 'complete') {
+
+            var view    = me.view,
+                newStart,
+                newEnd;
+
+            switch (config.range) {
+                case 'date' :
+                    newStart = new Date(config.dateFrom);
+                    newEnd   = new Date(config.dateTo);
+                    // ensure that specified period has at least a day
+                    if (Sch.util.Date.getDurationInDays(newStart, newEnd) &lt; 1) {
+                        newEnd  = Sch.util.Date.add(newEnd, Sch.util.Date.DAY, 1);
+                    }
+                    break;
+
+                case 'current' :
+                    var visibleSpan = view.getVisibleDateRange();
+                    newStart        = visibleSpan.startDate;
+                    newEnd          = visibleSpan.endDate || view.timeAxis.getEnd();
+                    break;
+
+                case 'completedata' :
+                   var span = component.getEventStore().getTotalTimeSpan();
+                   newStart = span.start;
+                   newEnd   = span.end;
+                   break;
+            }
+
+            // apply new time frame
+            if (newStart &amp;&amp; newEnd) {
+                component.setTimeSpan(newStart, newEnd);
+            }
+        }
+
+        me.ticks  = component.timeAxis.getTicks();
+
+        // if only currently visible rows have to be extracted
+        if (config.rowsRange == 'visible') {
+            // find effective currently visible rows range (an array: [startIndex, endIndex])
+            config.rowsRange = me.findVisibleRowsRange();
+
+        // all rows mode
+        } else {
+            config.rowsRange = null;
+        }
+
+
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getStylesheets'>    /**
+</span>     * @protected
+     * Get links to the stylesheets of current page.
+     */
+    getStylesheets : function() {
+        var translate   = this.translateURLsToAbsolute,
+            styleSheets = Ext.getDoc().select('link[rel=&quot;stylesheet&quot;]'),
+            ctTmp       = Ext.get(Ext.core.DomHelper.createDom({
+                tag : 'div'
+            })),
+            stylesString;
+
+        styleSheets.each(function(s) {
+            var node    = s.dom.cloneNode(true);
+            // put absolute URL to node `href` attribute
+            translate &amp;&amp; node.setAttribute('href', s.dom.href);
+            ctTmp.appendChild(node);
+        });
+
+        stylesString = ctTmp.dom.innerHTML + '';
+
+        return stylesString;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-forEachTimeSpanPlugin'>    // Since export is a sync operation for now, all plugins drawing lines &amp; zones need to be temporarily adjusted
+</span>    // to draw their content synchronously.
+    forEachTimeSpanPlugin : function (component, fn, scope) {
+        if (Sch.feature &amp;&amp; Sch.feature.AbstractTimeSpan) {
+
+            var me = this;
+            var plugins = (component.plugins || []).concat(component.normalGrid.plugins || []).concat(component.columnLinesFeature || []);
+
+            for (var i = 0, l = plugins.length; i &lt; l; i++) {
+                var plugin  = plugins[i];
+
+                if (plugin instanceof Sch.feature.AbstractTimeSpan) {
+                    fn.call(scope || me, plugin);
+                }
+            }
+        }
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setCellSize'>    setCellSize : function (cellSize) {
+</span>        var me = this;
+
+        me.timeColumnWidth = cellSize[0];
+
+        if (me.timeColumnWidth) {
+            this.getComponent().setTimeColumnWidth(me.timeColumnWidth);
+        }
+
+        // change the row height only if value is provided
+        if (cellSize.length &gt; 1) {
+            me.view.setRowHeight(cellSize[1]);
+        }
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-findVisibleRowsRange'>    findVisibleRowsRange : function () {
+</span>        var me         = this,
+            nodeCache  = me.lockedView.all,
+            startIndex = nodeCache.startIndex,
+            endIndex   = nodeCache.endIndex;
+
+        var metVisibleNode       = false,
+            firstVisibleRowIndex = -1,
+            lastVisibleRowIndex  = -1;
+
+        for (var i = startIndex; i &lt;= endIndex; i++) {
+            var node       = nodeCache.item(i, true);
+
+            if (me.isRowVisible(node, me.lockedBox)) {
+                if (!metVisibleNode) {
+                    firstVisibleRowIndex = i;
+                    metVisibleNode = true;
+                }
+                lastVisibleRowIndex = i;
+
+            } else if (metVisibleNode) {
+                break;
+            }
+        }
+
+        return [firstVisibleRowIndex, lastVisibleRowIndex];
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-prepareComponent'>    /**
+</span>     * @protected
+     * Prepares the component to export. This includes setting requested time span, time column width etc.
+     * @param {Sch.panel.SchedulerGrid/Sch.panel.SchedulerTree} component The component being exported.
+     * @param {Object} config    Export configuration.
+     */
+    prepareComponent : function (component, config) {
+        var me      = this;
+
+        component   = component || me.getComponent();
+
+        me.suspendInfiniteScroll(component);
+
+        me.forEachTimeSpanPlugin(component, function (plugin) {
+            plugin._renderDelay = plugin.renderDelay;
+            plugin.renderDelay  = 0;
+        });
+
+        component.getSchedulingView().timeAxisViewModel.suppressFit = true;
+        component.timeAxis.autoAdjust                               = false;
+        //expand grids in case they're collapsed
+        component.normalGrid.expand();
+        component.lockedGrid.expand();
+
+        // remember view regions (to be able to decide on rows visibility if requested)
+        me.lockedBox = me.lockedView.getBox();
+        me.normalBox = me.normalView.getBox();
+
+        // change timespan/tick width according to provided settings
+        me.setComponentRange(config);
+
+        // if row/column sizes provided
+        config.cellSize &amp;&amp; me.setCellSize(config.cellSize);
+
+        // launch template method
+        config.beforeExport &amp;&amp; config.beforeExport(component, me.ticks);
+
+        me.prepareColumns(config.columns);
+
+        // For Tree grid, optionally expand all nodes
+        if (me.expandAllBeforeExport &amp;&amp; component.expandAll) {
+            component.expandAll();
+        }
+
+        // resizes the component to fit it into specified paper size (depending on pagination rules)
+        me.fitComponentIntoPage();
+
+        //bug fix #2264 - MultiPage export does not sync timeaxis on first run
+        me.view.timeAxisViewModel.setTickWidth(me.view.timeAxisViewModel.getTickWidth());
+
+        //IE8 bug
+        if (me.isBuffered() &amp;&amp; Ext.isIE8) {
+            me.normalView.bufferedRenderer.variableRowHeight = false;
+            me.lockedView.bufferedRenderer.variableRowHeight = false;
+        }
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-prepareColumns'>    prepareColumns : function (columns) {
+</span>
+        var me = this;
+
+        if (columns) {
+
+            me.lockedGrid.headerCt.items.each(function (column) {
+                if (Ext.Array.contains(columns, column)) {
+                    column.show();
+                }
+                else {
+                    column.hide();
+                }
+            });
+        }
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-restoreComponent'>    restoreComponent : function (component) {
+</span>        var me      = this;
+
+        component   = component || me.getComponent();
+
+        me.forEachTimeSpanPlugin(component, function (plugin) {
+            plugin.renderDelay  = plugin._renderDelay;
+            delete plugin._renderDelay;
+        });
+
+        // restore scheduler state
+        me.restoreComponentState(component);
+
+        me.restoreInfiniteScroll(component);
+
+        //We need to update TimeAxisModel for layout fix #1334
+        // component.getSchedulingView().timeAxisViewModel.update();
+
+        // call template method
+        me.exportConfig.afterExport &amp;&amp; me.exportConfig.afterExport(component);
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-saveComponentState'>    saveComponentState : function (component) {
+</span>        component           = component || this.getComponent();
+
+        var me              = this,
+            view            = component.getSchedulingView(),
+            normalGrid      = component.normalGrid,
+            lockedGrid      = component.lockedGrid;
+
+        var columns = [];
+
+        lockedGrid.headerCt.items.each(function (column) {
+           columns.push({
+               column : column,
+               visible : !column.isHidden()
+           });
+        });
+
+        //values needed to restore original size/dates of component
+        me.restoreSettings    = {
+            width               : component.getWidth(),
+            height              : component.getHeight(),
+            rowHeight           : view.timeAxisViewModel.getViewRowHeight(),
+            columnWidth         : view.timeAxisViewModel.getTickWidth(),
+            startDate           : component.getStart(),
+            endDate             : component.getEnd(),
+            normalWidth         : normalGrid.getWidth(),
+            normalLeft          : normalGrid.getEl().getStyle('left'),
+            lockedWidth         : lockedGrid.getWidth(),
+            lockedCollapse      : lockedGrid.collapsed,
+            normalCollapse      : normalGrid.collapsed,
+            columns             : columns,
+            autoAdjust          : component.timeAxis.autoAdjust,
+            suppressFit         : view.timeAxisViewModel.suppressFit,
+            startIndex          : view.all.startIndex,
+
+            lockedScrollX       : me.lockedView.getScrollX(),
+            normalScrollX       : view.getScrollX(),
+            scrollY             : view.getScrollY()
+        };
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-restoreComponentState'>    restoreComponentState : function (component) {
+</span>        var me      = this;
+
+        component   = component || me.getComponent();
+
+        var config  = me.restoreSettings,
+            view    = component.getSchedulingView();
+
+        component.timeAxis.autoAdjust = config.autoAdjust;
+
+        component.normalGrid.show();
+
+        component.setWidth(config.width);
+        component.setHeight(config.height);
+        component.setTimeSpan(config.startDate, config.endDate);
+        component.setTimeColumnWidth(config.columnWidth, true);
+
+        view.setRowHeight(config.rowHeight);
+
+        // resote locked grid columns visibility
+        Ext.Array.each(config.columns, function (item) {
+            item.column.setVisible(item.visible);
+        });
+
+        component.lockedGrid.show();
+
+        component.normalGrid.setWidth(config.normalWidth);
+        component.normalGrid.getEl().setStyle('left', config.normalLeft);
+        component.lockedGrid.setWidth(config.lockedWidth);
+        view.timeAxisViewModel.suppressFit = config.suppressFit;
+        view.timeAxisViewModel.setTickWidth(config.columnWidth);
+
+        if (config.lockedCollapse) {
+            component.lockedGrid.collapse();
+        }
+
+        if (config.normalCollapse) {
+            component.normalGrid.collapse();
+        }
+
+        // restore scroll position
+        me.restoreComponentScroll(config);
+
+        if (me.getBufferedRenderer()) {
+            if (Ext.isIE8) {
+                me.normalView.bufferedRenderer.variableRowHeight = true;
+                me.lockedView.bufferedRenderer.variableRowHeight = true;
+            }
+        }
+
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-restoreComponentScroll'>    restoreComponentScroll : function (restoreSettings) {
+</span>        var me = this;
+
+        me.lockedView.setScrollX(restoreSettings.lockedScrollX);
+        me.normalView.scrollTo(restoreSettings.normalScrollX, restoreSettings.scrollY);
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-extractPages'>    /**
+</span>     * Extracts the component content. On completion calls specified callback function providing an array of extracted pages as an argument.
+     * @param {Sch.panel.SchedulerGrid/Sch.panel.SchedulerTree} component Component content of which to be extracted
+     * @param {Object} config Configuration object. May contain the following properties:
+     * @param {String} config.format Page format
+     * @param {String} config.orientation Page orientation (either `portrait` or `landscape`)
+     * @param {String} config.range Range of the panel to be exported. Options are `complete`, `current`, `date`. When `date` is specified there also has to be specified next two configs.
+     * @param {Date} config.dateFrom Range start date. Used only when `config.range` is `date`
+     * @param {Date} config.dateTo Range end date. Used only when `config.range` is `date`
+     * @param {Boolean} config.showHeader Flag saying that page numbers header has to be shown
+     * @param {Function} callback Function which is called after extraction of pages has completed. The callback will have the following arguments:
+     * @param {Function} callback.pages An array with extracted pages
+     * @param {Object} scope Scope for the callback function
+     */
+    extractPages : function (component, config, callback, scope) {
+        var me          = this;
+
+        // stop garbage collecting
+        me.enableGarbageCollector  = Ext.enableGarbageCollector;
+        Ext.enableGarbageCollector = false;
+        Ext.dom.GarbageCollector.pause();
+
+        // keep provided export config
+        me.exportConfig = config;
+
+        me.normalRows             = [];
+        me.lockedRows             = [];
+        me.extractedPages         = [];
+        me.numberOfPages          = 0;
+        me.lockedRowsHeight       = 0;
+        me.normalRowsHeight       = 0;
+        me.firstExportedRowOffset = 0;
+        me.secondaryCanvasOffset  = 0;
+
+        // calculates paper sizes based on provided parameters and DPI
+        me.setPaperSize(config.pageSize, config.orientation);
+
+        // stores references to the component, its elements and makes a backup of its pre-export state
+        me.setComponent(component, config);
+
+        // prepares component to exporting (applies provided timespan etc.)
+        me.prepareComponent(component, config);
+
+        me.callbacks        = {
+            success : callback || Ext.emptyFn,
+            scope   : scope || me
+        };
+
+        // fetch all component rows into temporary arrays
+        // and call 'onRowsCollected' to collect them into pages and call 'onPagesExtracted' on completion
+        setTimeout(function () {
+            me.collectRows(me.onRowsCollected, me, config);
+        }, 1);
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-onPagesExtracted'>    /**
+</span>     * @protected
+     * Finishes exporting process. Restores the component to its initial state and returns extracted pages by calling a provided callback.
+     * @param  {Object[]} [pages] Extracted pages. If omitted then will take collected pages from {@link #extractedPages} array.
+     */
+    onPagesExtracted : function (pages) {
+        var me  = this;
+
+        // restore panel to initial state
+        me.restoreComponent();
+        // and return results
+        me.submitPages(pages);
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-submitPages'>    submitPages : function (pages) {
+</span>        var me          = this,
+            callbacks   = me.callbacks;
+
+        callbacks.success.call(callbacks.scope, me.renderPages(pages));
+
+        // resume garbage collecting
+        Ext.enableGarbageCollector = me.enableGarbageCollector;
+        Ext.dom.GarbageCollector.resume();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getCurrentPage'>    getCurrentPage : function () {
+</span>        return this.currentPage;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-setCurrentPage'>    setCurrentPage : function (page) {
+</span>        this.currentPage = page;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getExpectedNumberOfPages'>    getExpectedNumberOfPages : Ext.emptyFn,
+</span>
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-commitPage'>    /**
+</span>     * Commits a filled page. Pushes the page into {@link #extractedPages resulted set of pages}.
+     * Calls {@link #preparePageToCommit} for the final page DOM tweaking.
+     * @param [config] An optional configuration object. Will also be passed to {@link #preparePageToCommit} method.
+     */
+    commitPage : function (config) {
+
+        var me      = this;
+
+        me.numberOfPages++;
+
+        var pageBody = me.preparePageToCommit(config);
+
+        me.fireEvent('beforecommitpage', me, pageBody, me.numberOfPages, me.getExpectedNumberOfPages());
+
+        var page    = Ext.apply({
+            html    : pageBody.dom.innerHTML,
+            number  : me.numberOfPages
+        }, config);
+
+        me.extractedPages.push(page);
+
+        me.fireEvent('commitpage', me, page, me.numberOfPages, me.getExpectedNumberOfPages());
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-collectLockedRow'>    /**
+</span>     * @protected
+     * Collects the locked grid row.
+     * @param  {Element} item The locked grid row
+     * @param  {Ext.data.Model} recordIndex Index of the record corresponding to the row.
+     * @return {Object} Object keeping reference to the cloned row element and its height.
+     */
+    collectLockedRow : function (item, recordIndex) {
+        var height  = Ext.fly(item).getHeight();
+
+        this.lockedRowsHeight   += height;
+
+        var result  = {
+            height  : height,
+            row     : item.cloneNode(true),
+            record  : this.lockedView.getRecord(recordIndex)
+        };
+
+        this.lockedRows.push(result);
+
+        return result;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-collectNormalRow'>    /**
+</span>     * @protected
+     * Collects the normal grid row.
+     * @param  {Element} item The normal grid row
+     * @param  {Ext.data.Model} recordIndex Index of the record corresponding to the row.
+     * @return {Object} Object keeping reference to the cloned row element and its height.
+     */
+    collectNormalRow : function (item, recordIndex) {
+        var height  = Ext.fly(item).getHeight();
+
+        this.normalRowsHeight   += height;
+
+        var result  = {
+            height  : height,
+            row     : item.cloneNode(true),
+            record  : this.normalView.getRecord(recordIndex)
+        };
+
+        this.normalRows.push(result);
+
+        return result;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-onRowsCollected'>    onRowsCollected : function () {
+</span>        throw 'Sch.plugin.exporter.AbstractExporter: [onRowsCollected] Abstract method called.';
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-iterateAsync'>    /**
+</span>     * @private
+     * Iterates by calling provided function asynchronously with a delay.
+     * The delay duration is specified by {@link #iterateTimeout} config.
+     * @param  {Function} fn    Function implementing a single iteration step.
+     * @param  {Function} fn.next Callback function to be called to run the next iteration step.
+     * This will cause `fn` function launch. All arguments passed to {@link #fn.next} will be transfered to {@link #fn}.
+     * @param  {[type]}   [scope] Scope for the callback function
+     */
+    iterateAsync : function (fn, scope) {
+        var me      = this;
+
+        scope       = scope || me;
+
+        var next    = function () {
+            var args    = arguments;
+
+            // run iteration step asynchronously w/ delay
+            var interval = setInterval(function() {
+                clearInterval(interval);
+                fn.apply(scope, [].concat.apply([ next ], args));
+            }, me.iterateTimeout);
+
+        };
+
+        next.apply(me, Ext.Array.slice(arguments, 2));
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-callAsync'>    callAsync : function (fn, scope) {
+</span>        scope = scope || this;
+
+        var interval = setInterval(function() {
+            clearInterval(interval);
+            fn.apply(scope, Ext.Array.slice(arguments, 2));
+        }, this.iterateTimeout);
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-collectRows'>    /**
+</span>     * @protected
+     * Collects rows from the component. Launches the provided callback and passes collected rows as its arguments.
+     * @param callback {Function} The callback function when extraction of rows has finished.
+     */
+    collectRows : function (callback, scope, config) {
+
+        var me              = this,
+            startIndex      = 0;
+
+        var needToScroll = me.isBuffered();
+
+        // if rows to extract range is provided
+        if (config.rowsRange) {
+            // we know for sure index to start from
+            startIndex = config.rowsRange[0];
+            // if the range is inside the set of currently rendered rows we don't need to scroll
+            needToScroll = !(config.rowsRange[0] &gt;= me.view.all.startIndex &amp;&amp; config.rowsRange[1] &lt;= me.view.all.endIndex);
+        }
+
+        if (needToScroll) {
+            // scroll to start index before rows collecting
+            setTimeout(function () {
+                me.scrollTo(startIndex, function () {
+                    // fill firstExportedRowOffset value ..used to shift the secondary canvas vertically from page to page
+                    startIndex &amp;&amp; me.initFirstExportedRowOffset(startIndex);
+
+                    me.iterateAsync(me.collectRowsStep, me, startIndex, callback, scope, config);
+                });
+            }, 1);
+
+        } else {
+            // fill firstExportedRowOffset value ..used to shift the secondary canvas vertically from page to page
+            startIndex &amp;&amp; me.initFirstExportedRowOffset(startIndex);
+
+            setTimeout(function () {
+                me.collectRowsStep(null, startIndex, callback, scope, config);
+            }, 1);
+        }
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-initFirstExportedRowOffset'>    initFirstExportedRowOffset : function (firstExportedRowIndex) {
+</span>        this.firstExportedRowOffset = this.view.el.getScrollTop() - this.view.el.getTop() + Ext.fly(this.view.getNode(firstExportedRowIndex)).getTop();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-isRowVisible'>    isRowVisible : function (rowNode, visibleBox) {
+</span>        var nodeEl        = Ext.fly(rowNode),
+            nodeTop       = nodeEl.getTop(),
+            nodeHeight    = nodeEl.getHeight(),
+            nodeBottom    = nodeTop + nodeHeight,
+            nodeThreshold = (1 - this.getRowVisibilityThreshold()) * nodeHeight;
+
+        return nodeTop + nodeThreshold &gt; visibleBox.top &amp;&amp;
+            nodeBottom - nodeThreshold &lt; visibleBox.bottom;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-collectRowsStep'>    collectRowsStep : function (next, startIndex, callback, scope, config) {
+</span>        var me              = this,
+            endIndex        = me.normalView.all.endIndex,
+            count           = me.component.store.getCount(),
+            rowsRange       = config.rowsRange,
+            normalRows      = me.normalView.all.slice(startIndex),
+            lockedRows      = me.lockedView.all.slice(startIndex),
+            i               = 0;
+
+        var lastIndex;
+
+        // If we collect only visible rows
+        if (rowsRange) {
+            lastIndex = rowsRange[1];
+        }
+
+        var collected = false;
+
+        for (var index = startIndex; i &lt; normalRows.length; i++) {
+            if (index &gt; lastIndex) {
+                collected = true;
+                break;
+            }
+
+            lockedRows[i] &amp;&amp; me.collectLockedRow(lockedRows[i], index, config);
+            me.collectNormalRow(normalRows[i], index, config);
+
+            index++;
+        }
+
+
+        me.fireEvent('collectrows', me, startIndex, index, count);
+
+
+        // if we are in the buffered mode (and not collected all the requested rows yet)
+        // we need to scroll further
+        if (!collected &amp;&amp; me.isBuffered()) {
+
+            if (endIndex + 1 &lt; count) {
+                me.callAsync(function () {
+                    me.scrollTo(endIndex + 1, function () {
+                        next(endIndex + 1, callback, scope, config);
+                    });
+                });
+
+            } else {
+                me.callAsync(function () {
+                    me.scrollTo(0, function () {
+                        callback.call(scope || me, me.lockedRows, me.normalRows);
+                    });
+                });
+            }
+
+        // if we already collected all the needed rows - invoke the final step
+        } else {
+            callback.call(scope || me, me.lockedRows, me.normalRows);
+        }
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-renderPages'>    /**
+</span>     * @private
+     * Fills extracted pages `html` property before submitting them.
+     * @param  {Array} [pages] Array of pages. By default {@link #extractedPages} is used.
+     * @return {Array} Array of pages.
+     */
+    renderPages : function (pages) {
+        var me  = this;
+
+        pages   = pages || me.extractedPages;
+
+        for (var i = 0, l = pages.length; i &lt; l; i++) {
+            var page    = pages[i];
+            page.html   = me.applyPageTpl(page);
+        }
+
+        return pages;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-applyPageTpl'>    /**
+</span>     * @protected
+     * Builds HTML content of the page by applying provided page data to the {@link #tpl page template}.
+     * @param  {Object} pageInfo Page data:
+     * @param  {Object} pageInfo.html HTML code of the page
+     * @param  {Object} pageInfo.number page number
+     * @return {String}          HTML content of the page.
+     */
+    applyPageTpl : function (pageInfo) {
+        var me  = this;
+        return me.getTpl().apply(me.getPageTplData(pageInfo));
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-applyHeaderTpl'>    /**
+</span>     * @protected
+     * Builds HTML content of the page header by applying provided page data to the {@link #headerTpl header template}.
+     * @param  {Object} pageInfo Page data:
+     * @param  {Object} pageInfo.html HTML code of the page
+     * @param  {Object} pageInfo.number page number
+     * @return {String}          HTML content of the header.
+     */
+    applyHeaderTpl : function (pageInfo) {
+        var me          = this,
+            headerTpl   = me.getHeaderTpl();
+
+        if (me.exportConfig.showHeader &amp;&amp; headerTpl) {
+            // if function was provided to alter tpl data
+            var fn          = me.headerTplDataFn;
+            var alterData   = fn &amp;&amp; fn.call(me.headerTplDataFnScope || me, pageInfo);
+
+            return headerTpl.apply(Ext.apply(me.getHeaderTplData(pageInfo), alterData));
+        }
+
+        return '';
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-applyFooterTpl'>    /**
+</span>     * @protected
+     * Builds HTML content of the page footer by applying provided page data to the {@link #footerTpl footer template}.
+     * @param  {Object} pageInfo Page data:
+     * @param  {Object} pageInfo.html HTML code of the page
+     * @param  {Object} pageInfo.number page number
+     * @return {String}          HTML content of the footer.
+     */
+    applyFooterTpl : function (pageInfo) {
+        var me          = this,
+            footerTpl   = me.getFooterTpl();
+
+        if (me.exportConfig.showFooter &amp;&amp; footerTpl) {
+            // if function was provided to alter tpl data
+            var fn          = me.footerTplDataFn;
+            var alterData   = fn &amp;&amp; fn.call(me.footerTplDataFnScope || me, pageInfo);
+
+            return footerTpl.apply(Ext.apply(me.getFooterTplData(pageInfo), alterData));
+        }
+
+        return '';
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getHeaderTplData'>    /**
+</span>     * @protected
+     * Function to provide data for the {@link #headerTpl} template.
+     * @param  {Object} pageInfo Page data:
+     * @param  {Object} pageInfo.html HTML code of the page
+     * @param  {Object} pageInfo.number page number
+     * @return {Object} The template data:
+     * @return {Number} return.width width of the page header (page width)
+     * @return {Number} return.height height of the page header
+     * @return {Number} return.totalPages total number of pages
+     * @return {Number} return.pageNo the page number
+     */
+    getHeaderTplData : function (pageInfo) {
+        var me  = this;
+
+        return {
+            width       : me.paperWidth,
+            height      : me.pageHeaderHeight,
+            totalPages  : me.numberOfPages,
+            pageNo      : pageInfo.number
+        };
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getFooterTplData'>    /**
+</span>     * @protected
+     * Function to provide data for the {@link #footerTpl} template.
+     * @param  {Object} pageInfo Page data:
+     * @param  {Object} pageInfo.html HTML code of the page
+     * @param  {Object} pageInfo.number page number
+     * @return {Object} The template data:
+     * @return {Number} return.width width of the page footer (page width)
+     * @return {Number} return.height height of the page footer
+     * @return {Number} return.totalPages total number of pages
+     * @return {Number} return.pageNo the page number
+     */
+    getFooterTplData : function (pageInfo) {
+        var me  = this;
+
+        return {
+            width       : me.paperWidth,
+            height      : me.pageFooterHeight,
+            totalPages  : me.numberOfPages,
+            pageNo      : pageInfo.number
+        };
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getPageTplData'>    /**
+</span>     * @protected
+     * Provides data to be applied to the {@link #tpl page template}.
+     * @param  {Object} pageInfo Page data:
+     * @param  {Object} pageInfo.html HTML code of the page
+     * @param  {Object} pageInfo.number page number
+     * @return {Object}      Data to be applied to the {@link #tpl page template}.
+     */
+    getPageTplData : function (pageInfo) {
+        var me  = this;
+
+        return {
+            bodyClasses         : me.getBodyClasses(),
+            bodyHeight          : me.printHeight + me.headerHeight,
+            componentClasses    : me.getComponentClasses(),
+            styles              : me.getStylesheets(),
+            showHeader          : me.exportConfig.showHeader,
+            showFooter          : me.exportConfig.showFooter,
+            header              : me.applyHeaderTpl(pageInfo),
+            HTML                : pageInfo.html,
+            footer              : me.applyFooterTpl(pageInfo),
+            totalWidth          : me.paperWidth,
+            title               : pageInfo.number + ' of ' + me.numberOfPages
+        };
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-fitComponentIntoPage'>    /**
+</span>     * @protected
+     * Resizes the component to fit it into specified paper size, export settings etc. (depending on implemented pagination rules).
+     */
+    fitComponentIntoPage : Ext.emptyFn,
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getLockedGridBody'>    /**
+</span>     * @private
+     * Function that retrieves the table body of the locked grid.
+     * @param {Ext.dom.Element} [element] The fragment root for the selector. Defaults to current page.
+     * @return {Ext.dom.Element} Table body of the locked grid.
+     */
+    getLockedGridBody : function (element) {
+        element    = element || this.getCurrentPage();
+
+        return element.select(this.lockedBodySelector + ' ' + this.tableSelector).first();
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getNormalGridBody'>    /**
+</span>     * @private
+     * Retrieves the table body of the normal grid.
+     * @param {Ext.dom.Element} [element] The root element to retrieve from. Defaults to current page.
+     * @return {Ext.dom.Element} Table body of the normal grid.
+     */
+    getNormalGridBody : function (element) {
+        element = element || this.getCurrentPage();
+
+        return element.select(this.normalBodySelector + ' ' + this.tableSelector).first();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-emptyLockedGrid'>    emptyLockedGrid : function (element) {
+</span>        this.getLockedGridBody(element).select(this.lockedView.getItemSelector()).remove();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-fillGrids'>    fillGrids : function (lockedRows, normalRows, clone, append) {
+</span>        var me  = this;
+
+        me.fillLockedGrid(lockedRows, clone, append);
+        me.fillNormalGrid(normalRows, clone, append);
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-fillLockedGrid'>    fillLockedGrid : function (rows, clone, append) {
+</span>        var me  = this;
+        if (!append) me.emptyLockedGrid();
+
+        me.appendRows(me.getLockedGridBody(), rows || me.lockedRows, clone);
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-fillNormalGrid'>    fillNormalGrid : function (rows, clone, append) {
+</span>        var me  = this;
+        if (!append) me.emptyNormalGrid();
+
+        me.appendRows(me.getNormalGridBody(), rows || me.normalRows, clone);
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-appendRows'>    appendRows : function (node, children, clone) {
+</span>        var dom     = node.dom;
+        for (var i = 0, l = children.length; i &lt; l; i++) {
+            dom.appendChild(clone ? children[i].row.cloneNode(true) : children[i].row);
+        }
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-emptyNormalGrid'>    emptyNormalGrid : function (element) {
+</span>        this.getNormalGridBody(element).select(this.normalView.getItemSelector()).remove();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getRowHeight'>    getRowHeight : function () {
+</span>        return this.view.timeAxisViewModel.getViewRowHeight();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getTotalSize'>    /**
+</span>     * @private
+     * Returns full width and height of both grids.
+     * @return {Object} Object containing `width` and `height` properties.
+     */
+    getTotalSize : function() {
+        return {
+            width   : this.getTotalWidth(),
+            height  : this.getTotalHeight()
+        };
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getTotalHeight'>    /**
+</span>     * @private
+     * Returns full height of the component.
+     * @return {Number} Full height of the component.
+     */
+    getTotalHeight : function () {
+        var me  = this,
+            viewHeight;
+
+        if (me.isBuffered()) {
+            viewHeight  = me.bufferedHeightMargin + me.normalRowsHeight;
+        } else {
+            viewHeight  = me.lockedView.getEl().down(me.tableSelector).getHeight();
+        }
+
+        return me.headerHeight + viewHeight;
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getTotalWidth'>    /**
+</span>     * @private
+     * Returns full width of the component.
+     * @return {Number} Full width of both grids.
+     */
+    getTotalWidth : function () {
+        return this.getLockedGridWidth() + this.normalGrid.body.down(this.tableSelector).getWidth();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getLockedGridWidth'>    getLockedGridWidth : function () {
+</span>        return this.lockedHeader.getEl().first().getWidth();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-getNormalGridWidth'>    getNormalGridWidth : function () {
+</span>        return this.normalHeader.getEl().first().getWidth();
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-preparePageToCommit'>    /**
+</span>     * @protected
+     * Performs last changes to {@link #getCurrentPage the current page} being extracted before it's pushed into {@link #extractedPages} array.
+     * @param {Object} [config] Optional configuration object.
+     * @return {Ext.dom.Element} element Element holding the page.
+     */
+    preparePageToCommit : function () {
+        //create empty div that will temporarily hold our panel current HTML
+        var frag        = this.getCurrentPage(),
+            component   = this.component,
+            lockedGrid  = component.lockedGrid,
+            normalGrid  = component.normalGrid,
+            secondaryCanvas = frag.down('.sch-secondary-canvas', true);
+
+        frag.select('.sch-remove').remove();
+
+        var get             = function (s) { var el = frag.select('#' + s).first(); return el &amp;&amp; el.dom; },
+            elapseWidth     = function (el) { if (el) el.style.width  = '100%'; },
+            elapseHeight    = function (el) { if (el) el.style.height = '100%'; };
+
+        var normalBody      = frag.select(this.normalBodySelector).first();
+        normalBody.dom.style.top    = '0px';
+
+        var lockedBody      = frag.select(this.lockedBodySelector).first();
+        lockedBody.dom.style.top    = '0px';
+
+        // remove transform:translate3d(...) from views item container element
+        // otherwise it might mess top coordinate of the exported rows (checked in: 015_export_current_view)
+
+        var lockedItemsContainer;
+
+        if (lockedItemsContainer = this.getLockedGridBody()) {
+            if (Ext.isIE9m) {
+                lockedItemsContainer.dom.style.top = '';
+            } else {
+                lockedItemsContainer.dom.style.transform = '';
+            }
+        }
+
+        var normaItemsContainer;
+
+        if (normaItemsContainer = this.getNormalGridBody()) {
+            if (Ext.isIE9m) {
+                normaItemsContainer.dom.style.top = '';
+            } else {
+                normaItemsContainer.dom.style.transform = '';
+            }
+        }
+
+        if (secondaryCanvas) {
+            secondaryCanvas.style.top = this.secondaryCanvasOffset + 'px';
+            Ext.fly(secondaryCanvas).select('.sch-column-line').setHeight(this.normalRowsHeight);
+        }
+
+        // we elapse some elements width and/or height
+
+        var lockedElements  = [
+            get(component.id + '-targetEl'),
+            get(component.id + '-innerCt'),
+            get(lockedGrid.id),
+            get(lockedGrid.body.id),
+            get(lockedGrid.view.el.id)
+        ];
+
+        Ext.Array.forEach(lockedElements, elapseHeight);
+
+        elapseWidth(lockedElements[0]);
+        elapseWidth(lockedElements[1]);
+
+        if (!Ext.isIE) {
+            elapseWidth(get(normalGrid.headerCt.id));
+        }
+        else {
+            var el = get(normalGrid.headerCt.id);
+            if (el) el.style.width  = '';
+        }
+
+        Ext.Array.forEach([
+            get(normalGrid.id),
+            get(normalGrid.body.id),
+            get(normalGrid.getView().id)
+        ], function(el) {
+            if (el) {
+                el.style.height = el.style.width = '100%';
+            }
+        });
+
+        return frag;
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-cloneElement'>    cloneElement : function (el) {
+</span>        return new Ext.dom.Element(Ext.core.DomHelper.createDom({
+            tag     : 'div',
+            html    : el.dom.innerHTML
+        }));
+    },
+
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-startPage'>    /**
+</span>     * Starts a new page. Initializes {@link #currentPage} with a copy of the component that will
+     * be filled with collected rows based on implemented pagination rules.
+     * @param  {Ext.dom.Element} [pattern] Element to make a copy of. This is optional by default will make a copy of {@link #getComponent the component}.
+     */
+    startPage : function (pattern) {
+        var me      = this;
+
+        // make a detached copy of the component body
+        var copy    = me.cloneElement(pattern || me.getComponent().body);
+
+        // and put it into storedFragment
+        me.setCurrentPage(copy);
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-scrollTo'>    scrollTo : function (position, callback, scope) {
+</span>        var me = this;
+
+        if (me.component.ensureVisible) {
+
+            var record = me.component.store.getAt(position);
+
+            me.component.ensureVisible(record, {
+                callback : function () {
+                   if (callback &amp;&amp; this.isLocked === false) {
+                       callback.apply(scope || me);
+                   }
+                },
+                select  : false,
+                focus   : false,
+                animate : false
+            });
+
+        }
+        else {
+            me.lockedView.bufferedRenderer.scrollTo(position, false, function () {
+                me.normalView.bufferedRenderer.scrollTo(position, false, callback, scope || me);
+            });
+        }
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-removeNode'>    removeNode : function (el) {
+</span>        if (el &amp;&amp; el.parentNode) {
+            el.parentNode.removeChild(el);
+        }
+        else {
+            if (el.elements) {
+
+                for (var i = 0; i &lt; el.elements.length; i++) {
+                    var elem = el.elements[i];
+                    elem.parentNode.removeChild(elem);
+                }
+
+            }
+        }
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-restoreInfiniteScroll'>    //private
+</span>    restoreInfiniteScroll : function (panel) {
+
+        var view = panel.getSchedulingView();
+
+        if (panel.infiniteScroll &amp;&amp; view.rendered) {
+
+            // restore saved time span and scroll position
+            panel.timeAxis.setTimeSpan(this._oldStart, this._oldEnd);
+            view.setScrollX(this._oldScrollX);
+
+            // enable back infiniteScroll mode event listeners
+            view.enableInfiniteScroll();
+        }
+    },
+
+<span id='Sch-plugin-exporter-AbstractExporter-method-suspendInfiniteScroll'>    //private
+</span>    suspendInfiniteScroll : function (panel) {
+
+        var view = panel.getSchedulingView();
+
+        // unbind events reacting on scroll specific to infiniteScroll mode
+        if (panel.infiniteScroll &amp;&amp; view.rendered) {
+
+            view.disableInfiniteScroll();
+
+            // remember current time span and scroll position
+            this._oldStart      = panel.timeAxis.getStart();
+            this._oldEnd        = panel.timeAxis.getEnd();
+            this._oldScrollX    = view.getScrollX();
+
+            var span = panel.getEventStore().getTotalTimeSpan();
+            panel.setTimeSpan(span.start, span.end);
+        }
+    }
+
+});</pre>
+</body>
+</html>

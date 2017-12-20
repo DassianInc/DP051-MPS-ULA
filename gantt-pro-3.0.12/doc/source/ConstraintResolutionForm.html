@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-widget-ConstraintResolutionForm'>/**
+</span> * @class   Gnt.widget.ConstraintResolutionForm
+ * @extend  Ext.form.Panel
+ */
+Ext.define(&quot;Gnt.widget.ConstraintResolutionForm&quot;, {
+    extend : &quot;Ext.form.Panel&quot;,
+
+    requires : [
+        'Ext.form.RadioGroup',
+        'Ext.form.field.Display'
+    ],
+
+    mixins : [&quot;Gnt.mixin.Localizable&quot;],
+
+    alias  : 'widget.constraintresolutionform',
+
+<span id='Gnt-widget-ConstraintResolutionForm-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n Object containing localication strings
+     * An object, purposed for the class localization. Contains the following keys/values:
+
+            - &quot;Constraint violation&quot; : &quot;Constraint violation&quot;
+            - dateFormat           : &quot;m/d/Y&quot;,
+            - &quot;OK&quot;                 : 'OK',
+            - &quot;Cancel&quot;             : 'Cancel',
+            - &quot;Resolution options&quot; : &quot;Resolution options&quot;,
+            - &quot;Don't ask again&quot;    : &quot;Don't ask again&quot;,
+            - &quot;Task {0} violates constraint {1}&quot;     : &quot;Task {0} violates constraint {1}&quot;,
+            - &quot;Task {0} violates constraint {1} {2}&quot; : &quot;Task {0} violates constraint {1} {2}&quot;
+     */
+
+    legacyMode : false, // That's for localizable mixin
+
+    config : {
+<span id='Gnt-widget-ConstraintResolutionForm-cfg-resolutionContext'>        /**
+</span>         * @cfg {Object} resolutionContext Object containing a set of possible resolutions provided by {@link Gnt.constraint.Base#getResolution()}.
+         */
+        resolutionContext : null,
+<span id='Gnt-widget-ConstraintResolutionForm-cfg-dateFormat'>        /**
+</span>         * @cfg {String} [dateFormat=null] Date format string to use in vialotion description string. If none is given then 
+         * the one from {@link #l10n} will be used otherwise {@link Ext.Date#defaultFormat}.
+         */
+        dateFormat : null
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-property-bodyPadding'>    bodyPadding : 5,
+</span><span id='Gnt-widget-ConstraintResolutionForm-property-autoScroll'>    autoScroll  : true,
+</span>
+<span id='Gnt-widget-ConstraintResolutionForm-method-constructor'>    constructor : function(config) {
+</span>        var me = this;
+
+        if (Ext.Version.compare(Ext.versions.extjs, '5.0.0') == -1) {
+            me.initConfig(config);
+        }
+
+        me.callParent([config]);
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-initComponent'>    initComponent : function() {
+</span>        var me = this;
+
+        // &lt;debug&gt;
+        Ext.isObject(me.resolutionContext) ||
+            Ext.Error.raise(&quot;Can't initialize constration resolution form, resolution context is not given!&quot;);
+        // &lt;/debug&gt;
+
+        me.setupItemsFromResolutionContext(me.resolutionContext);
+        me.setupFooterFromResolutionContext(me.resolutionContext);
+
+        me.callParent(arguments);
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-setupItemsFromResolutionContext'>    setupItemsFromResolutionContext : function(resolutionContext) {
+</span>        var me = this,
+            resolutions = [];
+
+        // &lt;debug&gt;
+        Ext.isObject(resolutionContext) &amp;&amp;
+        Ext.isArray(resolutionContext.resolutions) &amp;&amp;
+        Ext.isFunction(resolutionContext.getCancelActionOption) ||
+            Ext.Error.raise(&quot;Invalid resolution context provided!&quot;);
+        // &lt;/debug&gt;
+
+        Ext.Array.each(resolutionContext.resolutions, function(r, index) {
+            resolutions.push({
+                xtype                 : 'radio',
+                boxLabel              : me.getResolutionOptionDescription(r.title, resolutionContext),
+                name                  : 'resolutionOption',
+                checked               : r === resolutionContext.getCancelActionOption(),
+                inputValue            : index,
+                tabIndex              : index
+            });
+        });
+
+        me.items = [{
+            xtype      : 'displayfield',
+            itemId     : 'description',
+            value      : me.getConstraintViolationDescription(resolutionContext),
+            anchor     : &quot;-0&quot;
+        }, {
+            xtype      : 'radiogroup',
+            itemId     : 'options',
+            columns    : 1,
+            title      : me.L(&quot;Resolution options&quot;),
+            allowBlank : false,
+            items      : resolutions,
+            anchor     : &quot;-0&quot;
+        }];
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-setupFooterFromResolutionContext'>    setupFooterFromResolutionContext : function(resolutionContext) {
+</span>        var me = this;
+
+        // &lt;debug&gt;
+        Ext.isObject(resolutionContext) &amp;&amp; Ext.isArray(resolutionContext.resolutions) ||
+            Ext.Error.raise(&quot;Invalid resolution context provided!&quot;);
+        // &lt;/debug&gt;
+
+        me.fbar = {
+            itemId : 'footer-tb',
+            items  : [{
+                xtype    : 'checkbox',
+                itemId   : 'dont-ask-cb',
+                boxLabel : me.L(&quot;Don't ask again&quot;),
+                tabIndex : resolutionContext.resolutions.length + 1
+            }, '-&gt;', {
+                text     : me.L(&quot;OK&quot;),
+                itemId   : 'ok-btn',
+                formBind : true,
+                tabIndex : resolutionContext.resolutions.length + 2,
+                handler  : me.onUserActionOk,
+                scope    : me
+            }, {
+                text     : me.L(&quot;Cancel&quot;),
+                itemId   : 'cancel-btn',
+                tabIndex : resolutionContext.resolutions.length + 3,
+                handler  : me.onUserActionCancel,
+                scope    : me
+            }]
+        };
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-getDontAskValue'>    getDontAskValue : function() {
+</span>        var me = this;
+        return me.down('#dont-ask-cb').getValue();
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-getConstraintViolationDescription'>    getConstraintViolationDescription : function(resolutionContext) {
+</span>        var me = this,
+            constraintTitle,
+            constraintDate,
+            constraintClass,
+            task, taskName, 
+            dateFormat;
+
+        // &lt;debug&gt;
+        Ext.isObject(resolutionContext) &amp;&amp;
+        Ext.isDefined(resolutionContext.title) &amp;&amp;
+        Ext.isDefined(resolutionContext.task) ||
+            Ext.Error.raise(&quot;Invalid resolution context provided!&quot;);
+        // &lt;/debug&gt;
+
+        constraintTitle = resolutionContext.title;
+        task            = resolutionContext.task;
+        taskName        = task.getName() || '';
+        constraintClass = task.getConstraintClass();
+        dateFormat      = me.dateFormat || me.L(&quot;dateFormat&quot;) || Ext.Date.defaultFormat;
+        constraintDate  = constraintClass &amp;&amp; constraintClass.getDisplayableConstraintDateForFormat(resolutionContext.date, dateFormat, task) || resolutionContext.date;
+
+        return constraintDate ?
+                   Ext.String.format(
+                       me.L(&quot;Task {0} violates constraint {1} {2}&quot;),
+                       taskName, constraintTitle, Ext.Date.format(constraintDate, dateFormat)
+                   )
+                       :
+                   Ext.String.format(
+                       me.L(&quot;Task {0} violates constraint {1}&quot;),
+                       taskName, constraintTitle
+                   );
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-getResolutionOptionDescription'>    getResolutionOptionDescription : function(rawDescription, resolutionContext) {
+</span>        var me = this,
+            task,
+            constraintDate,
+            constraintClass,
+            dateFormat;
+
+        // &lt;debug&gt;
+        Ext.isObject(resolutionContext) || Ext.Error.raise(&quot;Invalid resolution context provided!&quot;);
+        // &lt;/debug&gt;
+
+        task            = resolutionContext.task;
+        constraintClass = task.getConstraintClass();
+        dateFormat      = me.dateFormat || me.L(&quot;dateFormat&quot;) || Ext.Date.defaultFormat;
+        constraintDate  = constraintClass &amp;&amp; constraintClass.getDisplayableConstraintDateForFormat(resolutionContext.date, dateFormat, task) || resolutionContext.date;
+
+        return constraintDate ?
+                   Ext.String.format(
+                       rawDescription,
+                       Ext.Date.format(constraintDate, dateFormat)
+                   )
+                       :
+                   Ext.String.format(
+                       rawDescription,
+                       ''
+                   );
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-onUserActionOk'>    onUserActionOk : function(btn) {
+</span>        var me = this,
+            result;
+
+        result = me.getValues();
+
+        result.dontAsk = me.getDontAskValue();
+
+        me.fireEvent('ok', me, result);
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-onUserActionCancel'>    onUserActionCancel : function(btn) {
+</span>        var me = this;
+        me.fireEvent('cancel', me);
+    },
+
+<span id='Gnt-widget-ConstraintResolutionForm-method-getOptimalHeight'>    getOptimalHeight : function(width) {
+</span>        var me = this,
+            originalPos, originalWidth,
+            radioGroup, radioGroupOffsets,
+            optimalHeight,
+            footerBar;
+
+        if (width) {
+            originalPos   = me.getXY();
+            originalWidth = me.getWidth();
+            me.setXY([-10000, -10000]);
+            me.setWidth(width);
+        }
+
+        radioGroup        = me.getComponent('options');
+        radioGroupOffsets = radioGroup.getEl().getOffsetsTo(me.body);
+        footerBar         = me.getDockedComponent('footer-tb');
+        optimalHeight     = radioGroupOffsets[1] + Ext.getDom(radioGroup.getEl()).scrollHeight + 2 * me.bodyPadding + footerBar.getHeight() + 10 /* scroll safety */;
+
+        if (width) {
+            me.setWidth(originalWidth);
+            me.setXY(originalPos);
+        }
+
+        return optimalHeight;
+    }
+});
+</pre>
+</body>
+</html>

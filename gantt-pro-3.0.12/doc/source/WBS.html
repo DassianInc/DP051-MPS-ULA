@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Gnt-column-WBS'>/**
+</span>
+@class Gnt.column.WBS
+@extends Ext.grid.column.Date
+
+A &quot;calculated&quot; Column which displays the WBS (Work Breakdown Structure) for the tasks - the position of the task in the project tree structure.
+*/
+Ext.define(&quot;Gnt.column.WBS&quot;, {
+    extend      : &quot;Ext.grid.column.Column&quot;,
+    alias       : [
+        &quot;widget.wbscolumn&quot;,
+        &quot;widget.ganttcolumn.wbs&quot;
+    ],
+    mixins      : ['Gnt.mixin.Localizable'],
+
+<span id='Gnt-column-WBS-cfg-l10n'>    /**
+</span>     * @cfg {Object} l10n
+     * A object, purposed for the class localization. Contains the following keys/values:
+
+            - text : 'WBS'
+     */
+
+<span id='Gnt-column-WBS-cfg-width'>    /**
+</span>     * @cfg {Number} width The width of the column.
+     */
+    width       : 40,
+
+<span id='Gnt-column-WBS-cfg-align'>    /**
+</span>     * @cfg {String} align The alignment of the text in the column.
+     */
+    align       : 'left',
+
+<span id='Gnt-column-WBS-property-sortable'>    sortable    : false,
+</span><span id='Gnt-column-WBS-property-dataIndex'>    dataIndex   : 'index',
+</span>
+<span id='Gnt-column-WBS-method-constructor'>    constructor : function (config) {
+</span>        config = config || {};        
+
+        this.text   = config.text || this.L('text');
+
+        this.callParent(arguments);
+    },
+
+<span id='Gnt-column-WBS-method-renderer'>    renderer    : function (value, meta, task) {
+</span>        return task.getWBSCode();
+    }
+});
+</pre>
+</body>
+</html>
