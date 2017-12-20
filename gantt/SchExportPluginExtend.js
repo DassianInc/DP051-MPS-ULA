@@ -3389,20 +3389,20 @@ Ext.define('DSch.plugin.Export', {
         if(window.appState.killExport){
             return;
         }
-        total   = Math.max(pageNum, total);
-        !Ext.isDefined(me.pdfPostTotals) && me.setCalcTotalPdfRequest(total);
-        if(me.pdfPostTotals.processGroupsCount != me.pdfPostTotals.groupTotalCount){
+       // total   = Math.max(pageNum, total);
+        me.pdfPostTotals = Ext.isDefined(me.pdfPostTotals) ? me.pdfPostTotals : {processGroupsCount:0,groupsComplete:0}//&& me.setCalcTotalPdfRequest(total);
+        /*if(me.pdfPostTotals.processGroupsCount != me.pdfPostTotals.groupTotalCount){
             if(me.pdfPostTotals.groupCount != exporter.extractedPages.length){
                 return;
             }
-        }
-        me.pdfPostTotals.processGroupsCount += 1;
+        }*/
+        me.pdfPostTotals.processGroupsCount++;
 
         var promise = me.postPageToPDF(exporter, page, pageNum, total);
         promise.done(function(){
-            if(me.pdfPostTotals.processGroupsCount > me.pdfPostTotals.groupsTotal){
+            /*if(me.pdfPostTotals.processGroupsCount > me.pdfPostTotals.groupsTotal){
                 me.pdfPostTotals.groupsTotal = me.pdfPostTotals.processGroupsCount;
-            }
+            }*/
             me.fireEvent('updateprogressbar', 0.2 + 0.6 * pageNum / total, Ext.String.format(me.L('builtPage'), pageNum, total));
         });
     },
@@ -3586,12 +3586,12 @@ Ext.define('DSch.plugin.Export', {
                 };
 
                 Ext.apply(ajaxConfig, this.getAjaxConfig(ajaxConfig));
-
-                if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal && me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.processGroupsCount){
-                    Ext.Ajax.request(ajaxConfig);
-                    Ext.toast('Generating PDF', 'Please Wait', 't');
-                    delete me.pdfPostTotals;
-                }else{
+              //  if(me.pdfPostTotals.processGroupsCount ===  me.pdfPostTotals.groupsComplete){
+                //if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.groupsTotal && me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.processGroupsCount){
+             //       Ext.Ajax.request(ajaxConfig);
+             //       Ext.toast('Generating PDF', 'Please Wait', 't');
+             //       delete me.pdfPostTotals;
+             //   }else{
                     var random = 0;
                     window.toastOnRequest = window.setInterval(function(){
                         var textToast = ['Generating PDF','Still working'];
@@ -3599,7 +3599,7 @@ Ext.define('DSch.plugin.Export', {
                         random = random === 0 ? 1 : 0;
                     },4e3);
                     window.doRequestId = window.setInterval(function(){
-                        if(me.pdfPostTotals.groupsComplete ===  me.pdfPostTotals.processGroupsCount){
+                        if(me.pdfPostTotals.processGroupsCount ===  me.pdfPostTotals.groupsComplete){
                             window.clearInterval(window.doRequestId);
                             window.clearInterval(window.toastOnRequest);
                             Ext.Ajax.request(ajaxConfig);
@@ -3609,7 +3609,7 @@ Ext.define('DSch.plugin.Export', {
                             window.clearInterval(window.doRequestId);
                         }
                     },500);
-                }
+              //  }
 
 
             } else {
