@@ -326,7 +326,7 @@ Ext.define('Sch.locale.En', {
                     weekAndMonth : {
                         displayDateFormat   : 'm/d/Y',
                         middleDateFormat    : 'm/d',
-                        topDateFormat       : 'm/d/Y'
+                        topDateFormat       : 'M Y'//'m/d/Y'
                     },
 
                     weekAndDayLetter : {
