@@ -50,12 +50,12 @@ Ext.define('MyApp.store.GanttViewStore', {
                     id: '4',
                     name: 'Week & Day',
                     selected:false
-                },
+                }/*,
                 {
                     id: '5',
                     name: 'Day & Week',
                     selected:false
-                }
+                }*/
             ],
             fields: [
                 {
