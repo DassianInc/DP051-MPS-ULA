@@ -717,6 +717,10 @@
            var promise =  me.requestServer();
            /* development // me.setServer(window.location.protocol+'//'+ window.location.hostname+':'+window.location.port+'/')// */
            /* production //me.requestServer();*/
+            /** TODO:
+             * registerViewPreset: register a view preset for "manyYears" so as to remove override in gntPlugin.js
+             *  See gntPlugin.js ln 10355
+             */
             promise.done(function(){
                 // get users
 
