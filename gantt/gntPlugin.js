@@ -10345,16 +10345,23 @@ Ext.define('Sch.preset.Manager', {
                     unit        : 'YEAR',
                     align       : 'center',
                     dateFormat  : 'Y',
-                    increment   : 5
-                },
+                    /** Dassian Change:
+                     * original increment from 5 to 1
+                     **/
+                    increment   : 1
+                }
                 // smallest zoom level looked back
                 // we have to specify increments here since 'increment' in zoomLevel affects only bottom header
-                bottom      : {
+                /** Dassian Change:
+                 * Removed Bottom config from ManyYears options for gantt year display
+                 bottom      : {
                     unit        : 'YEAR',
                     align       : 'center',
                     dateFormat  : 'y',
                     increment   : 1
                 }
+                  */
+
             }
         },
         weekAndDayLetter : {
