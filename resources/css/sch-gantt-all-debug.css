@@ -1472,7 +1472,8 @@ div.sch-dependencyview-thin .sch-dependency-line-h {
     position : absolute;
     overflow : visible;
     top      : 16%;
-    height   : 68%;
+    /*#001: Dassian Fix for think children - added important*/
+    height   : 68% !important;
 }
 
 .sch-gantt-item {
@@ -1544,7 +1545,8 @@ div.sch-dependencyview-thin .sch-dependency-line-h {
 /* Leaf task styling */
 .sch-gantt-task-bar, .sch-gantt-task-segment {
     border : 1px solid;
-    height : 100%;
+    /*#001: Dassian Change: from 100 to 50*/
+    height : 50%;
 }
 
 div.sch-gantt-task-bar.sch-event-segmented {

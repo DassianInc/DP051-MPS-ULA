@@ -235,6 +235,9 @@
                    endDate: new Date(finishValue),
                    rightLabelField: {
                        renderer : function (value, record){
+                           /*#002: if(window.appState.toggleLabel){
+                                return ""
+                            }*/
                            var color = record.get('color');
                            var depth = record.getDepth();
                            if (color === 'red' && depth < 3) {
@@ -319,6 +322,9 @@
                    },
                    leftLabelField: {
                        renderer : function (value, record){
+                           /*#002:  if(window.appState.toggleLabel){
+                           //     return ""
+                           // }*/
                            var color = record.get('color');
                            if (color !=='lightBlue'){
 
@@ -604,6 +610,13 @@
                 var record = store.getById(key);
                 record.childNodes = recurseRestoreChildrenOrder(record.childNodes);
                 store.add(record);
+            });
+            /*
+                #003:Expand sort issue
+             */
+            store.root.childNodes = []
+            Ext.each(store.data.items,function(v,k){
+                store.root.childNodes[k] = v;
             });
             ganttPanel.getView().refresh();
             setTimeout(function(){
@@ -968,7 +981,9 @@
 
         init: function(application) {
             var me=this;
-            window.appState = {};
+            window.appState = {
+                //#002: add toggleLabel : false
+            };
             Ext.require('Gnt.model.Task');
             Ext.define('taskStoreModel', {
                 extend : 'Gnt.model.Task',

@@ -206,8 +206,8 @@ Ext.define('MyApp.view.MyPanel12', {
                     handler: function (button, e) {
                         var me = this;
                         var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                        ganttPanel.el.toggleCls('hide-labels');
-
+                         ganttPanel.el.toggleCls('hide-labels');
+                        //window.appState.labelToggle = !window.appState.labelToggle
                     },
                     height: 35,
                     itemId: 'showLabels',
@@ -338,6 +338,11 @@ Ext.define('MyApp.view.MyPanel12', {
     openSettings1: function(button, e, eOpts) {
         var me = this;
         var main = MyApp.app.getMainController();
+        var myPanel = Ext.ComponentManager.get('myPanel');
+        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
+        var mainView = Ext.ComponentManager.get('mainView');
+        var taskStore = Ext.getStore('taskStore');
+
         var ganttConfigStore = Ext.getStore('GanttConfigStoreXml');
         var promptShow = ganttConfigStore.findExact('name','noPrompt');
         var prompt = Ext.create('Ext.window.MessageBox', {
@@ -355,10 +360,7 @@ Ext.define('MyApp.view.MyPanel12', {
                     /*if (btn === 'no') {
                     }*/
                     if (btn === 'yes') {
-                        var myPanel = Ext.ComponentManager.get('myPanel');
-                        var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-                        var mainView = Ext.ComponentManager.get('mainView');
-                        var taskStore = Ext.getStore('taskStore');
+                        main.collapseAll(ganttPanel);//#004
                         var passedObjectsStore = Ext.getStore('PassedObjectsStoreXml');
                         var paramStore = Ext.getStore('ParamStoreXml');
                         var passedConfigStore = Ext.getStore('PassedConfigStoreXml');
@@ -454,7 +456,7 @@ Ext.define('MyApp.view.MyPanel12', {
                             batch: batch,
                             callback: function() {
                                 Ext.suspendLayouts();
-                                taskStore.loadRecords([]);
+                                //#004: taskStore.loadRecords([]);
                                 taskStore.load({
                                     callback: function(resp,opt,d){
                                         Ext.resumeLayouts(true);
@@ -478,10 +480,7 @@ Ext.define('MyApp.view.MyPanel12', {
                 }
             });
         } else {
-            var myPanel = Ext.ComponentManager.get('myPanel');
-            var ganttPanel = Ext.ComponentManager.get('ganttPanel');
-            var mainView = Ext.ComponentManager.get('mainView');
-            var taskStore = Ext.getStore('taskStore');
+            main.collapseAll(ganttPanel);//#004
             var passedObjectsStore = Ext.getStore('PassedObjectsStoreXml');
             var paramStore = Ext.getStore('ParamStoreXml');
             var passedConfigStore = Ext.getStore('PassedConfigStoreXml');
@@ -581,7 +580,7 @@ Ext.define('MyApp.view.MyPanel12', {
                 callback: function() {
                    Ext.suspendLayouts();
                     ganttPanel.lockedGrid.reconfigure(null, main.ganttColumns());
-                    taskStore.loadRecords([]);
+                    //#004: taskStore.loadRecords([]);
                     taskStore.load({
                         callback: function(){
                             Ext.resumeLayouts(true);
